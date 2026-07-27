@@ -82,7 +82,7 @@ export function Hero() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative flex min-h-[100svh] items-end overflow-hidden pb-20 pt-28 md:items-center md:pb-0 md:pt-0"
+      className="relative flex min-h-[100svh] items-end overflow-hidden pb-16 pt-20 sm:pb-20 sm:pt-28 md:items-center md:pb-0 md:pt-0"
     >
       <PlasmaScene />
 
@@ -112,7 +112,7 @@ export function Hero() {
           {profile.location} · {profile.title}
         </motion.p>
 
-        <h1 className="hero-title-glow font-display max-w-[14ch] text-[clamp(2.8rem,9vw,7rem)] font-semibold leading-[0.92] tracking-[-0.04em] text-white">
+        <h1 className="hero-title-glow font-display max-w-[14ch] text-[clamp(2.4rem,9vw,7rem)] font-semibold leading-[0.92] tracking-[-0.04em] text-white">
           {nameParts.map((word, wi) => (
             <span key={word} className="block overflow-hidden">
               <motion.span
@@ -131,7 +131,7 @@ export function Hero() {
           ))}
         </h1>
 
-        <div className="mt-10 h-12 overflow-hidden md:h-14">
+        <div className="mt-8 h-10 overflow-hidden sm:mt-10 sm:h-12 md:h-14">
           <AnimatePresence mode="wait">
             <motion.div
               key={profile.roles[roleIndex]}
@@ -139,7 +139,7 @@ export function Hero() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -28, opacity: 0 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="font-display text-xl text-accent-blue md:text-3xl"
+              className="font-display text-lg text-accent-blue sm:text-xl md:text-3xl"
             >
               {profile.roles[roleIndex]}
             </motion.div>
@@ -150,7 +150,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.6 }}
-          className="font-body mt-8 max-w-md text-sm leading-[1.8] text-muted md:text-base"
+          className="font-body mt-6 max-w-md text-sm leading-[1.8] text-muted sm:mt-8 md:text-base"
         >
           Turning financial complexity into clarity — through analytics, MIS
           systems, and project leadership that moves the business forward.
@@ -160,7 +160,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.05, duration: 0.6 }}
-          className="mt-12 flex flex-wrap items-center gap-5"
+          className="mt-8 flex flex-wrap items-center gap-4 sm:mt-12 sm:gap-5"
         >
           <Link href="#projects" data-cursor="interactive">
             <GlowButton variant="primary">View work</GlowButton>

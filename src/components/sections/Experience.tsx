@@ -40,7 +40,7 @@ export function Experience() {
     <section
       ref={sectionRef}
       id="experience"
-      className="relative px-6 py-32 md:px-12 md:py-44 lg:px-16"
+      className="relative px-4 py-20 sm:px-6 sm:py-32 md:px-12 md:py-44 lg:px-16"
     >
       <div className="mx-auto max-w-[90rem]">
         <p className="font-sans mb-6 text-[11px] uppercase tracking-[0.45em] text-accent-violet/80">
@@ -50,7 +50,7 @@ export function Experience() {
           text="Companies that shaped the craft."
           as="h2"
           mode="words"
-          className="mb-20 max-w-4xl text-[clamp(2.5rem,6vw,5rem)] font-semibold leading-[1.05] text-white md:mb-28"
+          className="mb-12 max-w-4xl text-[clamp(2rem,6vw,5rem)] font-semibold leading-[1.05] text-white sm:mb-20 md:mb-28"
         />
 
         <div className="relative">
@@ -75,7 +75,7 @@ export function Experience() {
                     <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-accent-blue">
                       {role.period}
                     </p>
-                    <h3 className="font-display mt-3 text-3xl font-semibold text-white md:text-4xl">
+                    <h3 className="font-display mt-3 text-2xl font-semibold text-white sm:text-3xl md:text-4xl">
                       {role.company}
                     </h3>
                     <p className="font-body mt-2 text-muted">{role.role}</p>

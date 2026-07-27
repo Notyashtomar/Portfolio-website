@@ -29,11 +29,11 @@ export default async function ProjectPage({ params }: Props) {
   if (!project) notFound();
 
   return (
-    <div className="relative px-6 pb-32 pt-32 md:px-12 md:pt-40 lg:px-16">
+    <div className="relative px-4 pb-20 pt-24 sm:px-6 sm:pb-28 sm:pt-32 md:px-12 md:pt-40 lg:px-16">
       <div className="relative mx-auto max-w-5xl">
         <Link
           href="/#projects"
-          className="font-sans mb-12 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-white/45 transition hover:text-white"
+          className="font-sans mb-8 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-white/45 transition hover:text-white sm:mb-12"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to projects
@@ -46,46 +46,46 @@ export default async function ProjectPage({ params }: Props) {
           text={project.title}
           as="h1"
           mode="words"
-          className="mt-5 max-w-4xl text-[clamp(2.5rem,6vw,4.5rem)] font-semibold leading-[1.05] text-white"
+          className="mt-5 max-w-4xl text-[clamp(2rem,6vw,4.5rem)] font-semibold leading-[1.05] text-white"
         />
         <SplitReveal
           text={project.tagline}
           as="p"
           mode="words"
-          className="font-body mt-6 max-w-2xl text-lg leading-[1.8] text-muted"
+          className="font-body mt-6 max-w-2xl text-base leading-[1.8] text-muted sm:text-lg"
           stagger={0.015}
         />
 
-        <div className="mt-16 grid gap-4 sm:grid-cols-3">
+        <div className="mt-10 grid grid-cols-3 gap-3 sm:mt-16 sm:gap-4">
           {project.metrics.map((metric) => (
             <PremiumCard key={metric.label} float={false} tilt={5}>
-              <p className="font-display text-4xl font-semibold text-white">
+              <p className="font-display text-2xl font-semibold text-white sm:text-3xl md:text-4xl">
                 {metric.value}
               </p>
-              <p className="font-sans mt-3 text-[10px] uppercase tracking-[0.24em] text-muted">
+              <p className="font-sans mt-2 text-[9px] uppercase tracking-[0.18em] text-muted sm:mt-3 sm:text-[10px] sm:tracking-[0.24em]">
                 {metric.label}
               </p>
             </PremiumCard>
           ))}
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="mt-6 grid gap-4 sm:mt-10 sm:gap-6 md:grid-cols-2">
           <PremiumCard tilt={6}>
-            <h2 className="font-display text-2xl text-white">Challenge</h2>
+            <h2 className="font-display text-xl text-white sm:text-2xl">Challenge</h2>
             <p className="font-body mt-5 text-sm leading-[1.85] text-muted">
               {project.challenge}
             </p>
           </PremiumCard>
           <PremiumCard tilt={6}>
-            <h2 className="font-display text-2xl text-white">Solution</h2>
+            <h2 className="font-display text-xl text-white sm:text-2xl">Solution</h2>
             <p className="font-body mt-5 text-sm leading-[1.85] text-muted">
               {project.solution}
             </p>
           </PremiumCard>
         </div>
 
-        <PremiumCard className="mt-6" tilt={4}>
-          <h2 className="font-display text-2xl text-white">Tech Stack</h2>
+        <PremiumCard className="mt-4 sm:mt-6" tilt={4}>
+          <h2 className="font-display text-xl text-white sm:text-2xl">Tech Stack</h2>
           <div className="mt-6 flex flex-wrap gap-2">
             {project.tech.map((item) => (
               <span
@@ -98,8 +98,8 @@ export default async function ProjectPage({ params }: Props) {
           </div>
         </PremiumCard>
 
-        <PremiumCard className="mt-6" tilt={4}>
-          <h2 className="font-display text-2xl text-white">Architecture</h2>
+        <PremiumCard className="mt-4 sm:mt-6" tilt={4}>
+          <h2 className="font-display text-xl text-white sm:text-2xl">Architecture</h2>
           <ol className="mt-6 space-y-4">
             {project.architecture.map((step, i) => (
               <li key={step} className="font-body flex gap-4 text-sm text-muted">
@@ -112,15 +112,15 @@ export default async function ProjectPage({ params }: Props) {
           </ol>
         </PremiumCard>
 
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 md:grid-cols-2">
           <PremiumCard tilt={5}>
-            <h2 className="font-display text-2xl text-white">Impact</h2>
+            <h2 className="font-display text-xl text-white sm:text-2xl">Impact</h2>
             <p className="font-body mt-5 text-sm leading-[1.85] text-muted">
               {project.impact}
             </p>
           </PremiumCard>
           <PremiumCard tilt={5}>
-            <h2 className="font-display text-2xl text-white">Lessons Learned</h2>
+            <h2 className="font-display text-xl text-white sm:text-2xl">Lessons Learned</h2>
             <ul className="mt-5 space-y-3">
               {project.lessons.map((lesson) => (
                 <li key={lesson} className="font-body text-sm leading-[1.85] text-muted">

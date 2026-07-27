@@ -37,6 +37,7 @@
 
 html {
   background: var(--bg);
+  overflow-x: hidden;
 }
 
 html.lenis,

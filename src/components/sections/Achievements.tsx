@@ -7,7 +7,7 @@ import { SplitReveal } from "@/components/motion/SplitReveal";
 
 export function Achievements() {
   return (
-    <section id="impact" className="relative px-6 py-32 md:px-12 md:py-44 lg:px-16">
+    <section id="impact" className="relative px-4 py-20 sm:px-6 sm:py-32 md:px-12 md:py-44 lg:px-16">
       <div className="mx-auto max-w-[90rem]">
         <p className="font-sans mb-6 text-[11px] uppercase tracking-[0.45em] text-accent-gold/80">
           Impact
@@ -16,13 +16,13 @@ export function Achievements() {
           text="Proof in the outcomes."
           as="h2"
           mode="words"
-          className="mb-20 max-w-4xl text-[clamp(2.5rem,6vw,5rem)] font-semibold leading-[1.05] text-white md:mb-28"
+          className="mb-12 max-w-4xl text-[clamp(2rem,6vw,5rem)] font-semibold leading-[1.05] text-white sm:mb-20 md:mb-28"
         />
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {achievements.map((item) => (
             <PremiumCard key={item.id} tilt={4}>
-              <p className="font-display text-5xl font-semibold text-white">
+              <p className="font-display text-3xl font-semibold text-white sm:text-4xl md:text-5xl">
                 <AnimatedCounter value={item.value} suffix={item.suffix} />
               </p>
               <p className="font-sans mt-4 text-sm text-white">{item.label}</p>
@@ -33,7 +33,7 @@ export function Achievements() {
           ))}
         </div>
 
-        <div className="mt-24 grid gap-16 lg:grid-cols-2">
+        <div className="mt-16 grid gap-12 sm:mt-24 sm:gap-16 lg:grid-cols-2">
           <div>
             <SplitReveal
               text="Education"

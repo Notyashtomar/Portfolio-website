@@ -23,7 +23,7 @@ export function Contact() {
   };
 
   return (
-    <section id="contact" className="relative px-6 py-32 md:px-12 md:py-48 lg:px-16">
+    <section id="contact" className="relative px-4 py-20 sm:px-6 sm:py-32 md:px-12 md:py-48 lg:px-16">
       <div className="mx-auto max-w-[90rem]">
         <p className="font-sans mb-6 text-[11px] uppercase tracking-[0.45em] text-accent-blue/80">
           Contact
@@ -32,10 +32,10 @@ export function Contact() {
           text="Let's build the next decision system."
           as="h2"
           mode="words"
-          className="mb-20 max-w-4xl text-[clamp(2.2rem,5.5vw,4.5rem)] font-semibold leading-[1.08] text-white md:mb-28"
+          className="mb-12 max-w-4xl text-[clamp(1.8rem,5.5vw,4.5rem)] font-semibold leading-[1.08] text-white sm:mb-20 md:mb-28"
         />
 
-        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
+        <div className="grid gap-8 sm:gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <div className="space-y-5">
             <PremiumCard tilt={6}>
               <a
@@ -50,7 +50,7 @@ export function Contact() {
                   <span className="font-sans block text-[10px] uppercase tracking-[0.28em] text-muted">
                     Email
                   </span>
-                  <span className="font-body text-white">{profile.email}</span>
+                  <span className="font-body break-all text-white">{profile.email}</span>
                 </span>
               </a>
             </PremiumCard>
@@ -88,7 +88,7 @@ export function Contact() {
             </a>
           </div>
 
-          <PremiumCard tilt={8} float={false} className="!p-8 md:!p-12">
+          <PremiumCard tilt={8} float={false} className="!p-5 sm:!p-8 md:!p-12">
             <form onSubmit={onSubmit} className="space-y-6">
               <div>
                 <label

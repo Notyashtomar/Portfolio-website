@@ -35,7 +35,7 @@ export function Skills() {
   }, [positions]);
 
   return (
-    <section id="skills" className="relative px-6 py-32 md:px-12 md:py-44 lg:px-16">
+    <section id="skills" className="relative px-4 py-20 sm:px-6 sm:py-32 md:px-12 md:py-44 lg:px-16">
       <div className="mx-auto max-w-[90rem]">
         <p className="font-sans mb-6 text-[11px] uppercase tracking-[0.45em] text-accent-blue/80">
           Skills
@@ -44,10 +44,28 @@ export function Skills() {
           text="A network of analytical craft."
           as="h2"
           mode="words"
-          className="mb-20 max-w-4xl text-[clamp(2.5rem,6vw,5rem)] font-semibold leading-[1.05] text-white md:mb-28"
+          className="mb-12 max-w-4xl text-[clamp(2rem,6vw,5rem)] font-semibold leading-[1.05] text-white sm:mb-20 md:mb-28"
         />
 
-        <div className="relative mx-auto max-w-4xl">
+        {/* Mobile: pill grid */}
+        <div className="grid grid-cols-2 gap-3 sm:hidden">
+          {skillNodes.map((node) => (
+            <div
+              key={node.id}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"
+            >
+              <p className="font-sans text-[11px] uppercase tracking-[0.18em] text-white/80">
+                {node.label}
+              </p>
+              <p className="font-body mt-1 text-[10px] leading-relaxed text-muted">
+                {node.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Tablet/Desktop: network visualization */}
+        <div className="relative mx-auto hidden max-w-4xl sm:block">
           <div className="relative aspect-square overflow-hidden rounded-[36px] border border-white/8 bg-[radial-gradient(circle_at_center,rgba(79,140,255,0.08),transparent_60%)]">
             <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100">
               {links.map(([a, b], i) => (
