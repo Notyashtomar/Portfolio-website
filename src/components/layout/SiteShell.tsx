@@ -46,10 +46,10 @@ function ShellInner({ children }: { children: ReactNode }) {
       {showIntro ? <CinematicIntro onComplete={onIntroComplete} /> : null}
 
       <div
-        className={`relative min-h-full transition-[opacity,transform,filter] duration-[1100ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`relative min-h-full transition-[opacity,transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           ready
             ? "pointer-events-auto translate-y-0 scale-100 opacity-100 blur-0"
-            : "pointer-events-none translate-y-3 scale-[1.015] opacity-0 blur-[8px]"
+            : "pointer-events-none translate-y-2 scale-[1.01] opacity-0 blur-[6px]"
         }`}
       >
         <AmbientBackground />

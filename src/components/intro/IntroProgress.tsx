@@ -5,10 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 
 const STAGES: Array<{ at: number; label: string }> = [
   { at: 0, label: "Initializing..." },
-  { at: 18, label: "Loading Assets..." },
-  { at: 38, label: "Rendering Experience..." },
-  { at: 62, label: "Optimizing Interface..." },
-  { at: 82, label: "Launching Portfolio..." },
+  { at: 15, label: "Loading Assets..." },
+  { at: 35, label: "Rendering Experience..." },
+  { at: 58, label: "Optimizing Interface..." },
+  { at: 80, label: "Launching Portfolio..." },
   { at: 100, label: "WELCOME" },
 ];
 

@@ -18,8 +18,8 @@ type Props = {
 };
 
 const MESSAGES_DONE_AT = 100;
-const MIN_MS = 4800;
-const ENTER_MS = 1600;
+const MIN_MS = 2300;
+const ENTER_MS = 900;
 
 export function CinematicIntro({ onComplete }: Props) {
   const { lite, enableWebGL } = usePerfFlags();
@@ -34,6 +34,7 @@ export function CinematicIntro({ onComplete }: Props) {
   const finish = useCallback(() => {
     if (finished.current) return;
     finished.current = true;
+    setProgress(100);
     setEntering(true);
     window.setTimeout(() => {
       setGone(true);
@@ -48,29 +49,30 @@ export function CinematicIntro({ onComplete }: Props) {
       return;
     }
 
-    const skipTimer = window.setTimeout(() => setCanSkip(true), 1600);
+    const skipTimer = window.setTimeout(() => setCanSkip(true), 700);
     let raf = 0;
     let last = performance.now();
+    let finishing = false;
 
     const tick = (now: number) => {
-      const dt = Math.min(48, now - last);
+      const dt = Math.min(40, now - last);
       last = now;
       const elapsed = now - started.current;
 
-      // Organic progress curve — faster mid, ease near end
-      const target = Math.min(
-        100,
-        (elapsed / MIN_MS) * 100 + Math.sin(elapsed / 900) * 2,
-      );
+      // Snappy organic progress — reaches ~100 in MIN_MS
+      const t = Math.min(1, elapsed / MIN_MS);
+      const eased = 1 - Math.pow(1 - t, 2.4);
+      const target = Math.min(100, eased * 100);
 
       setProgress((p) => {
-        const next = p + (target - p) * Math.min(1, dt / 180);
+        const next = p + (target - p) * Math.min(1, dt / 70);
         return Math.min(100, next);
       });
 
-      if (elapsed >= MIN_MS && document.readyState === "complete") {
+      if (!finishing && elapsed >= MIN_MS) {
+        finishing = true;
         setProgress(100);
-        window.setTimeout(finish, 420);
+        window.setTimeout(finish, 160);
         return;
       }
 
@@ -79,15 +81,9 @@ export function CinematicIntro({ onComplete }: Props) {
 
     raf = requestAnimationFrame(tick);
 
-    const onLoad = () => {
-      /* readyState checked in loop */
-    };
-    window.addEventListener("load", onLoad);
-
     return () => {
       cancelAnimationFrame(raf);
       window.clearTimeout(skipTimer);
-      window.removeEventListener("load", onLoad);
     };
   }, [finish]);
 
@@ -100,9 +96,9 @@ export function CinematicIntro({ onComplete }: Props) {
     return () => window.removeEventListener("pointermove", move);
   }, []);
 
-  // Safety timeout
+  // Safety timeout — never leave users stuck
   useEffect(() => {
-    const id = window.setTimeout(finish, 9000);
+    const id = window.setTimeout(finish, 4200);
     return () => window.clearTimeout(id);
   }, [finish]);
 
@@ -120,10 +116,10 @@ export function CinematicIntro({ onComplete }: Props) {
           entering
             ? {
                 opacity: 1,
-                scale: 1.08,
-                filter: "brightness(1.35) blur(0px)",
+                scale: 1.12,
+                filter: "brightness(1.45)",
               }
-            : { opacity: 1, scale: 1, filter: "brightness(1) blur(0px)" }
+            : { opacity: 1, scale: 1, filter: "brightness(1)" }
         }
         exit={{ opacity: 0 }}
         transition={{ duration: ENTER_MS / 1000, ease: [0.16, 1, 0.3, 1] }}
@@ -141,7 +137,6 @@ export function CinematicIntro({ onComplete }: Props) {
           <LiteMacBook progress={progress} entering={entering} mouse={mouse} />
         )}
 
-        {/* Expanding portal glow when entering */}
         <motion.div
           className="pointer-events-none absolute left-1/2 top-[42%] z-20 h-[40vmax] w-[40vmax] -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
@@ -150,10 +145,10 @@ export function CinematicIntro({ onComplete }: Props) {
           }}
           animate={
             entering
-              ? { scale: [1, 4.5], opacity: [0.5, 0.9, 0] }
-              : { scale: 0.85 + progress / 400, opacity: 0.25 + progress / 500 }
+              ? { scale: [1, 5], opacity: [0.55, 0.95, 0] }
+              : { scale: 0.85 + progress / 350, opacity: 0.28 + progress / 450 }
           }
-          transition={{ duration: entering ? 1.4 : 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: entering ? 0.85 : 0.35, ease: [0.16, 1, 0.3, 1] }}
         />
 
         <IntroProgress progress={Math.min(progress, MESSAGES_DONE_AT)} entering={entering} />
@@ -168,7 +163,6 @@ export function CinematicIntro({ onComplete }: Props) {
           </button>
         ) : null}
 
-        {/* Final white-blue wash into site */}
         <motion.div
           className="pointer-events-none absolute inset-0 z-50"
           style={{
@@ -177,7 +171,7 @@ export function CinematicIntro({ onComplete }: Props) {
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: entering ? 1 : 0 }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
         />
       </motion.div>
     </AnimatePresence>
@@ -224,8 +218,8 @@ function LiteMacBook({
         }
         transition={
           entering
-            ? { duration: 1.35, ease: [0.16, 1, 0.3, 1] }
-            : { y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" } }
+            ? { duration: 0.85, ease: [0.16, 1, 0.3, 1] }
+            : { y: { duration: 2.8, repeat: Infinity, ease: "easeInOut" } }
         }
       >
         <div

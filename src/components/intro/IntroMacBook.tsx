@@ -63,9 +63,9 @@ function MacBook({
     }
 
     if (entering) {
-      group.current.position.z = THREE.MathUtils.lerp(group.current.position.z, 1.6, 0.045);
+      group.current.position.z = THREE.MathUtils.lerp(group.current.position.z, 1.8, 0.09);
       group.current.scale.setScalar(
-        THREE.MathUtils.lerp(group.current.scale.x, 2.4, 0.045),
+        THREE.MathUtils.lerp(group.current.scale.x, 2.55, 0.09),
       );
     }
   });
@@ -167,16 +167,16 @@ function CameraRig({ entering }: { entering: boolean }) {
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     if (entering) {
-      camera.position.lerp(new THREE.Vector3(0, 0.95, 1.15), 0.045);
+      camera.position.lerp(new THREE.Vector3(0, 0.95, 1.05), 0.09);
       camera.lookAt(0, 0.85, 0);
       return;
     }
     if (start.current) {
-      camera.position.z = THREE.MathUtils.lerp(camera.position.z, 4.6, 0.03);
-      if (Math.abs(camera.position.z - 4.6) < 0.05) start.current = false;
+      camera.position.z = THREE.MathUtils.lerp(camera.position.z, 4.4, 0.06);
+      if (Math.abs(camera.position.z - 4.4) < 0.05) start.current = false;
     }
-    camera.position.x = Math.sin(t * 0.18) * 0.35;
-    camera.position.y = 1.25 + Math.sin(t * 0.22) * 0.12;
+    camera.position.x = Math.sin(t * 0.35) * 0.28;
+    camera.position.y = 1.25 + Math.sin(t * 0.4) * 0.1;
     camera.lookAt(0, 0.45, 0);
   });
 

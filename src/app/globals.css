@@ -325,7 +325,7 @@ body.no-cursor button {
     radial-gradient(ellipse 70% 50% at 80% 30%, rgba(139, 92, 246, 0.16), transparent 50%),
     radial-gradient(ellipse 60% 45% at 50% 80%, rgba(255, 61, 154, 0.08), transparent 55%),
     #030303;
-  animation: intro-mesh-shift 14s ease-in-out infinite alternate;
+  animation: intro-mesh-shift 8s ease-in-out infinite alternate;
 }
 
 @keyframes intro-mesh-shift {
@@ -353,7 +353,7 @@ body.no-cursor button {
   left: -10%;
   top: 10%;
   background: rgba(79, 140, 255, 0.35);
-  animation: intro-aurora-a 12s ease-in-out infinite;
+  animation: intro-aurora-a 7s ease-in-out infinite;
 }
 
 .intro-aurora-b {
@@ -362,7 +362,7 @@ body.no-cursor button {
   right: -5%;
   bottom: 5%;
   background: rgba(139, 92, 246, 0.32);
-  animation: intro-aurora-b 15s ease-in-out infinite;
+  animation: intro-aurora-b 9s ease-in-out infinite;
 }
 
 .intro-aurora-c {
@@ -371,7 +371,7 @@ body.no-cursor button {
   left: 40%;
   top: 40%;
   background: rgba(255, 61, 154, 0.16);
-  animation: intro-aurora-c 10s ease-in-out infinite;
+  animation: intro-aurora-c 6s ease-in-out infinite;
 }
 
 @keyframes intro-aurora-a {

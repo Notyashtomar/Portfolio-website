@@ -8,11 +8,11 @@ type Props = {
 };
 
 export function ScreenUI({ progress }: Props) {
-  const showNav = progress > 12;
-  const showTitle = progress > 28;
-  const showCards = progress > 48;
-  const showCta = progress > 68;
-  const showGlow = progress > 40;
+  const showNav = progress > 8;
+  const showTitle = progress > 18;
+  const showCards = progress > 32;
+  const showCta = progress > 48;
+  const showGlow = progress > 22;
 
   return (
     <div className="relative h-full min-h-[180px] w-full overflow-hidden bg-[#050508] text-white">
