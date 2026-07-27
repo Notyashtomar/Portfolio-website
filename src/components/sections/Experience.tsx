@@ -4,7 +4,6 @@ import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { useEffect, useMemo, useRef } from "react";
 import { gsap, registerGsap } from "@/lib/gsap";
 import { experience } from "@/data/resume";
-import { PremiumCard } from "@/components/ui/PremiumCard";
 import { SplitReveal } from "@/components/motion/SplitReveal";
 import { usePerfFlags } from "@/components/providers/Providers";
 
@@ -269,32 +268,58 @@ export function Experience() {
                   duration: 0.7,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="relative md:pl-12"
+                className="group/exp relative md:pl-12"
               >
-                <div className="absolute left-0 top-10 hidden h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-accent-blue bg-[#030303] shadow-[0_0_24px_rgba(79,140,255,0.8)] md:left-5 md:block" />
+                <div className="absolute left-0 top-10 hidden h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-accent-blue bg-[#030303] shadow-[0_0_24px_rgba(79,140,255,0.8)] transition duration-300 group-hover/exp:scale-125 group-hover/exp:shadow-[0_0_32px_rgba(79,140,255,1)] group-focus-within/exp:scale-125 md:left-5 md:block" />
 
-                <PremiumCard tilt={8}>
-                  <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-accent-blue">
-                    {role.period}
-                  </p>
-                  <h3 className="font-display mt-3 text-2xl font-semibold text-white sm:text-3xl md:text-4xl">
-                    {role.company}
-                  </h3>
-                  <p className="font-body mt-2 text-muted">{role.role}</p>
-                  <ul className="mt-8 space-y-4">
-                    {role.highlights.map((item, hi) => (
-                      <li
-                        key={item}
-                        className="font-body flex gap-4 border-t border-white/6 pt-4 text-sm leading-[1.75] text-muted first:border-t-0 first:pt-0"
-                      >
-                        <span className="font-sans text-[10px] text-accent-gold/80">
-                          {String(hi + 1).padStart(2, "0")}
-                        </span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </PremiumCard>
+                <motion.article
+                  tabIndex={0}
+                  data-cursor="interactive"
+                  whileHover={{ scale: 1.02, y: -4 }}
+                  whileFocus={{ scale: 1.02, y: -4 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="relative overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.025] p-6 outline-none transition-[border-color,box-shadow,background-color] duration-300 ease-out hover:border-accent-blue/40 hover:bg-white/[0.045] hover:shadow-[0_24px_70px_rgba(79,140,255,0.18),0_0_40px_rgba(139,92,246,0.12)] focus-visible:border-accent-blue/40 focus-visible:shadow-[0_24px_70px_rgba(79,140,255,0.18)] sm:p-8"
+                >
+                  <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-accent-blue/0 blur-3xl transition duration-300 ease-out group-hover/exp:bg-accent-blue/30 group-focus-within/exp:bg-accent-blue/30" />
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 ease-out group-hover/exp:opacity-100 group-focus-within/exp:opacity-100"
+                    style={{
+                      background:
+                        "radial-gradient(500px circle at 15% 0%, rgba(79,140,255,0.16), transparent 55%)",
+                    }}
+                  />
+
+                  <div className="relative z-10">
+                    <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-accent-blue">
+                      {role.period}
+                    </p>
+                    <h3 className="font-display mt-3 text-2xl font-semibold text-white transition duration-300 group-hover/exp:text-shimmer sm:text-3xl md:text-4xl">
+                      {role.company}
+                    </h3>
+                    <p className="font-body mt-2 text-muted">{role.role}</p>
+
+                    <p className="font-sans mt-6 text-[10px] uppercase tracking-[0.28em] text-white/30 transition duration-300 group-hover/exp:opacity-0 group-focus-within/exp:opacity-0 [@media(hover:none)]:hidden">
+                      Hover for details
+                    </p>
+
+                    <ul className="mt-0 max-h-0 space-y-0 overflow-hidden opacity-0 translate-y-[10px] transition-all duration-300 ease-out group-hover/exp:mt-8 group-hover/exp:max-h-[480px] group-hover/exp:translate-y-0 group-hover/exp:opacity-100 group-hover/exp:space-y-4 group-focus-within/exp:mt-8 group-focus-within/exp:max-h-[480px] group-focus-within/exp:translate-y-0 group-focus-within/exp:opacity-100 group-focus-within/exp:space-y-4 [@media(hover:none)]:mt-8 [@media(hover:none)]:max-h-[480px] [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100 [@media(hover:none)]:space-y-4">
+                      {role.highlights.map((item, hi) => (
+                        <li
+                          key={item}
+                          className="font-body flex gap-4 border-t border-white/6 pt-4 text-sm leading-[1.75] text-muted first:border-t-0 first:pt-0"
+                          style={{
+                            transitionDelay: `${80 + hi * 40}ms`,
+                          }}
+                        >
+                          <span className="font-sans text-[10px] text-accent-gold/80">
+                            {String(hi + 1).padStart(2, "0")}
+                          </span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.article>
               </motion.div>
             ))}
           </div>
