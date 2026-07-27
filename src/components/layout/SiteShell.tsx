@@ -18,11 +18,10 @@ const CinematicIntro = dynamic(
 function ShellInner({ children }: { children: ReactNode }) {
   useLenisGsap();
   const { enableCursor } = usePerfFlags();
-  const [ready, setReady] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
 
   useEffect(() => {
-    // Lock scroll during intro
     if (showIntro) {
       document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
@@ -36,25 +35,34 @@ function ShellInner({ children }: { children: ReactNode }) {
     };
   }, [showIntro]);
 
+  const onReveal = useCallback(() => {
+    setRevealed(true);
+  }, []);
+
   const onIntroComplete = useCallback(() => {
     setShowIntro(false);
-    requestAnimationFrame(() => setReady(true));
+    setRevealed(true);
   }, []);
 
   return (
     <>
-      {showIntro ? <CinematicIntro onComplete={onIntroComplete} /> : null}
+      {showIntro ? (
+        <CinematicIntro onReveal={onReveal} onComplete={onIntroComplete} />
+      ) : null}
 
       <div
-        className={`relative min-h-full transition-[opacity,transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          ready
-            ? "pointer-events-auto translate-y-0 scale-100 opacity-100 blur-0"
-            : "pointer-events-none translate-y-2 scale-[1.01] opacity-0 blur-[6px]"
+        className={`relative min-h-full will-change-[opacity,transform] ${
+          revealed
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
         }`}
+        style={{
+          transition: "opacity 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
       >
         <AmbientBackground />
         <div className="noise" aria-hidden />
-        {enableCursor && ready ? <CustomCursor /> : null}
+        {enableCursor && revealed ? <CustomCursor /> : null}
         <Navigation />
         <div className="relative z-10">{children}</div>
         <EasterEggs />

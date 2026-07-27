@@ -26,7 +26,7 @@ function MacBook({
 }: {
   progress: number;
   entering: boolean;
-  mouse: React.MutableRefObject<{ x: number; y: number }>;
+  mouse: MutableRefObject<{ x: number; y: number }>;
 }) {
   const group = useRef<THREE.Group>(null);
   const screen = useRef<THREE.Group>(null);
@@ -37,36 +37,37 @@ function MacBook({
     const t = state.clock.elapsedTime;
     if (!group.current) return;
 
-    target.set(mouse.current.x * 0.35, mouse.current.y * 0.2);
-    group.current.rotation.y = THREE.MathUtils.lerp(
-      group.current.rotation.y,
-      target.x + Math.sin(t * 0.25) * 0.08,
-      0.05,
-    );
-    group.current.rotation.x = THREE.MathUtils.lerp(
-      group.current.rotation.x,
-      -0.18 + target.y + Math.sin(t * 0.35) * 0.04,
-      0.05,
-    );
+    if (!entering) {
+      target.set(mouse.current.x * 0.35, mouse.current.y * 0.2);
+      group.current.rotation.y = THREE.MathUtils.lerp(
+        group.current.rotation.y,
+        target.x + Math.sin(t * 0.25) * 0.08,
+        0.05,
+      );
+      group.current.rotation.x = THREE.MathUtils.lerp(
+        group.current.rotation.x,
+        -0.18 + target.y + Math.sin(t * 0.35) * 0.04,
+        0.05,
+      );
+    } else {
+      // Settle upright for the fly-in
+      group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, 0, 0.08);
+      group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, -0.08, 0.08);
+    }
 
     if (screen.current) {
-      const open = entering ? 0.08 : 0.42 + Math.sin(t * 0.4) * 0.01;
+      const open = entering ? 0.12 : 0.42 + Math.sin(t * 0.4) * 0.01;
       screen.current.rotation.x = THREE.MathUtils.lerp(
         screen.current.rotation.x,
         -Math.PI * open,
-        0.06,
+        0.07,
       );
     }
 
     if (edgeMat.current) {
-      edgeMat.current.emissiveIntensity = 0.35 + progress / 180 + Math.sin(t * 2) * 0.08;
-    }
-
-    if (entering) {
-      group.current.position.z = THREE.MathUtils.lerp(group.current.position.z, 1.8, 0.09);
-      group.current.scale.setScalar(
-        THREE.MathUtils.lerp(group.current.scale.x, 2.55, 0.09),
-      );
+      edgeMat.current.emissiveIntensity = entering
+        ? THREE.MathUtils.lerp(edgeMat.current.emissiveIntensity, 1.1, 0.06)
+        : 0.35 + progress / 180 + Math.sin(t * 2) * 0.08;
     }
   });
 
@@ -158,19 +159,27 @@ function MacBook({
 function CameraRig({ entering }: { entering: boolean }) {
   const { camera } = useThree();
   const start = useRef(true);
+  const enterT = useRef(0);
 
   useEffect(() => {
     camera.position.set(0, 1.35, 5.2);
     camera.lookAt(0, 0.5, 0);
   }, [camera]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
+
     if (entering) {
-      camera.position.lerp(new THREE.Vector3(0, 0.95, 1.05), 0.09);
-      camera.lookAt(0, 0.85, 0);
+      enterT.current = Math.min(1, enterT.current + delta / 1.15);
+      const e = 1 - Math.pow(1 - enterT.current, 3);
+      camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0, 0.1);
+      camera.position.y = THREE.MathUtils.lerp(1.25, 0.92, e);
+      camera.position.z = THREE.MathUtils.lerp(4.4, 1.35, e);
+      camera.lookAt(0, 0.75 + e * 0.15, 0);
       return;
     }
+
+    enterT.current = 0;
     if (start.current) {
       camera.position.z = THREE.MathUtils.lerp(camera.position.z, 4.4, 0.06);
       if (Math.abs(camera.position.z - 4.4) < 0.05) start.current = false;
@@ -201,8 +210,13 @@ function SceneInner({ progress, entering, mouse, lite }: SceneProps) {
 
       <CameraRig entering={entering} />
 
-      <Float speed={1.2} rotationIntensity={0.15} floatIntensity={0.35}>
+      <Float
+        speed={entering ? 0 : 1.2}
+        rotationIntensity={entering ? 0 : 0.15}
+        floatIntensity={entering ? 0 : 0.35}
+      >
         <PresentationControls
+          enabled={!entering}
           global={false}
           snap
           speed={0.8}
@@ -230,9 +244,9 @@ function SceneInner({ progress, entering, mouse, lite }: SceneProps) {
       {!lite ? (
         <EffectComposer>
           <Bloom
-            intensity={entering ? 1.4 : 0.55}
-            luminanceThreshold={0.55}
-            luminanceSmoothing={0.4}
+            intensity={entering ? 0.85 : 0.5}
+            luminanceThreshold={0.6}
+            luminanceSmoothing={0.45}
             mipmapBlur
           />
         </EffectComposer>
