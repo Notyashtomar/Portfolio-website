@@ -29,12 +29,14 @@ export function PremiumCard({
   const px = useMotionValue(0.5);
   const py = useMotionValue(0.5);
   const rotateX = useSpring(useTransform(py, [0, 1], [tilt, -tilt]), {
-    stiffness: 220,
-    damping: 26,
+    stiffness: 280,
+    damping: 28,
+    mass: 0.6,
   });
   const rotateY = useSpring(useTransform(px, [0, 1], [-tilt, tilt]), {
-    stiffness: 220,
-    damping: 26,
+    stiffness: 280,
+    damping: 28,
+    mass: 0.6,
   });
   const glowX = useTransform(px, (v) => `${v * 100}%`);
   const glowY = useTransform(py, (v) => `${v * 100}%`);
@@ -77,7 +79,7 @@ export function PremiumCard({
       }
       className={cn(
         "premium-glass group relative overflow-hidden rounded-[28px] p-6 md:p-8",
-        "transition-shadow duration-300 hover:shadow-[0_24px_80px_rgba(79,140,255,0.1)]",
+        "will-change-transform transition-shadow duration-300 hover:shadow-[0_24px_80px_rgba(79,140,255,0.1)]",
         className,
       )}
       data-cursor="interactive"

@@ -11,11 +11,12 @@ export function useLenisGsap() {
   useEffect(() => {
     registerGsap();
     const lenis = new Lenis({
-      lerp: lite ? 0.14 : 0.11,
-      duration: lite ? 0.9 : 1.05,
+      lerp: lite ? 0.16 : 0.12,
+      duration: lite ? 0.85 : 1,
       smoothWheel: true,
       syncTouch: false,
-      wheelMultiplier: lite ? 1.15 : 1,
+      wheelMultiplier: lite ? 1.1 : 0.95,
+      touchMultiplier: 1.4,
     });
 
     lenis.on("scroll", ScrollTrigger.update);

@@ -44,15 +44,14 @@ function ProjectCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 72, rotateX: 10 }}
-      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-      viewport={{ once: true, amount: 0.25 }}
+      initial={{ opacity: 0, y: 48 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
       transition={{
-        delay: index * 0.12,
-        duration: 0.9,
+        delay: index * 0.1,
+        duration: 0.75,
         ease: [0.16, 1, 0.3, 1],
       }}
-      style={{ perspective: 1400 }}
       className="h-full"
     >
       <Link
@@ -64,12 +63,12 @@ function ProjectCard({
           ref={ref}
           onMouseMove={onMove}
           onMouseLeave={onLeave}
-          whileHover={lite ? undefined : { y: -10, scale: 1.015 }}
-          transition={{ type: "spring", stiffness: 260, damping: 22 }}
+          whileHover={lite ? undefined : { y: -8 }}
+          transition={{ type: "spring", stiffness: 320, damping: 26, mass: 0.7 }}
           className={cn(
-            "group relative flex h-full min-h-[340px] flex-col overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.025] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[440px]",
-            "transition-[border-color,box-shadow] duration-500 hover:border-accent-blue/35",
-            "hover:shadow-[0_30px_90px_rgba(79,140,255,0.16),0_0_0_1px_rgba(79,140,255,0.08)]",
+            "group interactive-card relative flex h-full min-h-[340px] flex-col overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.025] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[440px]",
+            "transition-[border-color,box-shadow] duration-400 hover:border-accent-blue/35",
+            "hover:shadow-[0_30px_90px_rgba(79,140,255,0.14),0_0_0_1px_rgba(79,140,255,0.08)]",
           )}
         >
           {!lite ? (

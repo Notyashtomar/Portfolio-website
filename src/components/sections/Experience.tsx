@@ -1,11 +1,13 @@
 "use client";
 
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap, registerGsap } from "@/lib/gsap";
 import { experience } from "@/data/resume";
 import { SplitReveal } from "@/components/motion/SplitReveal";
 import { usePerfFlags } from "@/components/providers/Providers";
+import { easeOut, springSoft } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 const FLOAT_NODES = [
   { label: "SQL", x: 18, y: 16, delay: 0 },
@@ -19,24 +21,24 @@ const FLOAT_NODES = [
 function ExperienceAtmosphere() {
   const { lite } = usePerfFlags();
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: false, amount: 0.2 });
+  const inView = useInView(ref, { once: false, amount: 0.15 });
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
   });
-  const ySlow = useTransform(scrollYProgress, [0, 1], [40, -60]);
-  const yFast = useTransform(scrollYProgress, [0, 1], [80, -100]);
-  const rotate = useTransform(scrollYProgress, [0, 1], [0, 40]);
+  const ySlow = useTransform(scrollYProgress, [0, 1], [30, -50]);
+  const yFast = useTransform(scrollYProgress, [0, 1], [60, -80]);
+  const rotate = useTransform(scrollYProgress, [0, 1], [0, 28]);
 
   const particles = useMemo(
     () =>
-      Array.from({ length: lite ? 8 : 18 }, (_, i) => ({
+      Array.from({ length: lite ? 6 : 14 }, (_, i) => ({
         id: i,
         left: 8 + ((i * 37) % 84),
         top: 6 + ((i * 53) % 88),
         size: 1.5 + (i % 3),
-        duration: 4 + (i % 5),
-        delay: (i % 7) * 0.35,
+        duration: 4.5 + (i % 5),
+        delay: (i % 7) * 0.3,
       })),
     [lite],
   );
@@ -47,95 +49,60 @@ function ExperienceAtmosphere() {
       aria-hidden
       className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] overflow-hidden lg:block"
     >
-      {/* Soft color fields */}
       <motion.div
         style={{ y: ySlow }}
-        className="absolute right-[-10%] top-[8%] h-[42%] w-[70%] rounded-full bg-accent-blue/15 blur-[90px]"
+        className="absolute right-[-10%] top-[8%] h-[42%] w-[70%] rounded-full bg-accent-blue/12 blur-[90px] will-change-transform"
       />
       <motion.div
         style={{ y: yFast }}
-        className="absolute bottom-[6%] right-[4%] h-[38%] w-[58%] rounded-full bg-accent-violet/18 blur-[100px]"
-      />
-      <motion.div
-        className="absolute right-[18%] top-[42%] h-40 w-40 rounded-full bg-accent-magenta/10 blur-[70px]"
-        animate={
-          inView && !lite
-            ? { opacity: [0.25, 0.55, 0.25], scale: [0.9, 1.15, 0.9] }
-            : { opacity: 0.3 }
-        }
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-[6%] right-[4%] h-[38%] w-[58%] rounded-full bg-accent-violet/14 blur-[100px] will-change-transform"
       />
 
-      {/* Orbital rings */}
       <motion.div
         style={{ rotate }}
-        className="absolute right-[8%] top-[18%] h-[320px] w-[320px]"
+        className="absolute right-[8%] top-[18%] h-[300px] w-[300px] will-change-transform"
       >
         <motion.div
           className="absolute inset-0 rounded-full border border-accent-blue/15"
           animate={inView && !lite ? { rotate: 360 } : {}}
-          transition={{ duration: 42, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 48, repeat: Infinity, ease: "linear" }}
         />
         <motion.div
-          className="absolute inset-8 rounded-full border border-dashed border-accent-violet/20"
+          className="absolute inset-10 rounded-full border border-dashed border-accent-violet/18"
           animate={inView && !lite ? { rotate: -360 } : {}}
-          transition={{ duration: 56, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
         />
-        <motion.div
-          className="absolute inset-16 rounded-full border border-white/8"
-          animate={
-            inView && !lite
-              ? { scale: [1, 1.06, 1], opacity: [0.35, 0.7, 0.35] }
-              : {}
-          }
-          transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-blue shadow-[0_0_24px_rgba(79,140,255,0.9)]"
-          animate={
-            inView && !lite
-              ? { scale: [1, 1.35, 1], opacity: [0.7, 1, 0.7] }
-              : {}
-          }
-          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Orbiting dots */}
+        <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-blue shadow-[0_0_20px_rgba(79,140,255,0.85)]" />
         {!lite
-          ? [0, 1, 2].map((i) => (
+          ? [0, 1].map((i) => (
               <motion.div
                 key={i}
                 className="absolute inset-0"
                 animate={inView ? { rotate: 360 } : {}}
                 transition={{
-                  duration: 16 + i * 5,
+                  duration: 18 + i * 6,
                   repeat: Infinity,
                   ease: "linear",
-                  delay: i * 0.4,
                 }}
               >
                 <span
-                  className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 rounded-full bg-white/75 shadow-[0_0_12px_rgba(255,255,255,0.65)]"
-                  style={{ marginTop: i === 1 ? 32 : i === 2 ? 64 : 0 }}
+                  className="absolute left-1/2 top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-white/70"
+                  style={{ marginTop: i * 40 }}
                 />
               </motion.div>
             ))
           : null}
       </motion.div>
 
-      {/* Floating labels */}
       {FLOAT_NODES.map((node) => (
         <motion.div
           key={node.label}
-          className="absolute rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-sans text-[9px] uppercase tracking-[0.22em] text-white/55 backdrop-blur-md"
+          className="absolute rounded-full border border-white/10 bg-black/45 px-3 py-1.5 font-sans text-[9px] uppercase tracking-[0.22em] text-white/50 backdrop-blur-sm"
           style={{ left: `${node.x}%`, top: `${node.y}%` }}
-          initial={{ opacity: 0, y: 12 }}
           animate={
-            inView
-              ? {
-                  opacity: [0.35, 0.85, 0.35],
-                  y: [0, -10, 0],
-                }
-              : { opacity: 0 }
+            inView && !lite
+              ? { opacity: [0.3, 0.75, 0.3], y: [0, -8, 0] }
+              : { opacity: 0.45 }
           }
           transition={{
             delay: node.delay,
@@ -148,11 +115,10 @@ function ExperienceAtmosphere() {
         </motion.div>
       ))}
 
-      {/* Particle field */}
       {particles.map((p) => (
         <motion.span
           key={p.id}
-          className="absolute rounded-full bg-white/50"
+          className="absolute rounded-full bg-white/45"
           style={{
             left: `${p.left}%`,
             top: `${p.top}%`,
@@ -161,10 +127,7 @@ function ExperienceAtmosphere() {
           }}
           animate={
             inView
-              ? {
-                  opacity: [0.15, 0.8, 0.15],
-                  y: [0, -18, 0],
-                }
+              ? { opacity: [0.12, 0.7, 0.12], y: [0, -14, 0] }
               : { opacity: 0.2 }
           }
           transition={{
@@ -175,29 +138,128 @@ function ExperienceAtmosphere() {
           }}
         />
       ))}
-
-      {/* Vertical data stream lines */}
-      {!lite
-        ? [12, 28, 46, 64, 82].map((left, i) => (
-            <motion.span
-              key={left}
-              className="absolute top-0 h-full w-px bg-gradient-to-b from-transparent via-accent-blue/20 to-transparent"
-              style={{ left: `${left}%` }}
-              animate={
-                inView
-                  ? { opacity: [0.1, 0.45, 0.1], scaleY: [0.7, 1, 0.7] }
-                  : {}
-              }
-              transition={{
-                delay: i * 0.25,
-                duration: 3.8 + i * 0.2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          ))
-        : null}
     </div>
+  );
+}
+
+function ExperienceCard({
+  role,
+  index,
+}: {
+  role: (typeof experience)[number];
+  index: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const [canHover, setCanHover] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setCanHover(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  const expanded = !canHover || open;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ delay: index * 0.1, duration: 0.65, ease: easeOut }}
+      className="relative md:pl-12"
+      onMouseEnter={() => canHover && setOpen(true)}
+      onMouseLeave={() => canHover && setOpen(false)}
+      onFocusCapture={() => setOpen(true)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
+      }}
+    >
+      <div
+        className={cn(
+          "absolute left-0 top-10 hidden h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-accent-blue bg-[#030303] transition duration-300 md:left-5 md:block",
+          expanded
+            ? "scale-125 shadow-[0_0_28px_rgba(79,140,255,1)]"
+            : "shadow-[0_0_20px_rgba(79,140,255,0.7)]",
+        )}
+      />
+
+      <motion.article
+        tabIndex={0}
+        data-cursor="interactive"
+        animate={expanded && canHover ? { y: -6 } : { y: 0 }}
+        transition={springSoft}
+        className={cn(
+          "interactive-card relative overflow-hidden rounded-[28px] border bg-white/[0.025] p-6 outline-none sm:p-8",
+          expanded
+            ? "border-accent-blue/40 bg-white/[0.045] shadow-[0_24px_70px_rgba(79,140,255,0.16)]"
+            : "border-white/8",
+        )}
+      >
+        <div
+          className={cn(
+            "pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-accent-blue/25 blur-3xl transition-opacity duration-300",
+            expanded ? "opacity-100" : "opacity-0",
+          )}
+        />
+
+        <div className="relative z-10">
+          <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-accent-blue">
+            {role.period}
+          </p>
+          <h3 className="font-display mt-3 text-2xl font-semibold text-white sm:text-3xl md:text-4xl">
+            {role.company}
+          </h3>
+          <p className="font-body mt-2 text-muted">{role.role}</p>
+
+          {canHover ? (
+            <p
+              className={cn(
+                "font-sans mt-5 text-[10px] uppercase tracking-[0.28em] text-white/30 transition-opacity duration-250",
+                expanded ? "pointer-events-none opacity-0" : "opacity-100",
+              )}
+            >
+              Hover for details
+            </p>
+          ) : null}
+
+          <div
+            className={cn(
+              "grid transition-[grid-template-rows,margin] duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]",
+              expanded ? "mt-6 grid-rows-[1fr]" : "mt-0 grid-rows-[0fr]",
+            )}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <ul
+                className={cn(
+                  "space-y-4 transition-opacity duration-300",
+                  expanded ? "opacity-100" : "opacity-0",
+                )}
+              >
+                {role.highlights.map((item, hi) => (
+                  <li
+                    key={item}
+                    className="font-body flex gap-4 border-t border-white/6 pt-4 text-sm leading-[1.75] text-muted first:border-t-0 first:pt-0"
+                    style={{
+                      transition: "opacity 300ms ease, transform 300ms ease",
+                      transitionDelay: expanded ? `${60 + hi * 45}ms` : "0ms",
+                      opacity: expanded ? 1 : 0,
+                      transform: expanded ? "translateY(0)" : "translateY(8px)",
+                    }}
+                  >
+                    <span className="font-sans shrink-0 text-[10px] text-accent-gold/80">
+                      {String(hi + 1).padStart(2, "0")}
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </motion.article>
+    </motion.div>
   );
 }
 
@@ -221,8 +283,8 @@ export function Experience() {
           scrollTrigger: {
             trigger: section,
             start: "top 70%",
-            end: "bottom 30%",
-            scrub: 1,
+            end: "bottom 25%",
+            scrub: 1.2,
           },
         },
       );
@@ -253,74 +315,12 @@ export function Experience() {
         <div className="relative lg:max-w-[54%]">
           <div
             ref={lineRef}
-            className="absolute left-[7px] top-0 hidden h-full w-px bg-gradient-to-b from-accent-blue via-accent-violet/50 to-transparent md:left-5 md:block"
+            className="absolute left-[7px] top-0 hidden h-full w-px origin-top bg-gradient-to-b from-accent-blue via-accent-violet/50 to-transparent md:left-5 md:block"
           />
 
           <div className="space-y-8 md:space-y-10">
             {experience.map((role, index) => (
-              <motion.div
-                key={role.id}
-                initial={{ opacity: 0, x: -28 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{
-                  delay: index * 0.12,
-                  duration: 0.7,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                className="group/exp relative md:pl-12"
-              >
-                <div className="absolute left-0 top-10 hidden h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-accent-blue bg-[#030303] shadow-[0_0_24px_rgba(79,140,255,0.8)] transition duration-300 group-hover/exp:scale-125 group-hover/exp:shadow-[0_0_32px_rgba(79,140,255,1)] group-focus-within/exp:scale-125 md:left-5 md:block" />
-
-                <motion.article
-                  tabIndex={0}
-                  data-cursor="interactive"
-                  whileHover={{ scale: 1.02, y: -4 }}
-                  whileFocus={{ scale: 1.02, y: -4 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="relative overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.025] p-6 outline-none transition-[border-color,box-shadow,background-color] duration-300 ease-out hover:border-accent-blue/40 hover:bg-white/[0.045] hover:shadow-[0_24px_70px_rgba(79,140,255,0.18),0_0_40px_rgba(139,92,246,0.12)] focus-visible:border-accent-blue/40 focus-visible:shadow-[0_24px_70px_rgba(79,140,255,0.18)] sm:p-8"
-                >
-                  <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-accent-blue/0 blur-3xl transition duration-300 ease-out group-hover/exp:bg-accent-blue/30 group-focus-within/exp:bg-accent-blue/30" />
-                  <div
-                    className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 ease-out group-hover/exp:opacity-100 group-focus-within/exp:opacity-100"
-                    style={{
-                      background:
-                        "radial-gradient(500px circle at 15% 0%, rgba(79,140,255,0.16), transparent 55%)",
-                    }}
-                  />
-
-                  <div className="relative z-10">
-                    <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-accent-blue">
-                      {role.period}
-                    </p>
-                    <h3 className="font-display mt-3 text-2xl font-semibold text-white transition duration-300 group-hover/exp:text-shimmer sm:text-3xl md:text-4xl">
-                      {role.company}
-                    </h3>
-                    <p className="font-body mt-2 text-muted">{role.role}</p>
-
-                    <p className="font-sans mt-6 text-[10px] uppercase tracking-[0.28em] text-white/30 transition duration-300 group-hover/exp:opacity-0 group-focus-within/exp:opacity-0 [@media(hover:none)]:hidden">
-                      Hover for details
-                    </p>
-
-                    <ul className="mt-0 max-h-0 space-y-0 overflow-hidden opacity-0 translate-y-[10px] transition-all duration-300 ease-out group-hover/exp:mt-8 group-hover/exp:max-h-[480px] group-hover/exp:translate-y-0 group-hover/exp:opacity-100 group-hover/exp:space-y-4 group-focus-within/exp:mt-8 group-focus-within/exp:max-h-[480px] group-focus-within/exp:translate-y-0 group-focus-within/exp:opacity-100 group-focus-within/exp:space-y-4 [@media(hover:none)]:mt-8 [@media(hover:none)]:max-h-[480px] [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100 [@media(hover:none)]:space-y-4">
-                      {role.highlights.map((item, hi) => (
-                        <li
-                          key={item}
-                          className="font-body flex gap-4 border-t border-white/6 pt-4 text-sm leading-[1.75] text-muted first:border-t-0 first:pt-0"
-                          style={{
-                            transitionDelay: `${80 + hi * 40}ms`,
-                          }}
-                        >
-                          <span className="font-sans text-[10px] text-accent-gold/80">
-                            {String(hi + 1).padStart(2, "0")}
-                          </span>
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </motion.article>
-              </motion.div>
+              <ExperienceCard key={role.id} role={role} index={index} />
             ))}
           </div>
         </div>
