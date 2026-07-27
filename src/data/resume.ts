@@ -321,14 +321,32 @@ export const certifications = [
   {
     title: "Financial Modelling & Business Analysis",
     issuer: "PwC",
+    date: "",
+    credentialUrl: "",
   },
   {
     title: "Data Analytics & Visualization",
     issuer: "Macquarie University",
+    date: "",
+    credentialUrl: "",
   },
   {
     title: "Introduction to Corporate Finance",
     issuer: "University of Pennsylvania",
+    date: "",
+    credentialUrl: "",
+  },
+  {
+    title: "Leadership Skills",
+    issuer: "Indian Institute of Management Ahmedabad (IIMA)",
+    date: "",
+    credentialUrl: "",
+  },
+  {
+    title: "How Software Ate Finance",
+    issuer: "Stanford University",
+    date: "",
+    credentialUrl: "",
   },
 ] as const;
 
@@ -366,7 +384,7 @@ export const achievements = [
     value: certifications.length,
     suffix: "",
     label: "Certifications",
-    detail: "PwC · Macquarie · University of Pennsylvania",
+    detail: "PwC · Macquarie · UPenn · IIMA · Stanford",
   },
 ] as const;
 

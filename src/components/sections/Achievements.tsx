@@ -76,6 +76,23 @@ export function Achievements() {
                   <p className="font-sans mt-3 text-[10px] uppercase tracking-[0.2em] text-muted">
                     {cert.issuer}
                   </p>
+                  {cert.date ? (
+                    <p className="font-sans mt-2 text-[10px] uppercase tracking-[0.18em] text-white/35">
+                      {cert.date}
+                    </p>
+                  ) : null}
+                  {cert.credentialUrl ? (
+                    <a
+                      href={cert.credentialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-cursor="interactive"
+                      className="font-sans mt-4 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-accent-blue transition hover:text-white"
+                    >
+                      View Credential
+                      <span aria-hidden>↗</span>
+                    </a>
+                  ) : null}
                 </PremiumCard>
               ))}
             </div>
