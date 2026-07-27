@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { focusAreas, profile } from "@/data/resume";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { PremiumCard } from "@/components/ui/PremiumCard";
@@ -52,14 +53,38 @@ export function About() {
 
         <div className="mt-12 grid gap-3 sm:mt-20 sm:grid-cols-2 lg:grid-cols-3">
           {focusAreas.map((area, i) => (
-            <PremiumCard key={area} tilt={4} className="group">
-              <span className="font-sans text-[10px] uppercase tracking-[0.35em] text-accent-violet/70">
+            <motion.article
+              key={area.title}
+              data-cursor="interactive"
+              tabIndex={0}
+              whileHover={{ scale: 1.02 }}
+              whileFocus={{ scale: 1.02 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="group relative h-[220px] overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.025] p-6 outline-none transition-[border-color,box-shadow,background-color] duration-300 ease-out hover:border-accent-violet/40 hover:bg-white/[0.05] hover:shadow-[0_20px_60px_rgba(139,92,246,0.22),0_0_40px_rgba(139,92,246,0.12)] focus-visible:border-accent-violet/40 focus-visible:shadow-[0_20px_60px_rgba(139,92,246,0.22)] sm:h-[240px] md:p-8"
+            >
+              <div className="pointer-events-none absolute -left-8 -top-10 h-36 w-36 rounded-full bg-accent-violet/0 blur-3xl transition duration-300 ease-out group-hover:bg-accent-violet/35 group-focus-within:bg-accent-violet/35" />
+              <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 ease-out group-hover:opacity-100 group-focus-within:opacity-100"
+                style={{
+                  background:
+                    "radial-gradient(420px circle at 18% 0%, rgba(139,92,246,0.18), transparent 55%)",
+                }}
+              />
+
+              <span className="relative z-10 font-sans text-[10px] uppercase tracking-[0.35em] text-accent-violet/70 transition duration-300 group-hover:text-accent-violet group-focus-within:text-accent-violet">
                 0{i + 1}
               </span>
-              <p className="font-display mt-4 text-xl text-white transition-transform duration-300 group-hover:translate-x-1 sm:text-2xl md:text-3xl">
-                {area}
-              </p>
-            </PremiumCard>
+
+              <div className="absolute inset-x-6 bottom-6 z-10 md:inset-x-8 md:bottom-8">
+                <p className="font-display text-xl text-white transition-transform duration-300 ease-out group-hover:-translate-y-14 group-focus-within:-translate-y-14 sm:text-2xl sm:group-hover:-translate-y-16 sm:group-focus-within:-translate-y-16 md:text-3xl">
+                  {area.title}
+                </p>
+
+                <p className="font-body absolute inset-x-0 bottom-0 text-sm leading-[1.7] text-white/65 opacity-0 translate-y-[10px] transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                  {area.description}
+                </p>
+              </div>
+            </motion.article>
           ))}
         </div>
       </div>

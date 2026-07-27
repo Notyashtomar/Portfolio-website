@@ -24,12 +24,36 @@ export const profile = {
 } as const;
 
 export const focusAreas = [
-  "Financial Analytics",
-  "MIS Reporting",
-  "Dashboard Development",
-  "SQL Automation",
-  "Financial Forecasting",
-  "Data Visualization",
+  {
+    title: "Financial Analytics",
+    description:
+      "Transform raw financial data into actionable insights through KPI tracking, trend analysis, and business intelligence.",
+  },
+  {
+    title: "MIS Reporting",
+    description:
+      "Automate daily, weekly, and monthly reports to improve operational visibility and decision-making.",
+  },
+  {
+    title: "Dashboard Development",
+    description:
+      "Design interactive dashboards using Power BI, Tableau, and Excel for real-time business monitoring.",
+  },
+  {
+    title: "SQL Automation",
+    description:
+      "Write optimized SQL queries, automate data extraction, and streamline reporting workflows.",
+  },
+  {
+    title: "Financial Forecasting",
+    description:
+      "Build forecasting models to estimate revenue, expenses, and business growth using historical data.",
+  },
+  {
+    title: "Data Visualization",
+    description:
+      "Present complex datasets with clean, intuitive charts and visuals that drive faster decisions.",
+  },
 ] as const;
 
 export const experience = [
