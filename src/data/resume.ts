@@ -1,5 +1,5 @@
 /**
- * Source of truth: Yash Bird Analyst (1).pdf
+ * Source of truth: Yash resume format.docx
  * Do not invent roles, metrics, employers, or projects beyond this file.
  */
 
@@ -7,29 +7,29 @@ export const profile = {
   name: "Yash Raj Singh Tomar",
   displayName: "YASH RAJ SINGH TOMAR",
   shortName: "Yash Tomar",
-  title: "Analyst",
+  title: "Data Analyst",
   location: "New Delhi",
   phone: "+91 9311973552",
   email: "yashtomar142001@gmail.com",
-  resumeFile: "/Yash-Raj-Singh-Tomar-Resume.pdf",
+  linkedin: "https://in.linkedin.com/in/yashraj-s-tomar200114",
+  resumeFile: "/Yash-Raj-Singh-Tomar-Resume.docx",
   roles: [
+    "Data Analyst",
+    "MIS Analyst",
     "Business Analyst",
     "Financial Analyst",
-    "MIS Analyst",
-    "Project Lead",
-    "Analyst",
   ],
   summary:
-    "Results-driven Project Lead and Financial Analyst with expertise in data analytics, financial modelling, and project management. Skilled in leading teams, optimizing workflows, and delivering impactful business solutions. Proven ability to turn complex data into actionable insights that drive operational efficiency.",
+    "Data Analyst with 2+ years of experience in financial analytics, MIS reporting, and process automation. Improved reporting efficiency by up to 40% using Advanced Excel, SQL, and Power BI. Skilled in transforming large datasets into actionable insights for cost control, forecasting, and business decisions.",
 } as const;
 
 export const focusAreas = [
-  "Business Analysis",
   "Financial Analytics",
-  "MIS",
-  "Project Leadership",
-  "Automation",
-  "Data Insights",
+  "MIS Reporting",
+  "Dashboard Development",
+  "SQL Automation",
+  "Financial Forecasting",
+  "Data Visualization",
 ] as const;
 
 export const experience = [
@@ -38,171 +38,163 @@ export const experience = [
     company: "Bird Group",
     role: "MIS Analyst",
     period: "Sep 2025 – Present",
-    location: "New Delhi",
+    location: "Delhi",
     highlights: [
-      "Ensured accuracy and timely processing of financial transactions.",
-      "Supported financial reporting and operational analysis.",
-      "Led cross-functional teams to improve workflow efficiency and project delivery.",
-      "Planned timelines, delegated tasks, and monitored progress to meet business goals.",
+      "Automated Excel-based financial reports and dashboards, improving reporting efficiency by 30%.",
+      "Partnered with cross-functional stakeholders to streamline reporting workflows and reduce manual effort by 25%.",
+      "Architected and optimized SQL-driven data pipelines processing 50K+ financial records, reducing data processing time by 35% while elevating KPI visibility and decision intelligence.",
     ],
   },
   {
     id: "wistful-finance",
     company: "Wistful Finance Pvt. Ltd.",
     role: "MIS Analyst",
-    period: "Sep 2024 – Aug 2025",
+    period: "Sep 2024 – Sep 2025",
     location: "New Delhi",
     highlights: [
-      "Collected, cleaned, and analyzed large financial datasets.",
-      "Identified trends, risks, and growth opportunities.",
-      "Supported management with data-driven insights.",
+      "Processed and analysed 50K+ financial records using SQL, Python, and Power BI, uncovering key performance trends that improved reporting efficiency by 25% and supported data-driven strategic decisions.",
+      "Engineered automated reporting solutions, reducing data processing turnaround time by 40% and significantly improving operational efficiency.",
+      "Delivered structured insights to senior management using Power BI and SQL, enabling faster strategic decision-making and improving operational efficiency by 20%.",
     ],
   },
   {
     id: "sla-consultants",
-    company: "SLA Consultants India",
+    company: "SLA Consultants",
     role: "Business Analyst Intern",
     period: "Jul 2024 – Sep 2024",
     location: "New Delhi",
     highlights: [
-      "Gathered and documented business requirements.",
-      "Prepared workflow diagrams and process documents.",
-      "Assisted in improving operational processes.",
+      "Gathered and documented business requirements in collaboration with cross-functional stakeholders, improving process clarity and reducing workflow inefficiencies by 20% using structured documentation and analysis in SQL and Microsoft Excel.",
     ],
   },
 ] as const;
 
 export const projects = [
   {
-    slug: "data-dashboard-development",
-    title: "Data Dashboard Development",
-    subtitle: "Excel & Power BI",
-    tagline: "Interactive leadership dashboards that compressed reporting cycles.",
+    slug: "financial-forecasting",
+    title: "Financial Forecasting Model",
+    subtitle: "Excel · Jan 2026",
+    tagline:
+      "Forecasting models on 50K+ records that lifted accuracy by 25%.",
     challenge:
-      "Reporting lived across fragmented spreadsheets, slowing decision cycles and making KPI visibility inconsistent for leadership.",
+      "Revenue trends and cost-saving opportunities were hard to isolate without structured forecasting across a large historical dataset.",
     solution:
-      "Built interactive dashboards with Pivot Tables, VBA, and Power BI so financial and operational metrics could be explored in one place.",
-    tech: ["Excel", "Pivot Tables", "VBA", "Power BI"],
+      "Designed and implemented financial forecasting models using advanced Microsoft Excel and SQL, analyzing 50K+ historical records to identify revenue trends and cost-saving opportunities.",
+    tech: ["Microsoft Excel", "SQL", "Forecasting Models"],
     architecture: [
-      "Source workbooks consolidated into structured Excel models",
-      "Pivot-driven summary layers for fast slicing",
-      "VBA automation for repeatable refresh workflows",
-      "Power BI visuals for leadership-ready storytelling",
+      "Historical financial records consolidated for trend analysis",
+      "Advanced Excel models for revenue and cost forecasting",
+      "SQL-backed analysis on 50K+ records",
+      "Outputs structured for strategic planning decisions",
     ],
     metrics: [
-      { value: "30%", label: "Faster reporting time" },
-      { value: "Excel + Power BI", label: "Delivery stack" },
-      { value: "Interactive", label: "Dashboard format" },
+      { value: "25%", label: "Forecast accuracy gain" },
+      { value: "50K+", label: "Historical records" },
+      { value: "Jan 2026", label: "Delivery" },
     ],
     impact:
-      "Improved reporting time by 30%, giving stakeholders clearer KPI visibility with less manual assembly.",
+      "Improved forecast accuracy by 25% and enabled data-driven strategic planning around revenue trends and cost-saving opportunities.",
     lessons: [
-      "Automation compounds when the underlying data model is clean.",
-      "Leadership dashboards succeed when exploration and clarity coexist.",
+      "Forecast quality depends on clean historical coverage.",
+      "Excel + SQL together make large-scale forecasting practical.",
+    ],
+  },
+  {
+    slug: "data-dashboard-development",
+    title: "Financial Dashboard",
+    subtitle: "Excel & Power BI · Sep 2025",
+    tagline:
+      "Interactive leadership dashboards on 50,000+ rows of financial data.",
+    challenge:
+      "Leadership needed faster KPI visibility without waiting on slow, manually assembled financial reports.",
+    solution:
+      "Designed interactive dashboards on 50,000+ rows of financial data for leadership reporting using Excel and Power BI.",
+    tech: ["Excel", "Power BI", "KPI Reporting"],
+    architecture: [
+      "Financial datasets prepared for interactive exploration",
+      "Excel models as the analytical foundation",
+      "Power BI visuals for leadership-ready storytelling",
+      "KPI views optimized for faster report preparation",
+    ],
+    metrics: [
+      { value: "30%", label: "Faster report prep" },
+      { value: "50,000+", label: "Data rows" },
+      { value: "Sep 2025", label: "Delivery" },
+    ],
+    impact:
+      "Reduced report preparation time by 30% while improving visibility into KPI performance for leadership.",
+    lessons: [
+      "Interactive dashboards succeed when KPI clarity comes first.",
+      "Scale matters — 50K+ rows need intentional model design.",
     ],
   },
   {
     slug: "sql-data-extraction",
-    title: "SQL Data Extraction & Transformation",
-    subtitle: "SQL Automation",
-    tagline: "Automated multi-source extraction that lifted processing efficiency.",
+    title: "SQL Data Automation",
+    subtitle: "SQL · Aug 2024",
+    tagline:
+      "Automated pipelines across sources that cut turnaround by 20%.",
     challenge:
-      "Data lived across multiple sources, forcing repetitive manual extraction before analysis could even begin.",
+      "Reporting depended on repetitive multi-source extraction before analysis could begin.",
     solution:
-      "Automated data fetching and transformation with SQL queries so multi-source inputs could be prepared consistently and faster.",
-    tech: ["SQL", "Data Extraction", "Transformation"],
+      "Built automated data pipelines using SQL to extract and transform data from multiple sources, processing 100K+ records.",
+    tech: ["SQL", "Data Pipelines", "ETL"],
     architecture: [
-      "Multi-source query layer for structured extraction",
-      "Transformation logic for clean analytical tables",
-      "Reusable SQL patterns for recurring reporting needs",
+      "Multi-source SQL extraction layer",
+      "Transformation logic for consistent reporting tables",
+      "Automated pipelines for recurring refresh cycles",
+      "Output designed for faster business insight delivery",
     ],
     metrics: [
-      { value: "40%", label: "Processing efficiency gain" },
-      { value: "Multi-source", label: "Data coverage" },
-      { value: "Automated", label: "Fetch workflow" },
+      { value: "40%", label: "Processing efficiency" },
+      { value: "100K+", label: "Records processed" },
+      { value: "20%", label: "Faster turnaround" },
     ],
     impact:
-      "Improved processing efficiency by 40% by removing repetitive manual extraction steps.",
+      "Reduced reporting turnaround time by 20%, increased data processing efficiency by 40%, and improved reporting consistency.",
     lessons: [
-      "The highest ROI automation often sits before the dashboard.",
-      "Consistent transformation logic protects insight quality.",
-    ],
-  },
-  {
-    slug: "financial-forecasting",
-    title: "Financial Data Analysis & Forecasting",
-    subtitle: "Excel Analytics",
-    tagline: "Trend analysis and forecasting models for revenue and cost decisions.",
-    challenge:
-      "Financial trends and cost-saving opportunities were hard to see without structured forecasting and comparative analysis.",
-    solution:
-      "Used advanced Excel techniques — VLOOKUP, INDEX-MATCH, and forecasting models — to analyze trends and surface revenue and cost-saving strategies.",
-    tech: ["Excel", "VLOOKUP", "INDEX-MATCH", "Forecasting Models"],
-    architecture: [
-      "Lookup-driven reconciliation across financial tables",
-      "Trend analysis on historical performance",
-      "Forecasting models for planning scenarios",
-    ],
-    metrics: [
-      { value: "Forecasting", label: "Model focus" },
-      { value: "Revenue & Cost", label: "Decision lenses" },
-      { value: "Excel", label: "Primary platform" },
-    ],
-    impact:
-      "Enabled clearer trend visibility and supported optimization of revenue and cost-saving strategies.",
-    lessons: [
-      "Strong lookup architecture makes forecasting trustworthy.",
-      "Financial insight is most useful when tied to an action lever.",
+      "Automation before the dashboard creates compounding speed gains.",
+      "Consistent transformation logic protects insight quality at scale.",
     ],
   },
 ] as const;
 
 export const skillCategories = [
   {
-    category: "Analytics & Finance",
+    category: "Data & Analytics",
     skills: [
-      "Financial Analysis & Reporting",
-      "Financial Modeling & Forecasting",
-    ],
-  },
-  {
-    category: "Project & Operations",
-    skills: [
-      "Project Planning & Execution",
-      "Workflow & Process Optimization",
-    ],
-  },
-  {
-    category: "Leadership & Communication",
-    skills: [
-      "Team Leadership & Mentoring",
-      "Presentation & Reporting",
-      "Problem Solving & Time Management",
-    ],
-  },
-  {
-    category: "Tools & Technology",
-    skills: [
-      "Advanced MS Excel & Google Sheets",
-      "Power BI / Tableau",
       "SQL",
-      "Python (Data Analysis)",
-      "MS Office Suite",
-      "CRM / ERP Systems",
+      "Python (Pandas)",
+      "Data Cleaning",
+      "Exploratory Data Analysis (EDA)",
+      "Data Visualization",
     ],
+  },
+  {
+    category: "Finance & Reporting",
+    skills: [
+      "Financial Analysis",
+      "MIS Reporting",
+      "Financial Forecasting",
+      "Dashboard Development",
+    ],
+  },
+  {
+    category: "Tools & Platforms",
+    skills: ["Advanced Excel", "Power BI", "Stakeholder Communication"],
   },
 ] as const;
 
 export const skillNodes = [
   {
-    id: "ba",
-    label: "Business Analysis",
-    detail: "Requirements gathering, process documentation, and operational clarity.",
+    id: "sql",
+    label: "SQL",
+    detail: "Extraction, transformation, and multi-source data pipelines.",
   },
   {
-    id: "fm",
-    label: "Financial Modelling",
-    detail: "Forecasting, scenario thinking, and structured financial analysis.",
+    id: "excel",
+    label: "Advanced Excel",
+    detail: "Financial reports, dashboards, and forecasting models.",
   },
   {
     id: "pbi",
@@ -210,162 +202,117 @@ export const skillNodes = [
     detail: "Interactive dashboards and leadership-ready visualization.",
   },
   {
-    id: "excel",
-    label: "Excel",
-    detail: "Pivot Tables, lookups, and financial workbook architecture.",
-  },
-  {
-    id: "adv-excel",
-    label: "Advanced Excel",
-    detail: "Complex modelling, automation-ready sheets, and analysis depth.",
-  },
-  {
-    id: "sql",
-    label: "SQL",
-    detail: "Extraction, transformation, and multi-source data preparation.",
-  },
-  {
     id: "python",
     label: "Python",
-    detail: "Data analysis workflows for cleaning and insight generation.",
+    detail: "Pandas-based analysis for cleaning and insight generation.",
   },
   {
-    id: "vba",
-    label: "VBA",
-    detail: "Spreadsheet automation used in dashboard delivery workflows.",
+    id: "fa",
+    label: "Financial Analysis",
+    detail: "Cost control, forecasting, and decision-focused analytics.",
   },
   {
-    id: "tableau",
-    label: "Tableau",
-    detail: "Visual analytics alongside Power BI for storytelling.",
+    id: "clean",
+    label: "Data Cleaning",
+    detail: "Preparing large datasets for reliable analysis.",
   },
   {
-    id: "pm",
-    label: "Project Management",
-    detail: "Timeline planning, delegation, and delivery ownership.",
+    id: "eda",
+    label: "EDA",
+    detail: "Exploratory analysis to surface trends and performance drivers.",
   },
   {
-    id: "erp",
-    label: "ERP",
-    detail: "Working across ERP systems for operational and financial data.",
-  },
-  {
-    id: "crm",
-    label: "CRM",
-    detail: "CRM systems for business and operational context.",
-  },
-  {
-    id: "auto",
-    label: "Automation",
-    detail: "Reducing manual effort across reporting and data workflows.",
+    id: "dash",
+    label: "Dashboards",
+    detail: "Interactive reporting for KPI visibility and leadership use.",
   },
   {
     id: "mis",
-    label: "MIS",
-    detail: "Management information systems, reporting accuracy, and analysis.",
+    label: "MIS Reporting",
+    detail: "Management information systems and automated financial reports.",
+  },
+  {
+    id: "forecast",
+    label: "Forecasting",
+    detail: "Financial forecasting models for planning and cost strategy.",
+  },
+  {
+    id: "viz",
+    label: "Visualization",
+    detail: "Clear visual storytelling from complex financial datasets.",
+  },
+  {
+    id: "stake",
+    label: "Stakeholders",
+    detail: "Cross-functional communication and insight delivery.",
   },
 ] as const;
 
 export const education = [
   {
-    school: "Delhi University (Maharaja Agrasen College)",
-    period: "2020 – 2023",
-    credential:
-      "Bachelor’s in Mathematics (Hons.) with OMSP (Mathematical Statistics & Probability)",
-    detail: "Focus on core mathematics, statistics, and data analysis.",
+    school: "Maharaja Agrasen College, University of Delhi",
+    period: "Aug 2020 – Jun 2023",
+    credential: "Bachelor’s degree (Math and Office Management)",
+    detail: "Focus: Statistics, Probability, Data Analysis · Delhi",
   },
   {
-    school: "JM International School",
-    period: "2020",
-    credential: "Senior Secondary (Class XII) — Science",
-    detail: "Score: 90%. Foundation in Physics, Chemistry, and Mathematics.",
-  },
-  {
-    school: "JM International School",
-    period: "2018",
-    credential: "Secondary (Class X)",
-    detail: "Score: 90%. Focus on analytical and problem-solving skills.",
+    school: "JM International School, Delhi",
+    period: "Aug 2020",
+    credential: "Higher Secondary (Physics, Chemistry, Math)",
+    detail: "Score: 90% · Delhi",
   },
 ] as const;
 
 export const certifications = [
   {
-    title: "Introduction to Corporate Finance",
-    issuer: "University of Pennsylvania",
-  },
-  {
-    title: "Fundamentals of Quantitative Modeling",
-    issuer: "University of Pennsylvania",
-  },
-  {
-    title: "Financial Acumen for Non-Financial Managers",
-    issuer: "University of Pennsylvania",
-  },
-  {
-    title: "How Software Ate Finance",
-    issuer: "Stanford University",
-  },
-  {
-    title: "Financial Modeling & Business Analysis",
+    title: "Financial Modelling & Business Analysis",
     issuer: "PwC",
   },
   {
-    title: "Problem-Solving with Excel",
-    issuer: "PwC",
-  },
-  {
-    title: "Leadership Skills",
-    issuer: "IIM Ahmedabad",
-  },
-  {
-    title: "Excel Skills for Business: Essentials",
+    title: "Data Analytics & Visualization",
     issuer: "Macquarie University",
   },
   {
-    title: "Analyzing & Visualizing Data with Microsoft Power BI",
-    issuer: "Office Master",
-  },
-  {
-    title: "Business Analytics & Finance Tools",
-    issuer: "SLA Consultants India",
+    title: "Introduction to Corporate Finance",
+    issuer: "University of Pennsylvania",
   },
 ] as const;
 
 export const achievements = [
   {
     id: "experience",
-    value: 3,
-    suffix: "",
-    label: "Professional Roles",
-    detail: "Bird Group · Wistful Finance · SLA Consultants",
+    value: 2,
+    suffix: "+",
+    label: "Years Experience",
+    detail: "Financial analytics · MIS · process automation",
   },
   {
-    id: "dashboards",
-    value: 30,
-    suffix: "%",
-    label: "Faster Reporting",
-    detail: "From interactive Excel & Power BI dashboards",
-  },
-  {
-    id: "automation",
+    id: "efficiency",
     value: 40,
     suffix: "%",
-    label: "Processing Efficiency",
-    detail: "From SQL extraction & transformation automation",
+    label: "Reporting Efficiency",
+    detail: "Peak improvement across Excel, SQL, and Power BI work",
+  },
+  {
+    id: "records",
+    value: 50,
+    suffix: "K+",
+    label: "Financial Records",
+    detail: "Analyzed and processed across MIS and dashboard work",
   },
   {
     id: "projects",
     value: 3,
     suffix: "",
     label: "Featured Projects",
-    detail: "Dashboards · SQL automation · Financial forecasting",
+    detail: "Forecasting · Dashboards · SQL automation",
   },
   {
     id: "certs",
     value: certifications.length,
     suffix: "",
     label: "Certifications",
-    detail: "PwC · UPenn · Stanford · IIM Ahmedabad · more",
+    detail: "PwC · Macquarie · University of Pennsylvania",
   },
 ] as const;
 

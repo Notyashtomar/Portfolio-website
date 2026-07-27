@@ -7,9 +7,10 @@ export const metadata: Metadata = {
   title: `${profile.name} · ${profile.title}`,
   description: profile.summary,
   keywords: [
+    "Data Analyst",
+    "MIS Analyst",
     "Business Analyst",
     "Financial Analyst",
-    "MIS Analyst",
     "Power BI",
     "SQL",
     "Excel",

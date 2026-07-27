@@ -4,6 +4,7 @@ import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { GlowButton } from "@/components/ui/GlowButton";
+import { profile } from "@/data/resume";
 import Link from "next/link";
 
 const links = [
@@ -75,7 +76,7 @@ export function Navigation() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/Yash-Raj-Singh-Tomar-Resume.pdf"
+            href={profile.resumeFile}
             download
             data-cursor="interactive"
             className="hidden md:block"
@@ -140,7 +141,7 @@ export function Navigation() {
           </nav>
           <div className="mt-4 border-t border-white/8 pt-4">
             <Link
-              href="/Yash-Raj-Singh-Tomar-Resume.pdf"
+              href={profile.resumeFile}
               download
               onClick={() => setOpen(false)}
             >

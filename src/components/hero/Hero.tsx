@@ -153,7 +153,7 @@ export function Hero() {
           className="font-body mt-6 max-w-md text-sm leading-[1.8] text-muted sm:mt-8 md:text-base"
         >
           Turning financial complexity into clarity — through analytics, MIS
-          systems, and project leadership that moves the business forward.
+          reporting, and automation that moves the business forward.
         </motion.p>
 
         <motion.div
