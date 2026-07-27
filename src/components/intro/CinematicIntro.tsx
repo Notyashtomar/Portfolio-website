@@ -20,22 +20,20 @@ const IntroMacBook = dynamic(
 );
 
 type Props = {
-  /** Site should start fading in under the intro */
   onReveal: () => void;
-  /** Intro fully done — safe to unmount */
   onComplete: () => void;
 };
 
-const MIN_MS = 2300;
-/** Camera fly + dissolve total */
-const ENTER_MS = 1450;
-/** When site starts appearing during the enter */
-const REVEAL_AT = 520;
+const MIN_MS = 2200;
+/** Punchy end — total time from finish() to unmount */
+const ENTER_MS = 780;
+/** Site circle-reveal kicks almost immediately */
+const REVEAL_AT = 140;
 
 export function CinematicIntro({ onReveal, onComplete }: Props) {
   const { lite, enableWebGL } = usePerfFlags();
   const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState<"load" | "enter" | "fade">("load");
+  const [phase, setPhase] = useState<"load" | "impact" | "exit">("load");
   const [canSkip, setCanSkip] = useState(false);
   const mouse = useRef({ x: 0, y: 0 });
   const started = useRef(performance.now());
@@ -46,19 +44,17 @@ export function CinematicIntro({ onReveal, onComplete }: Props) {
     if (finished.current) return;
     finished.current = true;
     setProgress(100);
-    setPhase("enter");
+    setPhase("impact");
 
     window.setTimeout(() => {
       if (!revealed.current) {
         revealed.current = true;
         onReveal();
       }
-      setPhase("fade");
+      setPhase("exit");
     }, REVEAL_AT);
 
-    window.setTimeout(() => {
-      onComplete();
-    }, ENTER_MS);
+    window.setTimeout(() => onComplete(), ENTER_MS);
   }, [onComplete, onReveal]);
 
   useEffect(() => {
@@ -69,7 +65,7 @@ export function CinematicIntro({ onReveal, onComplete }: Props) {
       return;
     }
 
-    const skipTimer = window.setTimeout(() => setCanSkip(true), 700);
+    const skipTimer = window.setTimeout(() => setCanSkip(true), 650);
     let raf = 0;
     let last = performance.now();
     let finishing = false;
@@ -78,20 +74,18 @@ export function CinematicIntro({ onReveal, onComplete }: Props) {
       const dt = Math.min(40, now - last);
       last = now;
       const elapsed = now - started.current;
-
       const t = Math.min(1, elapsed / MIN_MS);
       const eased = 1 - Math.pow(1 - t, 2.4);
       const target = Math.min(100, eased * 100);
 
-      setProgress((p) => Math.min(100, p + (target - p) * Math.min(1, dt / 70)));
+      setProgress((p) => Math.min(100, p + (target - p) * Math.min(1, dt / 65)));
 
       if (!finishing && elapsed >= MIN_MS) {
         finishing = true;
         setProgress(100);
-        window.setTimeout(finish, 180);
+        window.setTimeout(finish, 120);
         return;
       }
-
       raf = requestAnimationFrame(tick);
     };
 
@@ -112,96 +106,109 @@ export function CinematicIntro({ onReveal, onComplete }: Props) {
   }, []);
 
   useEffect(() => {
-    const id = window.setTimeout(finish, 4200);
+    const id = window.setTimeout(finish, 4000);
     return () => window.clearTimeout(id);
   }, [finish]);
 
-  const entering = phase === "enter" || phase === "fade";
-  const fading = phase === "fade";
+  const impacting = phase === "impact" || phase === "exit";
+  const exiting = phase === "exit";
   const use3D = enableWebGL && !lite;
 
   return (
     <motion.div
       className="fixed inset-0 z-[200] overflow-hidden bg-[#030303]"
       initial={{ opacity: 1 }}
-      animate={{ opacity: fading ? 0 : 1 }}
-      transition={{
-        duration: fading ? 0.85 : 0,
-        ease: [0.22, 1, 0.36, 1],
+      animate={{
+        opacity: exiting ? 0 : 1,
+        scale: impacting ? 1.04 : 1,
       }}
-      style={{ pointerEvents: fading ? "none" : "auto" }}
+      transition={{
+        opacity: { duration: exiting ? 0.45 : 0, ease: [0.22, 1, 0.36, 1] },
+        scale: { type: "spring", stiffness: 220, damping: 22 },
+      }}
+      style={{ pointerEvents: exiting ? "none" : "auto" }}
     >
       <motion.div
         className="absolute inset-0"
-        animate={
-          entering
-            ? { scale: 1.06, opacity: fading ? 0.4 : 1 }
-            : { scale: 1, opacity: 1 }
-        }
-        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        animate={{ opacity: impacting ? 0.25 : 1 }}
+        transition={{ duration: 0.4 }}
       >
         <IntroAtmosphere lite={lite} />
       </motion.div>
 
+      {/* Laptop layer — punch zoom then vanish */}
       <motion.div
         className="absolute inset-0 z-10"
         animate={
-          entering
-            ? { scale: 1.18, opacity: fading ? 0 : 1, filter: "blur(0px)" }
+          impacting
+            ? {
+                scale: [1, 0.97, 1.35],
+                opacity: exiting ? 0 : 1,
+                filter: ["blur(0px)", "blur(0px)", "blur(10px)"],
+              }
             : { scale: 1, opacity: 1, filter: "blur(0px)" }
         }
-        transition={{ duration: 1.15, ease: [0.16, 1, 0.3, 1] }}
+        transition={{
+          duration: 0.7,
+          times: [0, 0.18, 1],
+          ease: [0.16, 1, 0.3, 1],
+        }}
       >
         {use3D ? (
           <IntroMacBook
             progress={progress}
-            entering={entering}
+            entering={impacting}
             mouse={mouse}
             lite={lite}
           />
         ) : (
-          <LiteMacBook progress={progress} entering={entering} mouse={mouse} />
+          <LiteMacBook progress={progress} entering={impacting} mouse={mouse} />
         )}
       </motion.div>
 
-      {/* Soft portal — dark, not white flash */}
+      {/* Shockwave rings */}
+      {impacting
+        ? [0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="pointer-events-none absolute left-1/2 top-[44%] z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent-blue/50"
+              initial={{ width: 40, height: 40, opacity: 0.8 }}
+              animate={{
+                width: 900 + i * 220,
+                height: 900 + i * 220,
+                opacity: 0,
+              }}
+              transition={{
+                duration: 0.65,
+                delay: i * 0.06,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            />
+          ))
+        : null}
+
+      {/* Core flash — blue, brief, premium */}
       <motion.div
-        className="pointer-events-none absolute left-1/2 top-[44%] z-20 -translate-x-1/2 -translate-y-1/2 rounded-full"
+        className="pointer-events-none absolute left-1/2 top-[44%] z-30 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{
-          width: "28vmax",
-          height: "28vmax",
           background:
-            "radial-gradient(circle, rgba(79,140,255,0.28) 0%, rgba(10,12,20,0.55) 45%, transparent 70%)",
+            "radial-gradient(circle, rgba(200,220,255,0.9) 0%, rgba(79,140,255,0.45) 35%, transparent 70%)",
         }}
+        initial={{ scale: 0, opacity: 0 }}
         animate={
-          entering
-            ? {
-                scale: [1, 3.2, 6],
-                opacity: [0.45, 0.55, 0],
-              }
-            : {
-                scale: 0.9 + progress / 400,
-                opacity: 0.2 + progress / 600,
-              }
+          impacting
+            ? { scale: [0, 2.2, 8], opacity: [0, 1, 0] }
+            : { scale: 0, opacity: 0 }
         }
-        transition={{
-          duration: entering ? 1.25 : 0.4,
-          ease: [0.16, 1, 0.3, 1],
-        }}
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
       />
 
-      {/* Edge vignette deepens into site black */}
       <motion.div
-        className="pointer-events-none absolute inset-0 z-30"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, transparent 20%, #030303 78%)",
-        }}
-        animate={{ opacity: entering ? 0.95 : 0.35 }}
-        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-      />
-
-      <IntroProgress progress={progress} entering={entering} />
+        animate={{ opacity: impacting ? 0 : 1, y: impacting ? 12 : 0 }}
+        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <IntroProgress progress={progress} entering={impacting} />
+      </motion.div>
 
       {canSkip && phase === "load" ? (
         <button
@@ -247,13 +254,7 @@ function LiteMacBook({
         style={{ perspective: 1400 }}
         animate={
           entering
-            ? {
-                scale: 1.55,
-                y: -24,
-                rotateX: 0,
-                rotateY: 0,
-                opacity: 0,
-              }
+            ? { scale: 1.45, y: -20, rotateX: 0, rotateY: 0, opacity: 0 }
             : {
                 y: [0, -8, 0],
                 rotateX: 6 + offset.y * 0.12,
@@ -264,7 +265,7 @@ function LiteMacBook({
         }
         transition={
           entering
-            ? { duration: 1.15, ease: [0.16, 1, 0.3, 1] }
+            ? { duration: 0.55, ease: [0.16, 1, 0.3, 1] }
             : { y: { duration: 2.8, repeat: Infinity, ease: "easeInOut" } }
         }
       >

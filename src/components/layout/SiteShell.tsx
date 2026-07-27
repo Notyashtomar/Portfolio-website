@@ -35,10 +35,7 @@ function ShellInner({ children }: { children: ReactNode }) {
     };
   }, [showIntro]);
 
-  const onReveal = useCallback(() => {
-    setRevealed(true);
-  }, []);
-
+  const onReveal = useCallback(() => setRevealed(true), []);
   const onIntroComplete = useCallback(() => {
     setShowIntro(false);
     setRevealed(true);
@@ -51,13 +48,17 @@ function ShellInner({ children }: { children: ReactNode }) {
       ) : null}
 
       <div
-        className={`relative min-h-full will-change-[opacity,transform] ${
-          revealed
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
+        className={`relative min-h-full will-change-[clip-path,opacity] ${
+          revealed ? "pointer-events-auto" : "pointer-events-none"
         }`}
         style={{
-          transition: "opacity 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+          // Circular iris reveal from screen center — the premium handoff
+          clipPath: revealed
+            ? "circle(160% at 50% 44%)"
+            : "circle(0% at 50% 44%)",
+          opacity: revealed ? 1 : 0.98,
+          transition:
+            "clip-path 680ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease",
         }}
       >
         <AmbientBackground />

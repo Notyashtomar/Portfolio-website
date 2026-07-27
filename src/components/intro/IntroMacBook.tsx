@@ -170,12 +170,12 @@ function CameraRig({ entering }: { entering: boolean }) {
     const t = state.clock.elapsedTime;
 
     if (entering) {
-      enterT.current = Math.min(1, enterT.current + delta / 1.15);
-      const e = 1 - Math.pow(1 - enterT.current, 3);
-      camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0, 0.1);
-      camera.position.y = THREE.MathUtils.lerp(1.25, 0.92, e);
-      camera.position.z = THREE.MathUtils.lerp(4.4, 1.35, e);
-      camera.lookAt(0, 0.75 + e * 0.15, 0);
+      enterT.current = Math.min(1, enterT.current + delta / 0.55);
+      const e = 1 - Math.pow(1 - enterT.current, 2.8);
+      camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0, 0.16);
+      camera.position.y = THREE.MathUtils.lerp(1.25, 0.88, e);
+      camera.position.z = THREE.MathUtils.lerp(4.4, 1.15, e);
+      camera.lookAt(0, 0.72 + e * 0.2, 0);
       return;
     }
 
