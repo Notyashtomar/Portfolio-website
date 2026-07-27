@@ -245,6 +245,12 @@ body.no-cursor button {
     0 0 80px rgba(139, 92, 246, 0.08);
 }
 
+.skills-stage {
+  box-shadow:
+    inset 0 0 80px rgba(79, 140, 255, 0.06),
+    0 30px 80px rgba(0, 0, 0, 0.45);
+}
+
 .hero-fallback-glow {
   background:
     radial-gradient(ellipse 70% 55% at 50% 45%, rgba(79, 140, 255, 0.22), transparent 60%),
