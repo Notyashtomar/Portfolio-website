@@ -73,88 +73,118 @@ export const projects = [
   {
     slug: "financial-forecasting",
     title: "Financial Forecasting Model",
-    subtitle: "Excel · Jan 2026",
+    subtitle: "Excel · Oct 2023",
     tagline:
-      "Forecasting models on 50K+ records that lifted accuracy by 25%.",
+      "Built dynamic forecasting models on 50,000+ financial records using Excel, enabling budget planning and revenue projections with improved forecasting accuracy.",
     challenge:
-      "Revenue trends and cost-saving opportunities were hard to isolate without structured forecasting across a large historical dataset.",
+      "Budget planning and revenue projections needed a reliable forecasting layer across a large historical financial dataset.",
     solution:
-      "Designed and implemented financial forecasting models using advanced Microsoft Excel and SQL, analyzing 50K+ historical records to identify revenue trends and cost-saving opportunities.",
-    tech: ["Microsoft Excel", "SQL", "Forecasting Models"],
+      "Built dynamic forecasting models on 50,000+ financial records using Excel to support budget planning and revenue projections with clearer trend visibility.",
+    tech: ["Microsoft Excel", "Forecasting Models", "Financial Analysis"],
     architecture: [
-      "Historical financial records consolidated for trend analysis",
-      "Advanced Excel models for revenue and cost forecasting",
-      "SQL-backed analysis on 50K+ records",
-      "Outputs structured for strategic planning decisions",
+      "Historical financial records structured for model inputs",
+      "Dynamic Excel forecasting frameworks for budget and revenue planning",
+      "Accuracy checks against historical performance",
+      "Outputs designed for planning and projection decisions",
     ],
     metrics: [
-      { value: "25%", label: "Forecast accuracy gain" },
-      { value: "50K+", label: "Historical records" },
-      { value: "Jan 2026", label: "Delivery" },
+      {
+        value: "25%",
+        label: "Forecast accuracy gain",
+        numeric: 25,
+        suffix: "%",
+      },
+      {
+        value: "50K+",
+        label: "Historical records",
+        numeric: 50,
+        suffix: "K+",
+      },
+      { value: "Oct 2023", label: "Delivery", numeric: 0, suffix: "" },
     ],
     impact:
-      "Improved forecast accuracy by 25% and enabled data-driven strategic planning around revenue trends and cost-saving opportunities.",
+      "Improved forecasting accuracy by 25% while enabling stronger budget planning and revenue projections across 50K+ historical records.",
     lessons: [
-      "Forecast quality depends on clean historical coverage.",
-      "Excel + SQL together make large-scale forecasting practical.",
+      "Dynamic models outperform static spreadsheets when planning cycles change.",
+      "Forecast quality scales with clean historical coverage.",
     ],
   },
   {
     slug: "data-dashboard-development",
-    title: "Financial Dashboard",
-    subtitle: "Excel & Power BI · Sep 2025",
+    title: "Executive Financial Dashboard",
+    subtitle: "Excel & Power BI · Feb 2024",
     tagline:
-      "Interactive leadership dashboards on 50,000+ rows of financial data.",
+      "Designed interactive Power BI dashboards to visualize revenue, expenses, profit margins, and KPIs across 60,000+ financial records, reducing manual reporting time.",
     challenge:
-      "Leadership needed faster KPI visibility without waiting on slow, manually assembled financial reports.",
+      "Leadership needed faster visibility into revenue, expenses, profit margins, and KPIs without slow manual report assembly.",
     solution:
-      "Designed interactive dashboards on 50,000+ rows of financial data for leadership reporting using Excel and Power BI.",
+      "Designed interactive Power BI dashboards, supported by Excel, to visualize financial performance across 60,000+ records and compress reporting cycles.",
     tech: ["Excel", "Power BI", "KPI Reporting"],
     architecture: [
-      "Financial datasets prepared for interactive exploration",
-      "Excel models as the analytical foundation",
-      "Power BI visuals for leadership-ready storytelling",
-      "KPI views optimized for faster report preparation",
+      "Financial datasets prepared across revenue, expenses, and margins",
+      "Excel as the structured analytical foundation",
+      "Power BI visuals for executive-ready storytelling",
+      "KPI views optimized to cut manual reporting effort",
     ],
     metrics: [
-      { value: "30%", label: "Faster report prep" },
-      { value: "50,000+", label: "Data rows" },
-      { value: "Sep 2025", label: "Delivery" },
+      {
+        value: "35%",
+        label: "Faster reporting",
+        numeric: 35,
+        suffix: "%",
+      },
+      {
+        value: "60,000+",
+        label: "Data rows",
+        numeric: 60,
+        suffix: "K+",
+      },
+      { value: "Feb 2024", label: "Delivery", numeric: 0, suffix: "" },
     ],
     impact:
-      "Reduced report preparation time by 30% while improving visibility into KPI performance for leadership.",
+      "Reduced manual reporting time by 35% while improving visibility into revenue, expenses, profit margins, and KPIs across 60,000+ financial records.",
     lessons: [
-      "Interactive dashboards succeed when KPI clarity comes first.",
-      "Scale matters — 50K+ rows need intentional model design.",
+      "Executive dashboards win when KPIs are immediately actionable.",
+      "Interactive visuals remove friction from recurring leadership reviews.",
     ],
   },
   {
     slug: "sql-data-extraction",
     title: "SQL Data Automation",
-    subtitle: "SQL · Aug 2024",
+    subtitle: "SQL · Jun 2024",
     tagline:
-      "Automated pipelines across sources that cut turnaround by 20%.",
+      "Developed SQL scripts and automated reporting workflows to process 100,000+ records, improving data accuracy and reducing report generation time.",
     challenge:
-      "Reporting depended on repetitive multi-source extraction before analysis could begin.",
+      "Report generation depended on repetitive processing across large record volumes, slowing teams and introducing accuracy risk.",
     solution:
-      "Built automated data pipelines using SQL to extract and transform data from multiple sources, processing 100K+ records.",
-    tech: ["SQL", "Data Pipelines", "ETL"],
+      "Developed SQL scripts and automated reporting workflows to process 100,000+ records with greater consistency and less manual effort.",
+    tech: ["SQL", "Data Automation", "Reporting Workflows"],
     architecture: [
-      "Multi-source SQL extraction layer",
-      "Transformation logic for consistent reporting tables",
-      "Automated pipelines for recurring refresh cycles",
-      "Output designed for faster business insight delivery",
+      "SQL scripts for structured extraction and transformation",
+      "Automated reporting workflows for recurring generation",
+      "Accuracy checks across large record volumes",
+      "Outputs tuned for faster, cleaner business reporting",
     ],
     metrics: [
-      { value: "40%", label: "Processing efficiency" },
-      { value: "100K+", label: "Records processed" },
-      { value: "20%", label: "Faster turnaround" },
+      {
+        value: "40%",
+        label: "Processing efficiency",
+        numeric: 40,
+        suffix: "%",
+      },
+      {
+        value: "100K+",
+        label: "Records processed",
+        numeric: 100,
+        suffix: "K+",
+      },
+      { value: "Jun 2024", label: "Delivery", numeric: 0, suffix: "" },
     ],
     impact:
-      "Reduced reporting turnaround time by 20%, increased data processing efficiency by 40%, and improved reporting consistency.",
+      "Improved processing efficiency by 40%, strengthened data accuracy, and reduced report generation time across 100,000+ records.",
     lessons: [
       "Automation before the dashboard creates compounding speed gains.",
-      "Consistent transformation logic protects insight quality at scale.",
+      "Consistent SQL workflows protect accuracy at scale.",
     ],
   },
 ] as const;
@@ -295,17 +325,17 @@ export const achievements = [
   },
   {
     id: "records",
-    value: 50,
+    value: 60,
     suffix: "K+",
     label: "Financial Records",
-    detail: "Analyzed and processed across MIS and dashboard work",
+    detail: "Analyzed across forecasting, dashboards, and SQL automation",
   },
   {
     id: "projects",
     value: 3,
     suffix: "",
     label: "Featured Projects",
-    detail: "Forecasting · Dashboards · SQL automation",
+    detail: "Forecasting · Executive dashboards · SQL automation",
   },
   {
     id: "certs",

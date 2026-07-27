@@ -7,7 +7,7 @@ import { SplitReveal } from "@/components/motion/SplitReveal";
 
 const stats = [
   { value: 2, suffix: "+", label: "Years experience" },
-  { value: 30, suffix: "%", label: "Faster reporting" },
+  { value: 35, suffix: "%", label: "Faster reporting" },
   { value: 40, suffix: "%", label: "Process efficiency" },
 ];
 

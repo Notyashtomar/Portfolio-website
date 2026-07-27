@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { projects } from "@/data/resume";
 import { PremiumCard } from "@/components/ui/PremiumCard";
 import { SplitReveal } from "@/components/motion/SplitReveal";
+import { ProjectMetricValue } from "@/components/ui/ProjectMetricValue";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -60,7 +61,11 @@ export default async function ProjectPage({ params }: Props) {
           {project.metrics.map((metric) => (
             <PremiumCard key={metric.label} float={false} tilt={5}>
               <p className="font-display text-2xl font-semibold text-white sm:text-3xl md:text-4xl">
-                {metric.value}
+                <ProjectMetricValue
+                  numeric={metric.numeric}
+                  suffix={metric.suffix}
+                  fallback={metric.value}
+                />
               </p>
               <p className="font-sans mt-2 text-[9px] uppercase tracking-[0.18em] text-muted sm:mt-3 sm:text-[10px] sm:tracking-[0.24em]">
                 {metric.label}
