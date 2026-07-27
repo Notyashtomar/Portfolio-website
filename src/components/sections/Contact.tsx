@@ -23,16 +23,16 @@ export function Contact() {
   };
 
   return (
-    <section id="contact" className="relative px-4 py-20 sm:px-6 sm:py-32 md:px-12 md:py-48 lg:px-16">
+    <section id="contact" className="relative px-4 py-16 sm:px-6 sm:py-28 md:px-12 md:py-40 lg:px-16 lg:py-48">
       <div className="mx-auto max-w-[90rem]">
-        <p className="font-sans mb-6 text-[11px] uppercase tracking-[0.45em] text-accent-blue/80">
+        <p className="font-sans mb-5 text-[10px] uppercase tracking-[0.32em] text-accent-blue/80 sm:mb-6 sm:text-[11px] sm:tracking-[0.45em]">
           Contact
         </p>
         <SplitReveal
           text="Let's build the next decision system."
           as="h2"
           mode="words"
-          className="mb-12 max-w-4xl text-[clamp(1.8rem,5.5vw,4.5rem)] font-semibold leading-[1.08] text-white sm:mb-20 md:mb-28"
+          className="mb-10 max-w-4xl text-[clamp(1.7rem,5.5vw,4.5rem)] font-semibold leading-[1.1] text-white sm:mb-16 md:mb-28"
         />
 
         <div className="grid gap-8 sm:gap-10 lg:grid-cols-[0.85fr_1.15fr]">

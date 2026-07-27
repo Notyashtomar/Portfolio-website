@@ -47,7 +47,7 @@ function ExperienceAtmosphere() {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] overflow-hidden lg:block"
+      className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] overflow-hidden xl:block"
     >
       <motion.div
         style={{ y: ySlow }}
@@ -208,7 +208,7 @@ function ExperienceCard({
           <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-accent-blue">
             {role.period}
           </p>
-          <h3 className="font-display mt-3 text-2xl font-semibold text-white sm:text-3xl md:text-4xl">
+          <h3 className="font-display mt-3 text-xl font-semibold text-white sm:text-2xl md:text-3xl lg:text-4xl">
             {role.company}
           </h3>
           <p className="font-body mt-2 text-muted">{role.role}</p>
@@ -312,7 +312,7 @@ export function Experience() {
           className="mb-12 max-w-4xl text-[clamp(2rem,6vw,5rem)] font-semibold leading-[1.05] text-white sm:mb-20 md:mb-28"
         />
 
-        <div className="relative lg:max-w-[54%]">
+        <div className="relative xl:max-w-[54%]">
           <div
             ref={lineRef}
             className="absolute left-[7px] top-0 hidden h-full w-px origin-top bg-gradient-to-b from-accent-blue via-accent-violet/50 to-transparent md:left-5 md:block"

@@ -66,7 +66,7 @@ function ProjectCard({
           whileHover={lite ? undefined : { y: -8 }}
           transition={{ type: "spring", stiffness: 320, damping: 26, mass: 0.7 }}
           className={cn(
-            "group interactive-card relative flex h-full min-h-[340px] flex-col overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.025] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[440px]",
+            "group interactive-card relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-[24px] border border-white/8 bg-white/[0.025] p-5 sm:min-h-[340px] sm:rounded-[28px] sm:p-6 md:p-8 lg:min-h-[400px]",
             "transition-[border-color,box-shadow] duration-400 hover:border-accent-blue/35",
             "hover:shadow-[0_30px_90px_rgba(79,140,255,0.14),0_0_0_1px_rgba(79,140,255,0.08)]",
           )}
@@ -95,7 +95,7 @@ function ProjectCard({
                 {project.subtitle}
               </span>
               <motion.span
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/35 transition group-hover:border-accent-blue/40 group-hover:bg-accent-blue/15 group-hover:text-white"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/35 transition group-hover:border-accent-blue/40 group-hover:bg-accent-blue/15 group-hover:text-white"
                 whileHover={{ rotate: 45 }}
               >
                 <ArrowUpRight className="h-4 w-4 transition duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -132,7 +132,7 @@ function ProjectCard({
                       duration={1.4 + mi * 0.15}
                     />
                   </p>
-                  <p className="font-sans mt-2 text-[9px] uppercase tracking-[0.18em] text-white/45 sm:text-[10px] sm:tracking-[0.2em]">
+                  <p className="font-sans mt-2 text-[10px] uppercase tracking-[0.16em] text-white/45 sm:tracking-[0.2em]">
                     {metric.label}
                   </p>
                 </motion.div>
@@ -164,7 +164,7 @@ export function Projects() {
           className="mb-12 max-w-4xl text-[clamp(2rem,6vw,5rem)] font-semibold leading-[1.05] text-white sm:mb-20 md:mb-28"
         />
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-7">
           {projects.map((project, index) => (
             <ProjectCard key={project.slug} project={project} index={index} />
           ))}

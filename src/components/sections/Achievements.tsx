@@ -19,13 +19,13 @@ export function Achievements() {
           className="mb-12 max-w-4xl text-[clamp(2rem,6vw,5rem)] font-semibold leading-[1.05] text-white sm:mb-20 md:mb-28"
         />
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:gap-4">
           {achievements.map((item) => (
-            <PremiumCard key={item.id} tilt={4}>
-              <p className="font-display text-3xl font-semibold text-white sm:text-4xl md:text-5xl">
+            <PremiumCard key={item.id} tilt={4} className="!p-5 sm:!p-6 md:!p-8">
+              <p className="font-display text-2xl font-semibold text-white sm:text-3xl md:text-4xl lg:text-5xl">
                 <AnimatedCounter value={item.value} suffix={item.suffix} />
               </p>
-              <p className="font-sans mt-4 text-sm text-white">{item.label}</p>
+              <p className="font-sans mt-3 text-sm text-white sm:mt-4">{item.label}</p>
               <p className="font-body mt-2 text-xs leading-relaxed text-muted">
                 {item.detail}
               </p>
@@ -39,7 +39,7 @@ export function Achievements() {
               text="Education"
               as="h3"
               mode="chars"
-              className="mb-10 text-3xl font-semibold text-white"
+              className="mb-8 text-2xl font-semibold text-white sm:mb-10 sm:text-3xl"
               stagger={0.04}
             />
             <div className="space-y-5">
@@ -48,7 +48,9 @@ export function Achievements() {
                   <p className="font-sans text-[10px] uppercase tracking-[0.32em] text-accent-gold">
                     {item.period}
                   </p>
-                  <p className="font-display mt-3 text-xl text-white">{item.school}</p>
+                  <p className="font-display mt-3 text-lg leading-snug text-white sm:text-xl">
+                    {item.school}
+                  </p>
                   <p className="font-body mt-2 text-sm text-muted">{item.credential}</p>
                   <p className="font-body mt-2 text-sm text-white/50">{item.detail}</p>
                 </PremiumCard>
@@ -61,7 +63,7 @@ export function Achievements() {
               text="Certifications"
               as="h3"
               mode="chars"
-              className="mb-10 text-3xl font-semibold text-white"
+              className="mb-8 text-2xl font-semibold text-white sm:mb-10 sm:text-3xl"
               stagger={0.04}
             />
             <div className="grid gap-3 sm:grid-cols-2">

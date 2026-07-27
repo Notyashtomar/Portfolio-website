@@ -55,7 +55,7 @@ export function GlowButton({
     >
       <div
         className={cn(
-          "relative overflow-hidden rounded-full px-7 py-3.5 text-sm font-medium tracking-wide transition-all duration-300",
+          "relative inline-flex min-h-11 items-center justify-center overflow-hidden rounded-full px-6 py-3 text-sm font-medium tracking-wide transition-all duration-300 sm:px-7 sm:py-3.5",
           variants[variant],
           className,
         )}

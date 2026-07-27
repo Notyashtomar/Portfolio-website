@@ -39,14 +39,14 @@ export function Navigation() {
       }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "fixed inset-x-0 top-0 z-50 px-6 py-4 md:px-12",
+        "fixed inset-x-0 top-0 z-50 px-3 py-3 sm:px-6 sm:py-4 md:px-12",
         visible && "pointer-events-auto",
         !visible && "pointer-events-none",
       )}
     >
       <div
         className={cn(
-          "mx-auto flex max-w-[90rem] items-center justify-between rounded-full border px-6 py-3 transition-all duration-700",
+          "mx-auto flex max-w-[90rem] items-center justify-between rounded-full border px-4 py-2.5 transition-all duration-700 sm:px-6 sm:py-3",
           visible
             ? "border-white/10 bg-black/50 shadow-[0_8px_60px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
             : "border-transparent bg-transparent",
@@ -91,7 +91,7 @@ export function Navigation() {
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             data-cursor="interactive"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 lg:hidden"
             onClick={() => setOpen((v) => !v)}
           >
             <span className="sr-only">{open ? "Close" : "Menu"}</span>

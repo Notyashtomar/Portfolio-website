@@ -37,8 +37,8 @@ export default function HomePage() {
       <Achievements />
       <SectionTransition />
       <Contact />
-      <footer className="relative z-10 border-t border-white/6 px-6 py-14 text-center md:px-12">
-        <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-white/25">
+      <footer className="relative z-10 border-t border-white/6 px-4 py-10 text-center sm:px-6 sm:py-14 md:px-12">
+        <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-white/25 sm:tracking-[0.4em]">
           © {new Date().getFullYear()} Yash Raj Singh Tomar
         </p>
       </footer>

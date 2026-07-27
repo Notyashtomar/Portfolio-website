@@ -84,34 +84,39 @@ export function Skills() {
           className="mb-12 max-w-4xl text-[clamp(2rem,6vw,5rem)] font-semibold leading-[1.05] text-white sm:mb-20 md:mb-28"
         />
 
-        {/* Mobile: animated pill grid */}
-        <div className="grid grid-cols-2 gap-3 sm:hidden">
+        {/* Mobile + tablet: readable skill cards */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:hidden">
           {skillNodes.map((node, i) => (
-            <motion.div
+            <motion.button
               key={node.id}
-              initial={{ opacity: 0, y: 24, scale: 0.94 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true, amount: 0.4 }}
+              type="button"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{
-                delay: i * 0.05,
-                duration: 0.55,
+                delay: i * 0.04,
+                duration: 0.5,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              whileTap={{ scale: 0.97 }}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 transition hover:border-accent-blue/40 hover:bg-accent-blue/[0.06] hover:shadow-[0_0_30px_rgba(79,140,255,0.18)]"
+              onClick={() => setActive(active === node.id ? null : node.id)}
+              className={`rounded-2xl border px-4 py-4 text-left transition ${
+                active === node.id
+                  ? "border-accent-blue/45 bg-accent-blue/[0.08]"
+                  : "border-white/10 bg-white/[0.03]"
+              }`}
             >
-              <p className="font-sans text-[11px] uppercase tracking-[0.18em] text-white/80">
+              <p className="font-sans text-[11px] uppercase tracking-[0.18em] text-white/85">
                 {node.label}
               </p>
-              <p className="font-body mt-1 text-[10px] leading-relaxed text-muted">
+              <p className="font-body mt-2 text-xs leading-relaxed text-muted">
                 {node.detail}
               </p>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
 
-        {/* Tablet/Desktop: cinematic network */}
-        <div className="relative mx-auto hidden max-w-4xl sm:block">
+        {/* Desktop: network visualization */}
+        <div className="relative mx-auto hidden max-w-4xl lg:block">
           <div
             ref={stageRef}
             className="skills-stage relative aspect-square overflow-hidden rounded-[36px] border border-white/8 bg-[#05070d]"
@@ -313,7 +318,10 @@ export function Skills() {
                       onMouseLeave={() => setActive(null)}
                       onFocus={() => setActive(node.id)}
                       onBlur={() => setActive(null)}
-                      className="relative rounded-full border px-3 py-2 font-sans text-[9px] uppercase tracking-[0.14em] backdrop-blur-md md:text-[10px]"
+                      onClick={() =>
+                        setActive(active === node.id ? null : node.id)
+                      }
+                      className="relative min-h-11 rounded-full border px-4 py-2.5 font-sans text-[10px] uppercase tracking-[0.14em] backdrop-blur-md"
                       animate={{
                         opacity: dimmed ? 0.25 : 1,
                         scale: isActive ? 1.2 : 1,
@@ -417,7 +425,7 @@ export function Skills() {
                   transition={{ delay: 1.7, duration: 0.6 }}
                   className="pointer-events-none absolute bottom-6 left-1/2 z-20 -translate-x-1/2 font-sans text-[10px] uppercase tracking-[0.35em] text-white/45"
                 >
-                  Hover a node
+                  Explore a node
                 </motion.p>
               ) : null}
             </AnimatePresence>

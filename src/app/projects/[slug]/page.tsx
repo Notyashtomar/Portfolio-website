@@ -57,7 +57,7 @@ export default async function ProjectPage({ params }: Props) {
           stagger={0.015}
         />
 
-        <div className="mt-10 grid grid-cols-3 gap-3 sm:mt-16 sm:gap-4">
+        <div className="mt-10 grid grid-cols-1 gap-3 sm:mt-16 sm:grid-cols-3 sm:gap-4">
           {project.metrics.map((metric) => (
             <PremiumCard key={metric.label} float={false} tilt={5}>
               <p className="font-display text-2xl font-semibold text-white sm:text-3xl md:text-4xl">
@@ -67,7 +67,7 @@ export default async function ProjectPage({ params }: Props) {
                   fallback={metric.value}
                 />
               </p>
-              <p className="font-sans mt-2 text-[9px] uppercase tracking-[0.18em] text-muted sm:mt-3 sm:text-[10px] sm:tracking-[0.24em]">
+              <p className="font-sans mt-2 text-[10px] uppercase tracking-[0.18em] text-muted sm:mt-3 sm:tracking-[0.24em]">
                 {metric.label}
               </p>
             </PremiumCard>
