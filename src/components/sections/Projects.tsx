@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useSpring } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { projects } from "@/data/resume";
@@ -10,15 +10,54 @@ import { gsap, registerGsap, ScrollTrigger } from "@/lib/gsap";
 import { usePerfFlags } from "@/components/providers/Providers";
 
 /* ─── Project card ────────────────────────────────────────────── */
-function ProjectCard({ project, index }: { project: (typeof projects)[number]; index: number }) {
+function ProjectCard({
+  project,
+  index,
+  isCenter,
+  dimmed,
+}: {
+  project: (typeof projects)[number];
+  index: number;
+  isCenter: boolean;
+  dimmed: boolean;
+}) {
   const metrics = project.metrics.filter((m) => m.numeric > 0).slice(0, 2);
 
   return (
     <Link href={`/projects/${project.slug}`} data-cursor="interactive" className="block h-full">
-      <div className="group relative flex h-full flex-col border border-white/10 bg-[#060810] p-7 transition-all duration-500 hover:border-accent-blue/40 hover:bg-[#040916] sm:p-9">
-        <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-accent-violet/0 blur-3xl transition duration-700 group-hover:bg-accent-violet/25" />
-        <div className="pointer-events-none absolute -bottom-10 -left-8 h-40 w-40 rounded-full bg-accent-blue/0 blur-3xl transition duration-700 group-hover:bg-accent-blue/18" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-blue/0 to-transparent transition duration-500 group-hover:via-accent-blue/80" />
+      <motion.div
+        className="group relative flex h-full flex-col border bg-[#060810] p-7 sm:p-9"
+        animate={{
+          borderColor: isCenter ? "rgba(79,140,255,0.5)" : "rgba(255,255,255,0.08)",
+          boxShadow: isCenter
+            ? "0 0 60px rgba(79,140,255,0.18), 0 0 120px rgba(79,140,255,0.08)"
+            : "none",
+        }}
+        transition={{ duration: 0.4 }}
+      >
+        {/* Hover glows */}
+        <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-accent-violet/0 blur-3xl transition duration-700 group-hover:bg-accent-violet/28" />
+        <div className="pointer-events-none absolute -bottom-10 -left-8 h-40 w-40 rounded-full bg-accent-blue/0 blur-3xl transition duration-700 group-hover:bg-accent-blue/20" />
+
+        {/* Active top bar */}
+        <motion.div
+          className="absolute inset-x-0 top-0 h-0.5"
+          animate={{
+            background: isCenter
+              ? "linear-gradient(90deg, transparent, #4f8cff, #8b5cf6, transparent)"
+              : "transparent",
+            opacity: isCenter ? 1 : 0,
+          }}
+          transition={{ duration: 0.4 }}
+        />
+
+        {/* Card number watermark */}
+        <span
+          className="pointer-events-none absolute right-5 bottom-5 font-display text-[80px] font-bold leading-none select-none"
+          style={{ color: isCenter ? "rgba(79,140,255,0.06)" : "rgba(255,255,255,0.03)" }}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </span>
 
         <div className="relative z-10 flex h-full flex-col">
           <div className="flex items-start justify-between gap-4">
@@ -36,40 +75,37 @@ function ProjectCard({ project, index }: { project: (typeof projects)[number]; i
             </motion.span>
           </div>
 
-          <div className="mt-10 flex-1">
+          <div className="mt-8 flex-1">
             <h3 className="font-display text-3xl font-bold leading-[1.1] text-white sm:text-[2.2rem]">
               {project.title.toUpperCase()}
             </h3>
-            <p className="font-body mt-5 text-sm leading-[1.85] text-white/45 transition duration-500 group-hover:text-white/70">
+            <p className="font-body mt-4 text-sm leading-[1.85] text-white/45 transition duration-500 group-hover:text-white/70">
               {project.tagline}
             </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-2 gap-3">
+          <div className="mt-8 grid grid-cols-2 gap-3">
             {metrics.map((m, mi) => (
-              <div
+              <motion.div
                 key={m.label}
-                className="border border-white/8 bg-black/40 p-4 transition duration-300 group-hover:border-accent-blue/30 group-hover:bg-accent-blue/[0.07]"
+                className="border border-white/8 bg-black/40 p-4 transition duration-300 group-hover:bg-accent-blue/[0.07]"
+                animate={{ borderColor: isCenter ? "rgba(79,140,255,0.25)" : "rgba(255,255,255,0.08)" }}
+                transition={{ duration: 0.4 }}
               >
                 <p className="font-display text-3xl font-bold text-white">
                   <AnimatedCounter value={m.numeric} suffix={m.suffix} duration={1.4 + mi * 0.15} />
                 </p>
                 <p className="font-sans mt-1.5 text-[9px] uppercase tracking-[0.22em] text-white/35">{m.label}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
 
-          <div className="mt-7 flex items-center gap-2 font-sans text-[9px] uppercase tracking-[0.32em] text-white/25 transition group-hover:text-accent-blue/80">
+          <div className="mt-6 flex items-center gap-2 font-sans text-[9px] uppercase tracking-[0.32em] text-white/25 transition group-hover:text-accent-blue/80">
             <span>Case Study</span>
-            <motion.span
-              className="h-px bg-accent-blue"
-              initial={{ width: 0 }}
-              whileHover={{ width: 40 }}
-              transition={{ duration: 0.4 }}
-            />
+            <span className="h-px w-0 bg-accent-blue transition-all duration-500 group-hover:w-10" />
           </div>
         </div>
-      </div>
+      </motion.div>
     </Link>
   );
 }
@@ -80,6 +116,7 @@ function FinanceTicker() {
     "EBITDA","ROI","IRR","NPV","CAGR","SHARPE RATIO","P&L ANALYSIS",
     "MIS REPORTING","ALPHA","VOLATILITY","ARIMA","REGRESSION",
     "FORECASTING","VaR","SQL AUTOMATION","SAP FICO","DCF MODEL","VALUATION",
+    "BUDGET VARIANCE","LIQUIDITY RATIO","WORKING CAPITAL","EBITDA MARGIN",
   ];
   const doubled = [...TERMS, ...TERMS];
   return (
@@ -96,56 +133,67 @@ function FinanceTicker() {
   );
 }
 
-/* ─── Animated spotlight that tracks the centered card ─────────── */
+/* ─── Spotlight that follows the centered card ─────────────────── */
 function Spotlight({ x }: { x: number }) {
-  const sx = useSpring(x, { stiffness: 60, damping: 18 });
+  const sx = useSpring(x, { stiffness: 50, damping: 16 });
   return (
     <motion.div
-      className="pointer-events-none absolute top-1/2 z-0 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full"
+      className="pointer-events-none absolute top-1/2 z-0 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full"
       style={{
         x: sx,
-        background: "radial-gradient(circle, rgba(79,140,255,0.10) 0%, transparent 70%)",
-        filter: "blur(40px)",
+        background: "radial-gradient(circle, rgba(79,140,255,0.14) 0%, transparent 65%)",
+        filter: "blur(50px)",
       }}
     />
   );
 }
 
-/* ─── Progress bar ────────────────────────────────────────────── */
-function ProgressBar({ progress, total }: { progress: number; total: number }) {
-  const active = Math.min(Math.ceil(progress * total), total);
+/* ─── Progress dots ───────────────────────────────────────────── */
+function ProgressDots({ progress, total, center }: { progress: number; total: number; center: number }) {
   return (
-    <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-4">
-      {/* Dot indicators */}
-      <div className="flex items-center gap-1.5">
+    <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-4">
+      <div className="flex items-center gap-2">
         {Array.from({ length: total }).map((_, i) => {
-          const filled = progress * total > i;
+          const isActive = i === center;
+          const isPast   = progress * total > i + 0.5;
           return (
             <motion.div
               key={i}
-              className="rounded-full bg-white/20"
-              animate={filled
-                ? { width: 18, height: 4, backgroundColor: "rgba(79,140,255,0.9)" }
-                : { width: 6, height: 4, backgroundColor: "rgba(255,255,255,0.2)" }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-full"
+              animate={isActive
+                ? { width: 24, height: 5, backgroundColor: "rgba(79,140,255,1)", boxShadow: "0 0 10px rgba(79,140,255,0.8)" }
+                : isPast
+                ? { width: 8,  height: 4, backgroundColor: "rgba(79,140,255,0.4)", boxShadow: "none" }
+                : { width: 6,  height: 4, backgroundColor: "rgba(255,255,255,0.15)", boxShadow: "none" }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             />
           );
         })}
       </div>
-      <span className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/25 tabular-nums">
-        {active} / {total}
-      </span>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={center}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/30 tabular-nums"
+        >
+          {String(center + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+        </motion.span>
+      </AnimatePresence>
     </div>
   );
 }
 
 /* ─── Main section ────────────────────────────────────────────── */
 export function Projects() {
-  const sectionRef  = useRef<HTMLElement>(null);
-  const trackRef    = useRef<HTMLDivElement>(null);
-  const cardRefs    = useRef<(HTMLDivElement | null)[]>([]);
-  const [progress, setProgress] = useState(0);
-  const spotlightX  = useMotionValue(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const trackRef   = useRef<HTMLDivElement>(null);
+  const cardRefs   = useRef<(HTMLDivElement | null)[]>([]);
+  const [progress, setProgress]       = useState(0);
+  const [centerIdx, setCenterIdx]     = useState(-1);
+  const [hoveredIdx, setHoveredIdx]   = useState<number | null>(null);
+  const spotlightX = useMotionValue(0);
 
   const { lite } = usePerfFlags();
 
@@ -159,44 +207,43 @@ export function Projects() {
 
     let tween: gsap.core.Tween | null = null;
 
-    const applyCardLoom = (scrollX: number) => {
+    const applyLoom = () => {
       const vwCenter = window.innerWidth / 2;
+      let bestDist = Infinity;
+      let bestIdx  = -1;
 
-      cardRefs.current.forEach((card) => {
+      cardRefs.current.forEach((card, i) => {
         if (!card) return;
         const rect    = card.getBoundingClientRect();
         const cardCx  = rect.left + rect.width / 2;
-        const dist    = (cardCx - vwCenter) / window.innerWidth; // -1…0…1
-
-        // Clamp and compute transforms
+        const dist    = (cardCx - vwCenter) / window.innerWidth; // -1…1
         const absDist = Math.abs(dist);
-        const scale   = 1 - absDist * 0.14;           // 0.86 … 1
-        const opacity = 1 - absDist * 0.65;            // 0.35 … 1
-        const rotY    = dist * 14;                      // -14deg … 14deg
-        const blur    = absDist * 4;                    // 0 … 4px
+
+        // Deeper 3-D loom
+        const scale   = Math.max(0.78, 1 - absDist * 0.20);
+        const opacity = Math.max(0.15, 1 - absDist * 0.80);
+        const rotY    = dist * 18;
+        const transY  = absDist * 28;           // non-centre cards dip down
+        const blur    = absDist * 6;
 
         gsap.set(card, {
-          scale:         Math.max(0.82, scale),
-          opacity:       Math.max(0.25, opacity),
-          rotateY:       rotY,
-          filter:        `blur(${blur.toFixed(1)}px)`,
+          scale,
+          opacity,
+          rotateY:     rotY,
+          y:           transY,
+          filter:      `blur(${blur.toFixed(1)}px)`,
+          zIndex:      Math.round(10 - absDist * 10),
           transformOrigin: dist > 0 ? "left center" : "right center",
-          z:             -absDist * 120,
         });
+
+        const d = Math.abs(cardCx - vwCenter);
+        if (d < bestDist) { bestDist = d; bestIdx = i; }
       });
 
-      // Spotlight follows the most-centred card
-      let bestCard = cardRefs.current[0];
-      let bestDist = Infinity;
-      cardRefs.current.forEach((card) => {
-        if (!card) return;
-        const rect = card.getBoundingClientRect();
-        const d    = Math.abs(rect.left + rect.width / 2 - vwCenter);
-        if (d < bestDist) { bestDist = d; bestCard = card; }
-      });
-      if (bestCard) {
-        const rect = bestCard.getBoundingClientRect();
-        spotlightX.set(rect.left + rect.width / 2);
+      setCenterIdx(bestIdx);
+      if (bestIdx >= 0 && cardRefs.current[bestIdx]) {
+        const r = cardRefs.current[bestIdx]!.getBoundingClientRect();
+        spotlightX.set(r.left + r.width / 2);
       }
     };
 
@@ -209,13 +256,13 @@ export function Projects() {
         if (scrollDist === 0) return;
 
         section.style.height = `${window.innerHeight + scrollDist}px`;
-        gsap.set(track, { x: 0 });
 
-        // Initial state: all cards off to the right, tilted
-        cardRefs.current.forEach((card, i) => {
-          if (!card) return;
-          gsap.set(card, { opacity: 0, scale: 0.9, rotateY: 12, y: 30 });
+        // Initial state: all cards off-right, tilted, invisible
+        cardRefs.current.forEach((card) => {
+          if (card) gsap.set(card, { opacity: 0, scale: 0.88, rotateY: 16, y: 40 });
         });
+
+        gsap.set(track, { x: 0 });
 
         tween = gsap.to(track, {
           x: -scrollDist,
@@ -224,39 +271,27 @@ export function Projects() {
             trigger: section,
             start: "top top",
             end: () => `+=${scrollDist}`,
-            scrub: 1.2,
+            scrub: 1.4,
             invalidateOnRefresh: true,
             onEnter() {
-              // Entrance animation: first visible cards animate in
               cardRefs.current.forEach((card, i) => {
                 if (!card) return;
-                gsap.to(card, {
-                  opacity: 1,
-                  y: 0,
-                  delay: i * 0.08,
-                  duration: 0.7,
-                  ease: "power3.out",
-                });
+                gsap.to(card, { opacity: 1, y: 0, delay: i * 0.07, duration: 0.8, ease: "power3.out" });
               });
             },
             onUpdate(self) {
               setProgress(self.progress);
-              applyCardLoom(-scrollDist * self.progress);
+              applyLoom();
             },
           },
         });
 
-        // Run once for initial positions
-        applyCardLoom(0);
+        applyLoom();
       });
     };
 
     const r1 = requestAnimationFrame(() => requestAnimationFrame(setup));
-
-    const onResize = () => {
-      if (section) section.style.height = "";
-      setup();
-    };
+    const onResize = () => { if (section) section.style.height = ""; setup(); };
     window.addEventListener("resize", onResize);
 
     return () => {
@@ -288,9 +323,9 @@ export function Projects() {
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
-              transition={{ delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ delay: i * 0.08, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              <ProjectCard project={project} index={i} />
+              <ProjectCard project={project} index={i} isCenter={false} dimmed={false} />
             </motion.div>
           ))}
         </div>
@@ -298,105 +333,111 @@ export function Projects() {
     );
   }
 
-  /* ── Full mode: sticky + GSAP horizontal scroll + 3D loom ── */
+  /* ── Full mode ── */
   return (
     <section id="projects" ref={sectionRef} className="relative">
       <div
         className="sticky top-0 h-screen overflow-hidden"
-        style={{ perspective: "1400px", perspectiveOrigin: "50% 50%" }}
+        style={{ perspective: "1600px", perspectiveOrigin: "50% 52%" }}
       >
-        {/* Ambient background */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_60%,rgba(79,140,255,0.06),transparent)]" />
+        {/* Ambient radial */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_55%,rgba(79,140,255,0.07),transparent)]" />
 
-        {/* Moving spotlight */}
+        {/* Spotlight on centered card */}
         <Spotlight x={spotlightX.get()} />
 
         {/* Top bar */}
         <div className="absolute inset-x-0 top-0 z-20 px-5 pt-5 sm:px-8 md:px-12 lg:px-16">
-          <div className="flex items-center gap-4 mb-2">
+          <div className="mb-2 flex items-center gap-4">
             <span className="section-num">02 / WORK</span>
             <div className="h-px flex-1 bg-gradient-to-r from-accent-blue/25 to-transparent" />
-            <span className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/22 tabular-nums">
-              {Math.round(progress * projects.length * 10) / 10} / {projects.length}
-            </span>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={centerIdx}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/25 tabular-nums"
+              >
+                {centerIdx >= 0 ? projects[centerIdx]?.title : ""}
+              </motion.span>
+            </AnimatePresence>
           </div>
           <FinanceTicker />
         </div>
 
-        {/* Left / right fade masks */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#030303] to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#030303] to-transparent" />
+        {/* Edge fades */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#030303] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#030303] to-transparent" />
 
-        {/* Track wrapper — centred vertically */}
-        <div className="flex h-full items-center" style={{ paddingTop: "72px", paddingBottom: "56px" }}>
+        {/* Track */}
+        <div className="flex h-full items-center" style={{ paddingTop: "72px", paddingBottom: "60px" }}>
           <div
             ref={trackRef}
-            className="flex items-stretch gap-6 pl-5 sm:pl-8 md:pl-12 lg:pl-16"
+            className="flex items-center gap-5 pl-5 sm:pl-8 md:pl-12 lg:pl-16"
             style={{ width: "max-content" }}
           >
             {/* Leading blurb */}
-            <div className="flex shrink-0 flex-col justify-center" style={{ width: "min(60vw, 260px)" }}>
-              <h2
-                className="section-heading-bold leading-tight"
-                style={{ fontSize: "clamp(1.5rem, 3.2vw, 2.6rem)" }}
-              >
+            <div className="flex shrink-0 flex-col justify-center" style={{ width: "min(55vw, 240px)" }}>
+              <h2 className="section-heading-bold leading-tight" style={{ fontSize: "clamp(1.4rem,3vw,2.4rem)" }}>
                 WORK THAT<br />MOVED THE<br />NUMBERS.
               </h2>
-              <p className="font-body mt-4 text-sm leading-[1.8] text-white/32">
-                Turning financial complexity<br />into clarity — one dataset<br />at a time.
+              <p className="font-body mt-4 text-sm leading-[1.8] text-white/30">
+                Turning financial complexity into clarity — one dataset at a time.
               </p>
               <div className="mt-5 flex items-center gap-2 font-sans text-[9px] uppercase tracking-[0.38em] text-white/18">
                 <motion.span
-                  className="h-px bg-white/25"
-                  animate={{ width: [20, 36, 20] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  className="h-px bg-white/22"
+                  animate={{ width: [16, 32, 16] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <span>Scroll to explore</span>
               </div>
             </div>
 
-            {/* Project cards — each gets a ref for loom + entrance */}
+            {/* Project cards */}
             {projects.map((project, i) => (
               <div
                 key={project.slug}
                 ref={(el) => { cardRefs.current[i] = el; }}
                 className="shrink-0"
+                onMouseEnter={() => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}
                 style={{
-                  width: "min(80vw, 460px)",
-                  height: "clamp(340px, 58vh, 530px)",
+                  width: "min(78vw, 440px)",
+                  height: "clamp(360px, 60vh, 540px)",
                   transformStyle: "preserve-3d",
                   willChange: "transform, opacity, filter",
+                  cursor: "pointer",
                 }}
               >
-                <ProjectCard project={project} index={i} />
+                <ProjectCard
+                  project={project}
+                  index={i}
+                  isCenter={centerIdx === i}
+                  dimmed={hoveredIdx !== null && hoveredIdx !== i}
+                />
               </div>
             ))}
 
             {/* Trailing CTA */}
-            <div
-              className="flex shrink-0 flex-col items-center justify-center pr-16"
-              style={{ width: "min(60vw, 280px)" }}
-            >
-              <Link
-                href="#contact"
-                data-cursor="interactive"
-                className="group flex flex-col items-center gap-4 text-center"
-              >
+            <div className="flex shrink-0 flex-col items-center justify-center pr-16" style={{ width: "min(55vw, 260px)" }}>
+              <Link href="#contact" data-cursor="interactive" className="group flex flex-col items-center gap-4 text-center">
                 <motion.span
-                  className="font-display font-bold text-white/15"
-                  style={{ fontSize: "clamp(2rem, 4.5vw, 3.5rem)" }}
-                  whileHover={{ color: "rgba(255,255,255,0.65)" }}
+                  className="font-display font-bold text-white/14"
+                  style={{ fontSize: "clamp(1.8rem, 4vw, 3.2rem)" }}
+                  whileHover={{ color: "rgba(255,255,255,0.6)" }}
                 >
                   LET&apos;S BUILD
                 </motion.span>
                 <motion.span
-                  className="font-display font-bold text-white/15"
-                  style={{ fontSize: "clamp(2rem, 4.5vw, 3.5rem)" }}
+                  className="font-display font-bold text-white/14"
+                  style={{ fontSize: "clamp(1.8rem, 4vw, 3.2rem)" }}
                   whileHover={{ color: "rgba(79,140,255,1)" }}
                 >
                   SOMETHING.
                 </motion.span>
-                <span className="mt-1 font-sans text-[10px] uppercase tracking-[0.4em] text-accent-blue/45">
+                <span className="mt-1 font-sans text-[10px] uppercase tracking-[0.4em] text-accent-blue/40">
                   Get in touch ↗
                 </span>
               </Link>
@@ -404,8 +445,8 @@ export function Projects() {
           </div>
         </div>
 
-        {/* Scroll progress dots */}
-        <ProgressBar progress={progress} total={projects.length} />
+        {/* Progress dots */}
+        <ProgressDots progress={progress} total={projects.length} center={centerIdx} />
       </div>
     </section>
   );

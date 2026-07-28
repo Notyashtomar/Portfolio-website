@@ -211,6 +211,93 @@ export const projects = [
       "Consistent SQL workflows protect accuracy at scale.",
     ],
   },
+  {
+    slug: "financial-planning-budget",
+    title: "Financial Planning & Budget Analysis",
+    subtitle: "Excel · Power BI · Jan 2025",
+    tagline:
+      "Built a comprehensive budgeting model to analyze department-wise expenses, revenue forecasts, and budget variance, enabling faster financial planning and executive decision-making.",
+    challenge:
+      "Department-wise budget tracking was fragmented, causing delayed variance detection and slower executive decision cycles.",
+    solution:
+      "Built a comprehensive Excel budgeting model integrated with Power BI dashboards to track department expenses, revenue forecasts, and budget variance across 85K+ financial records.",
+    tech: ["Excel", "Power BI", "Budget Modeling", "Variance Analysis"],
+    architecture: [
+      "Department-wise expense and revenue data structured in Excel",
+      "Variance analysis layer comparing actuals vs. budgets",
+      "Power BI dashboards for leadership budget reviews",
+      "Automated alerts for budget overruns and forecast shifts",
+    ],
+    metrics: [
+      { value: "28%", label: "Budget accuracy improved", numeric: 28, suffix: "%" },
+      { value: "85K+", label: "Financial records",       numeric: 85, suffix: "K+" },
+      { value: "Jan 2025", label: "Delivery",            numeric: 0,  suffix: "" },
+    ],
+    impact:
+      "Improved budget accuracy by 28% and enabled real-time financial planning decisions across 85,000+ records for executive leadership.",
+    lessons: [
+      "Variance analysis surfaces gaps before they become strategic problems.",
+      "Budget models are most effective when linked directly to leadership dashboards.",
+    ],
+  },
+  {
+    slug: "profitability-cost-analysis",
+    title: "Profitability & Cost Analysis",
+    subtitle: "SQL · Power BI · May 2025",
+    tagline:
+      "Designed a financial analytics dashboard to evaluate gross profit, operating costs, EBITDA trends, and product profitability across multiple business units.",
+    challenge:
+      "Leadership lacked a unified view of profitability drivers across product lines and business units, making cost optimization decisions slow.",
+    solution:
+      "Built SQL pipelines and Power BI dashboards evaluating EBITDA trends, gross profit, and operating costs across 120K+ transactions for multi-unit profitability analysis.",
+    tech: ["SQL", "Power BI", "EBITDA Analysis", "Cost Modeling"],
+    architecture: [
+      "SQL extraction and transformation across multi-unit transaction data",
+      "EBITDA and gross margin models built in Power BI",
+      "Operating cost breakdown by product and business unit",
+      "Trend analysis views for quarterly profitability reviews",
+    ],
+    metrics: [
+      { value: "22%", label: "Cost optimization",        numeric: 22,  suffix: "%" },
+      { value: "120K+", label: "Transactions analyzed",  numeric: 120, suffix: "K+" },
+      { value: "May 2025", label: "Delivery",            numeric: 0,   suffix: "" },
+    ],
+    impact:
+      "Drove 22% cost optimization by surfacing EBITDA and profitability trends across 120,000+ transactions in real-time Power BI dashboards.",
+    lessons: [
+      "Multi-unit profitability views reveal cross-subsidization that single-unit reporting hides.",
+      "SQL-driven cost models allow faster scenario testing than manual spreadsheets.",
+    ],
+  },
+  {
+    slug: "cashflow-kpi-dashboard",
+    title: "Cash Flow & Financial KPI Dashboard",
+    subtitle: "Excel · SQL · Oct 2025",
+    tagline:
+      "Developed an executive dashboard to monitor cash flow, accounts receivable, accounts payable, liquidity ratios, and working capital, providing real-time visibility into organizational financial health.",
+    challenge:
+      "Finance teams lacked real-time cash flow visibility, leading to reactive liquidity management and delayed AP/AR decisions.",
+    solution:
+      "Developed an Excel and SQL-powered executive dashboard monitoring cash flow, AR/AP, liquidity ratios, and working capital across 150K+ financial entries.",
+    tech: ["Excel", "SQL", "Cash Flow Modeling", "KPI Dashboards"],
+    architecture: [
+      "SQL pipelines aggregating AR, AP, and cash flow transaction data",
+      "Excel models computing liquidity ratios and working capital",
+      "Executive KPI dashboard with real-time health indicators",
+      "Automated data refresh for daily financial snapshot delivery",
+    ],
+    metrics: [
+      { value: "40%", label: "Reporting efficiency",    numeric: 40,  suffix: "%" },
+      { value: "150K+", label: "Financial entries",     numeric: 150, suffix: "K+" },
+      { value: "Oct 2025", label: "Delivery",           numeric: 0,   suffix: "" },
+    ],
+    impact:
+      "Delivered 40% reporting efficiency gains by giving finance leadership real-time cash flow and liquidity visibility across 150,000+ financial entries.",
+    lessons: [
+      "Real-time cash flow dashboards shift finance teams from reactive to proactive liquidity management.",
+      "AR/AP visibility in a single view eliminates the most common working capital blind spots.",
+    ],
+  },
 ] as const;
 
 export const skillCategories = [
