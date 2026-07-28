@@ -149,13 +149,15 @@ function Spotlight({ x }: { x: number }) {
 }
 
 /* ─── Progress dots ───────────────────────────────────────────── */
-function ProgressDots({ progress, total, center }: { progress: number; total: number; center: number }) {
+function ProgressDots({
+  progress, total, center, ctaActive,
+}: { progress: number; total: number; center: number; ctaActive: boolean }) {
   return (
     <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-4">
       <div className="flex items-center gap-2">
         {Array.from({ length: total }).map((_, i) => {
-          const isActive = i === center;
-          const isPast   = progress * total > i + 0.5;
+          const isActive = i === center && !ctaActive;
+          const isPast   = ctaActive || progress * total > i + 0.5;
           return (
             <motion.div
               key={i}
@@ -172,13 +174,13 @@ function ProgressDots({ progress, total, center }: { progress: number; total: nu
       </div>
       <AnimatePresence mode="wait">
         <motion.span
-          key={center}
+          key={ctaActive ? "cta" : center}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/30 tabular-nums"
         >
-          {String(center + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+          {ctaActive ? "→ CONTACT" : `${String(center + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`}
         </motion.span>
       </AnimatePresence>
     </div>
@@ -190,10 +192,12 @@ export function Projects() {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
   const spacerRef  = useRef<HTMLDivElement>(null);
+  const ctaRef     = useRef<HTMLDivElement>(null);
   const cardRefs   = useRef<(HTMLDivElement | null)[]>([]);
   const [progress, setProgress]       = useState(0);
   const [centerIdx, setCenterIdx]     = useState(0);
   const [hoveredIdx, setHoveredIdx]   = useState<number | null>(null);
+  const [ctaActive, setCtaActive]     = useState(false);
   const spotlightX = useMotionValue(0);
 
   const { lite } = usePerfFlags();
@@ -206,7 +210,7 @@ export function Projects() {
     const track   = trackRef.current;
     if (!section || !track) return;
 
-    let tween: gsap.core.Tween | null = null;
+    let tween: gsap.core.Tween | gsap.core.Timeline | null = null;
 
     const applyLoom = () => {
       const vwCenter = window.innerWidth / 2;
@@ -241,8 +245,31 @@ export function Projects() {
         if (d < bestDist) { bestDist = d; bestIdx = i; }
       });
 
-      setCenterIdx(bestIdx);
-      if (bestIdx >= 0 && cardRefs.current[bestIdx]) {
+      // Trailing CTA competes with cards for "who's centred" — whichever is
+      // closest to viewport centre wins and gets full brightness.
+      const cta = ctaRef.current;
+      let ctaDist = Infinity;
+      if (cta) {
+        const rect = cta.getBoundingClientRect();
+        const cx   = rect.left + rect.width / 2;
+        ctaDist    = Math.abs(cx - vwCenter);
+
+        const norm    = (cx - vwCenter) / window.innerWidth;
+        const absNorm = Math.abs(norm);
+        gsap.set(cta, {
+          scale:  Math.max(0.85, 1 - absNorm * 0.18),
+          filter: `blur(${(absNorm * 5).toFixed(1)}px)`,
+        });
+      }
+
+      const ctaWins = ctaDist < bestDist;
+      setCtaActive(ctaWins);
+      setCenterIdx(ctaWins ? -1 : bestIdx);
+
+      if (ctaWins && cta) {
+        const r = cta.getBoundingClientRect();
+        spotlightX.set(r.left + r.width / 2);
+      } else if (bestIdx >= 0 && cardRefs.current[bestIdx]) {
         const r = cardRefs.current[bestIdx]!.getBoundingClientRect();
         spotlightX.set(r.left + r.width / 2);
       }
@@ -268,34 +295,50 @@ export function Projects() {
         }
 
         // Pass 2: layout has settled with the spacer applied — now measure
-        // real scroll distance and build the trigger.
+        // real scroll distance so the CTA's centre (not the track's raw
+        // right edge) is what the animation targets. This guarantees the
+        // CTA reaches full brightness/centre before the section releases.
         requestAnimationFrame(() => {
-          const scrollDist = Math.max(0, track.scrollWidth - window.innerWidth);
-          if (scrollDist === 0) return;
+          const cta = ctaRef.current;
+          let scrollDist = Math.max(0, track.scrollWidth - window.innerWidth);
+          if (cta) {
+            const rect = cta.getBoundingClientRect();
+            const ctaCenter = rect.left + rect.width / 2;
+            // +32px safety margin so the CTA always fully reaches dead-centre
+            // even if late webfont/layout shifts nudge its measured width.
+            scrollDist = Math.max(scrollDist, ctaCenter - window.innerWidth / 2 + 32);
+          }
+          if (scrollDist <= 0) return;
 
-          // Extra scroll runway (×1.6) so the horizontal slide feels slower
-          // per pixel of vertical scroll, without changing the x range.
-          const runway = scrollDist * 1.6;
+          // Extra scroll runway (×1.28 — 20% faster than the previous ×1.6)
+          // so the horizontal slide feels slower than 1:1 scroll but snappier
+          // than before, without changing the x range.
+          const runway = scrollDist * 1.28;
           section.style.height = `${window.innerHeight + runway}px`;
 
           gsap.set(track, { x: 0 });
           applyLoom();
 
-          tween = gsap.to(track, {
-            x: -scrollDist,
-            ease: "none",
+          // Timeline (not a bare tween) so the horizontal slide finishes at
+          // 85% of the runway, leaving the final 15% of scroll as a "hold" —
+          // the 6th card / CTA sit fully centred and in focus for a beat
+          // before the section releases, instead of the scrub lag leaving
+          // them perpetually short of dead-centre right at the very end.
+          tween = gsap.timeline({
             scrollTrigger: {
               trigger: section,
               start: "top top",
               end: () => `+=${runway}`,
-              scrub: 2,
+              scrub: 1.1,
               invalidateOnRefresh: true,
               onUpdate(self) {
                 setProgress(self.progress);
                 applyLoom();
               },
             },
-          });
+          })
+            .to(track, { x: -scrollDist, ease: "none", duration: 0.85 })
+            .to({}, { duration: 0.15 });
         });
       });
     };
@@ -363,13 +406,13 @@ export function Projects() {
             <div className="h-px flex-1 bg-gradient-to-r from-accent-blue/25 to-transparent" />
             <AnimatePresence mode="wait">
               <motion.span
-                key={centerIdx}
+                key={ctaActive ? "cta" : centerIdx}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/25 tabular-nums"
               >
-                {centerIdx >= 0 ? projects[centerIdx]?.title : ""}
+                {ctaActive ? "Ready to talk?" : centerIdx >= 0 ? projects[centerIdx]?.title : ""}
               </motion.span>
             </AnimatePresence>
           </div>
@@ -433,33 +476,45 @@ export function Projects() {
               </div>
             ))}
 
-            {/* Trailing CTA */}
-            <div className="flex shrink-0 flex-col items-center justify-center pr-16" style={{ width: "min(55vw, 260px)" }}>
+            {/* Trailing CTA — brightens to full white/blue once centred */}
+            <div
+              ref={ctaRef}
+              className="flex shrink-0 flex-col items-center justify-center"
+              style={{ width: "min(60vw, 320px)", marginRight: "64px", willChange: "transform, filter" }}
+            >
               <Link href="#contact" data-cursor="interactive" className="group flex flex-col items-center gap-4 text-center">
                 <motion.span
-                  className="font-display font-bold text-white/14"
+                  className="font-display font-bold"
                   style={{ fontSize: "clamp(1.8rem, 4vw, 3.2rem)" }}
-                  whileHover={{ color: "rgba(255,255,255,0.6)" }}
+                  animate={{ color: ctaActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.14)" }}
+                  whileHover={{ color: "rgba(255,255,255,0.95)" }}
+                  transition={{ duration: 0.4 }}
                 >
                   LET&apos;S BUILD
                 </motion.span>
                 <motion.span
-                  className="font-display font-bold text-white/14"
+                  className="font-display font-bold"
                   style={{ fontSize: "clamp(1.8rem, 4vw, 3.2rem)" }}
+                  animate={{ color: ctaActive ? "rgba(79,140,255,1)" : "rgba(255,255,255,0.14)" }}
                   whileHover={{ color: "rgba(79,140,255,1)" }}
+                  transition={{ duration: 0.4 }}
                 >
                   SOMETHING.
                 </motion.span>
-                <span className="mt-1 font-sans text-[10px] uppercase tracking-[0.4em] text-accent-blue/40">
+                <motion.span
+                  className="mt-1 font-sans text-[10px] uppercase tracking-[0.4em]"
+                  animate={{ opacity: ctaActive ? 1 : 0.35, color: ctaActive ? "#4f8cff" : "rgba(79,140,255,0.4)" }}
+                  transition={{ duration: 0.4 }}
+                >
                   Get in touch ↗
-                </span>
+                </motion.span>
               </Link>
             </div>
           </div>
         </div>
 
         {/* Progress dots */}
-        <ProgressDots progress={progress} total={projects.length} center={centerIdx} />
+        <ProgressDots progress={progress} total={projects.length} center={centerIdx} ctaActive={ctaActive} />
       </div>
     </section>
   );

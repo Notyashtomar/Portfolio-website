@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { experience, focusAreas, profile } from "@/data/resume";
+import { motion, useInView } from "framer-motion";
+import { focusAreas, profile } from "@/data/resume";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { SplitReveal } from "@/components/motion/SplitReveal";
 import { springSoft } from "@/lib/motion";
@@ -193,105 +193,173 @@ function FocusCard({
   );
 }
 
-/* ── Interactive career timeline — fills the empty space beneath the summary ── */
-function CareerPulse() {
-  const [active, setActive] = useState<string | null>(experience[0]?.id ?? null);
-  const railRef = useRef<HTMLDivElement>(null);
+/* ── Finance × data-science signal console — fills the empty space beneath the summary ── */
+const SIGNALS = [
+  { label: "Revenue Trend", value: "+18.4%", points: [30, 40, 36, 52, 46, 60, 55, 68, 64, 82], color: "#34d399" },
+  { label: "Cost Variance", value: "-6.2%", points: [72, 65, 68, 55, 60, 47, 52, 39, 44, 30], color: "#f87171" },
+  { label: "Forecast Accuracy", value: "96.7%", points: [38, 46, 51, 57, 62, 70, 75, 82, 88, 95], color: "#4f8cff" },
+];
 
+function Sparkline({ points, color, gradId }: { points: number[]; color: string; gradId: string }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.5 });
+
+  const w = 140;
+  const h = 40;
+  const max = Math.max(...points);
+  const min = Math.min(...points);
+  const range = max - min || 1;
+  const step = w / (points.length - 1);
+  const line = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${(i * step).toFixed(1)} ${(h - ((p - min) / range) * h).toFixed(1)}`)
+    .join(" ");
+  const area = `${line} L ${w} ${h} L 0 ${h} Z`;
+  const lastY = h - ((points[points.length - 1] - min) / range) * h;
+
+  return (
+    <svg ref={ref} viewBox={`0 0 ${w} ${h}`} className="h-10 w-full overflow-visible" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <motion.path
+        d={area}
+        fill={`url(#${gradId})`}
+        initial={{ opacity: 0 }}
+        animate={inView ? { opacity: 1 } : {}}
+        transition={{ delay: 0.55, duration: 0.6 }}
+      />
+      <motion.path
+        d={line}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        animate={inView ? { pathLength: 1 } : { pathLength: 0 }}
+        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+      />
+      {inView && (
+        <motion.circle
+          cx={w}
+          cy={lastY}
+          r="2.5"
+          fill={color}
+          initial={{ scale: 0 }}
+          animate={{ scale: [0, 1.6, 1] }}
+          transition={{ delay: 1.05, duration: 0.5 }}
+        />
+      )}
+    </svg>
+  );
+}
+
+function SignalCard({ signal, index }: { signal: (typeof SIGNALS)[number]; index: number }) {
+  return (
+    <motion.div
+      data-cursor="interactive"
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.4 }}
+      whileHover={{ borderColor: `${signal.color}40`, y: -2 }}
+      transition={{ delay: index * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="group relative overflow-hidden rounded-2xl border border-white/8 bg-white/[0.02] p-4"
+    >
+      <div
+        className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-30"
+        style={{ background: signal.color }}
+      />
+      <div className="relative z-10 flex items-center justify-between gap-2">
+        <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-white/35">{signal.label}</p>
+        <span className="font-display shrink-0 text-sm font-semibold" style={{ color: signal.color }}>
+          {signal.value}
+        </span>
+      </div>
+      <div className="relative z-10 mt-3">
+        <Sparkline points={signal.points} color={signal.color} gradId={`about-spark-${index}`} />
+      </div>
+    </motion.div>
+  );
+}
+
+/** Rotating terminal line — types out finance & data-science snippets, then deletes and cycles. */
+const CONSOLE_LINES = [
+  "DCF = Σ CFₜ ÷ (1 + r)ᵗ",
+  "SELECT region, SUM(revenue) FROM sales GROUP BY region;",
+  "df.groupby('quarter')['ebitda'].agg(['mean','std'])",
+  "NPV > 0  →  ACCEPT PROJECT",
+  "=INDEX(MATCH(lookup_value, range, 0))",
+  "R² = 0.94   RMSE = 1.2%",
+  "Working Capital = Current Assets − Current Liabilities",
+];
+
+function ConsoleTicker() {
+  const [lineIdx, setLineIdx] = useState(0);
+  const [display, setDisplay] = useState("");
+  const [phase, setPhase] = useState<"typing" | "holding" | "deleting">("typing");
+
+  useEffect(() => {
+    const full = CONSOLE_LINES[lineIdx];
+    let timeout: ReturnType<typeof setTimeout>;
+
+    if (phase === "typing") {
+      if (display.length < full.length) {
+        timeout = setTimeout(() => setDisplay(full.slice(0, display.length + 1)), 32);
+      } else {
+        timeout = setTimeout(() => setPhase("holding"), 1500);
+      }
+    } else if (phase === "holding") {
+      timeout = setTimeout(() => setPhase("deleting"), 800);
+    } else {
+      if (display.length > 0) {
+        timeout = setTimeout(() => setDisplay(full.slice(0, display.length - 1)), 14);
+      } else {
+        setPhase("typing");
+        setLineIdx((i) => (i + 1) % CONSOLE_LINES.length);
+      }
+    }
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [display, phase, lineIdx]);
+
+  return (
+    <div className="flex min-h-[1.5em] items-center gap-2 overflow-hidden font-mono text-[12px] sm:text-[13px]">
+      <span className="shrink-0 text-accent-blue/60">$</span>
+      <span className="truncate text-white/55">{display}</span>
+      <motion.span
+        className="inline-block h-3.5 w-[2px] shrink-0 bg-accent-blue/70"
+        animate={{ opacity: [1, 1, 0, 0] }}
+        transition={{ duration: 0.9, repeat: Infinity, times: [0, 0.5, 0.5, 1], ease: "linear" }}
+      />
+    </div>
+  );
+}
+
+function DataConsole() {
   return (
     <div className="mt-10 sm:mt-14 lg:mt-16">
       <div className="mb-6 flex items-center gap-3">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" style={{ boxShadow: "0 0 6px #34d399" }} />
-        <p className="font-sans text-[10px] uppercase tracking-[0.32em] text-white/35">Career Log</p>
+        <motion.span
+          className="h-1.5 w-1.5 rounded-full bg-accent-blue"
+          style={{ boxShadow: "0 0 6px #4f8cff" }}
+          animate={{ opacity: [1, 0.4, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <p className="font-sans text-[10px] uppercase tracking-[0.32em] text-white/35">Data Signal</p>
         <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
       </div>
 
-      <div ref={railRef} className="relative pl-6">
-        {/* Vertical rail */}
-        <motion.div
-          className="absolute left-[3px] top-1 w-px bg-gradient-to-b from-accent-blue/50 via-white/12 to-transparent"
-          initial={{ scaleY: 0 }}
-          whileInView={{ scaleY: 1 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          style={{ transformOrigin: "top", height: "calc(100% - 4px)" }}
-        />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {SIGNALS.map((signal, i) => (
+          <SignalCard key={signal.label} signal={signal} index={i} />
+        ))}
+      </div>
 
-        <div className="space-y-1">
-          {experience.map((job, i) => {
-            const isActive  = active === job.id;
-            const isCurrent = job.period.toLowerCase().includes("present");
-
-            return (
-              <motion.div
-                key={job.id}
-                data-cursor="interactive"
-                initial={{ opacity: 0, x: -12 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                onMouseEnter={() => setActive(job.id)}
-                onClick={() => setActive(isActive ? null : job.id)}
-                className="group relative cursor-pointer py-3"
-              >
-                {/* Dot */}
-                <span
-                  className="absolute -left-6 top-4 flex h-2 w-2 -translate-x-1/2 items-center justify-center rounded-full transition-colors duration-300"
-                  style={{
-                    background: isActive ? "#4f8cff" : isCurrent ? "#34d399" : "rgba(255,255,255,0.25)",
-                    boxShadow: isActive ? "0 0 10px rgba(79,140,255,0.8)" : isCurrent ? "0 0 8px rgba(52,211,153,0.7)" : "none",
-                  }}
-                >
-                  {isCurrent && (
-                    <motion.span
-                      className="absolute inline-block h-2 w-2 rounded-full bg-emerald-400"
-                      animate={{ scale: [1, 2.2, 1], opacity: [0.7, 0, 0.7] }}
-                      transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
-                    />
-                  )}
-                </span>
-
-                {/* Header row */}
-                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                  <div className="flex items-baseline gap-2.5">
-                    <span
-                      className="font-display text-base font-semibold transition-colors duration-300 sm:text-lg"
-                      style={{ color: isActive ? "#ffffff" : "rgba(255,255,255,0.75)" }}
-                    >
-                      {job.company}
-                    </span>
-                    {isCurrent && (
-                      <span className="font-sans text-[8px] uppercase tracking-[0.2em] text-emerald-400/80">
-                        · live
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-sans text-[9px] uppercase tracking-[0.2em] text-white/25">
-                    {job.period}
-                  </span>
-                </div>
-                <p className="font-body mt-0.5 text-xs text-accent-blue/60">{job.role} · {job.location}</p>
-
-                {/* Expandable highlight */}
-                <AnimatePresence initial={false}>
-                  {isActive && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <p className="font-body mt-3 max-w-md text-[13px] leading-[1.75] text-white/50">
-                        {job.highlights[0]}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            );
-          })}
-        </div>
+      <div className="mt-4 rounded-xl border border-white/8 bg-[#05070d] px-4 py-3">
+        <ConsoleTicker />
       </div>
     </div>
   );
@@ -322,7 +390,7 @@ export function About() {
               className="font-body max-w-2xl text-[0.95rem] leading-[1.85] text-muted sm:text-base md:text-lg md:leading-[1.9]"
               stagger={0.02}
             />
-            <CareerPulse />
+            <DataConsole />
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">

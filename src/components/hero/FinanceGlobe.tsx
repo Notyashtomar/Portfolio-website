@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import {
@@ -19,6 +19,8 @@ import { usePerfFlags } from "@/components/providers/Providers";
 const R = 2;
 const DRAG_SENSITIVITY = 0.006;
 const AUTO_SPIN = 0.0014; // radians per frame when idle
+// Outermost ring sits at R * 1.52 — pad it a little so nothing kisses the edge.
+const GLOBE_MAX_EXTENT = R * 1.52 * 1.15;
 
 /* ─── Term data with tooltip context ────────────────────────── */
 const TERMS = [
@@ -306,6 +308,25 @@ function GlobeGroup({
   );
 }
 
+/** Keeps the whole globe (incl. outer rings) inside the frustum at any
+ * container aspect ratio, by pushing the camera back as needed. This makes
+ * the globe read as "smaller" on tighter/narrower containers while always
+ * showing 100% of it, instead of letting the outer rings clip off-screen. */
+function CameraFit() {
+  const { camera, size } = useThree();
+
+  useFrame(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    const aspect = size.width / size.height;
+    const vFov = (cam.fov * Math.PI) / 180;
+    const limitingAspect = Math.min(1, aspect);
+    const dist = GLOBE_MAX_EXTENT / (Math.tan(vFov / 2) * limitingAspect);
+    cam.position.z = THREE.MathUtils.lerp(cam.position.z, dist, 0.15);
+  });
+
+  return null;
+}
+
 function Scene({
   mouse, drag, active, onEnter, onLeave, tier,
 }: {
@@ -323,6 +344,7 @@ function Scene({
       <pointLight position={[5, 4, 3]} intensity={24} color="#4f8cff" />
       <pointLight position={[-4, -2, 2]} intensity={14} color="#8b5cf6" />
       <pointLight position={[0, -4, 0]} intensity={8} color="#ff3d9a" />
+      <CameraFit />
       <GlobeGroup mouse={mouse} drag={drag} active={active} onEnter={onEnter} onLeave={onLeave} />
       <Particles count={isHigh ? 90 : 55} />
       <EffectComposer multisampling={0}>

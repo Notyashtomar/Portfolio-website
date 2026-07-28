@@ -7,8 +7,46 @@ import {
   AnimatePresence, motion,
   useMotionValue, useSpring, useTransform,
 } from "framer-motion";
-import { Download, Mail, Phone, ExternalLink, ArrowRight, Send } from "lucide-react";
+import { Download, ArrowRight, Send } from "lucide-react";
 import { profile } from "@/data/resume";
+
+/* ── Brand icons (inline SVG, currentColor-driven) ── */
+function GmailIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path
+        d="M3 6.5C3 5.67 3.67 5 4.5 5h15c.83 0 1.5.67 1.5 1.5v11c0 .83-.67 1.5-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11Z"
+        stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"
+      />
+      <path d="M4 6.5 12 13l8-6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.4-1.48-.88-.78-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01a1.1 1.1 0 0 0-.79.37c-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.22 3.07c.15.2 2.1 3.2 5.08 4.49.7.3 1.26.49 1.69.63.72.22 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.42.25-.69.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35Z" />
+      <path
+        fillRule="evenodd" clipRule="evenodd"
+        d="M12 2C6.48 2 2 6.48 2 12c0 1.75.46 3.44 1.32 4.93L2 22l5.19-1.3A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm0 18.22a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.78.83-3.04-.2-.31A8.21 8.21 0 1 1 20.21 12 8.22 8.22 0 0 1 12 20.22Z"
+      />
+    </svg>
+  );
+}
+function LinkedInIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.11 20.45H3.56V9h3.55v11.45Z" />
+    </svg>
+  );
+}
+function PhoneIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2Z" />
+    </svg>
+  );
+}
 
 /* ══════════════════════════════════════════════════════════════
    UTILITIES
@@ -147,7 +185,7 @@ function StatusBadge({ label, value, active }: { label: string; value: string; a
 }
 
 /** Magnetic link that physically shifts toward the cursor. */
-function MagLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
+function MagLink({ href, children, className, external }: { href: string; children: React.ReactNode; className?: string; external?: boolean }) {
   const ref = useRef<HTMLAnchorElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -166,6 +204,8 @@ function MagLink({ href, children, className }: { href: string; children: React.
     <motion.a
       ref={ref}
       href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
       style={{ x: sx, y: sy }}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
@@ -289,10 +329,11 @@ export function Contact() {
 
             {/* Email */}
             {[
-              { href: `mailto:${profile.email}`,  icon: <Mail className="h-5 w-5" />, label: "Email",    value: profile.email,               color: "#4f8cff", colorClass: "accent-blue" },
-              { href: `tel:${profile.phone.replace(/\s/g,"")}`, icon: <Phone className="h-5 w-5"/>, label: "Phone", value: profile.phone, color: "#8b5cf6", colorClass: "accent-violet" },
-              { href: profile.linkedin, icon: <ExternalLink className="h-5 w-5" />, label: "LinkedIn", value: "yashraj-s-tomar200114", color: "#0ea5e9", colorClass: "[#0ea5e9]" },
-            ].map(({ href, icon, label, value, color, colorClass }, i) => (
+              { href: `mailto:${profile.email}`, icon: <GmailIcon className="h-5 w-5" />, label: "Email", value: profile.email, color: "#ea4335", external: false },
+              { href: `tel:${profile.phone.replace(/\s/g,"")}`, icon: <PhoneIcon className="h-5 w-5" />, label: "Phone", value: profile.phone, color: "#8b5cf6", external: false },
+              { href: `https://wa.me/919311973552?text=${encodeURIComponent("Hi Yash, I came across your portfolio and would like to connect!")}`, icon: <WhatsAppIcon className="h-5 w-5" />, label: "WhatsApp", value: "+91 93119 73552", color: "#25d366", external: true },
+              { href: profile.linkedin, icon: <LinkedInIcon className="h-5 w-5" />, label: "LinkedIn", value: "yashraj-s-tomar200114", color: "#0a66c2", external: true },
+            ].map(({ href, icon, label, value, color, external }, i) => (
               <motion.div
                 key={label}
                 className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[#05070d]"
@@ -307,7 +348,7 @@ export function Contact() {
                   className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
                 />
-                <MagLink href={href} className="flex items-center gap-4 p-5">
+                <MagLink href={href} external={external} className="flex items-center gap-4 p-5">
                   <span
                     className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-all duration-300 group-hover:scale-110"
                     style={{
