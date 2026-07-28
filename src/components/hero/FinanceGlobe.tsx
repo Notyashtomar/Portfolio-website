@@ -474,9 +474,9 @@ export function FinanceGlobe() {
         </Suspense>
       </Canvas>
 
-      {/* Category legend — desktop bottom-left */}
+      {/* Category legend — large screens only, top-left to avoid tooltip/hint overlap */}
       <motion.div
-        className="pointer-events-none absolute bottom-8 left-6 z-10 hidden flex-col gap-1.5 md:flex"
+        className="pointer-events-none absolute left-4 top-5 z-10 hidden flex-col gap-1.5 lg:flex"
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 2, duration: 0.7 }}
@@ -487,7 +487,7 @@ export function FinanceGlobe() {
               className="h-1.5 w-1.5 rounded-full"
               style={{ background: CAT_COLORS[key], boxShadow: `0 0 5px ${CAT_COLORS[key]}88` }}
             />
-            <span className="font-sans text-[8px] uppercase tracking-[0.24em] text-white/35">{label}</span>
+            <span className="font-sans text-[8px] uppercase tracking-[0.24em] text-white/30">{label}</span>
           </div>
         ))}
       </motion.div>
