@@ -190,8 +190,10 @@ function ProgressDots({
 /* ─── Main section ────────────────────────────────────────────── */
 export function Projects() {
   const sectionRef = useRef<HTMLElement>(null);
+  const stickyRef  = useRef<HTMLDivElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
   const spacerRef  = useRef<HTMLDivElement>(null);
+  const endSpacerRef = useRef<HTMLDivElement>(null);
   const ctaRef     = useRef<HTMLDivElement>(null);
   const cardRefs   = useRef<(HTMLDivElement | null)[]>([]);
   const [progress, setProgress]       = useState(0);
@@ -207,8 +209,9 @@ export function Projects() {
     registerGsap();
 
     const section = sectionRef.current;
+    const sticky  = stickyRef.current;
     const track   = trackRef.current;
-    if (!section || !track) return;
+    if (!section || !sticky || !track) return;
 
     let tween: gsap.core.Tween | gsap.core.Timeline | null = null;
 
@@ -221,23 +224,24 @@ export function Projects() {
         if (!card) return;
         const rect    = card.getBoundingClientRect();
         const cardCx  = rect.left + rect.width / 2;
-        const dist    = (cardCx - vwCenter) / window.innerWidth; // -1…1
+        const dist    = (cardCx - vwCenter) / window.innerWidth;
         const absDist = Math.abs(dist);
 
-        // Deeper 3-D loom
-        const scale   = Math.max(0.78, 1 - absDist * 0.20);
-        const opacity = Math.max(0.15, 1 - absDist * 0.80);
-        const rotY    = dist * 18;
-        const transY  = absDist * 28;           // non-centre cards dip down
-        const blur    = absDist * 6;
+        // Snap to full clarity when near dead-centre — no blur on the focused card.
+        const centered = absDist < 0.045;
+        const scale   = centered ? 1 : Math.max(0.82, 1 - absDist * 0.18);
+        const opacity = centered ? 1 : Math.max(0.2, 1 - absDist * 0.75);
+        const rotY    = centered ? 0 : dist * 14;
+        const transY  = centered ? 0 : absDist * 22;
+        const blur    = centered ? 0 : absDist * 5;
 
         gsap.set(card, {
           scale,
           opacity,
           rotateY:     rotY,
           y:           transY,
-          filter:      `blur(${blur.toFixed(1)}px)`,
-          zIndex:      Math.round(10 - absDist * 10),
+          filter:      blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : "none",
+          zIndex:      centered ? 10 : Math.round(10 - absDist * 10),
           transformOrigin: dist > 0 ? "left center" : "right center",
         });
 
@@ -275,101 +279,125 @@ export function Projects() {
       }
     };
 
+    const resetCardTransforms = () => {
+      cardRefs.current.forEach((card) => {
+        if (card) gsap.set(card, { clearProps: "transform,filter,opacity,zIndex" });
+      });
+      if (ctaRef.current) gsap.set(ctaRef.current, { clearProps: "transform,filter" });
+    };
+
+    /** How far left (px) the track must move so `el`'s centre sits on the viewport centre. */
+    const centerOffset = (el: HTMLElement) => {
+      const rect = el.getBoundingClientRect();
+      return Math.max(0, rect.left + rect.width / 2 - window.innerWidth / 2);
+    };
+
     const setup = () => {
       tween?.kill();
       ScrollTrigger.getAll().filter((t) => t.vars.trigger === section).forEach((t) => t.kill());
 
       const spacer = spacerRef.current;
+      const endSpacer = endSpacerRef.current;
       if (spacer) spacer.style.width = "0px";
+      if (endSpacer) endSpacer.style.width = "0px";
+      resetCardTransforms();
       gsap.set(track, { x: 0 });
 
-      // Pass 1: measure natural position of card 0, then grow the spacer
-      // so card 0's centre lands exactly on the viewport centre at scroll start.
+      // Pass 1 — grow leading spacer so card 0 starts dead-centre.
       requestAnimationFrame(() => {
         const firstCard = cardRefs.current[0];
         if (spacer && firstCard) {
-          const rect   = firstCard.getBoundingClientRect();
-          const center = rect.left + rect.width / 2;
-          const delta  = Math.max(0, window.innerWidth / 2 - center);
-          spacer.style.width = `${delta}px`;
+          const rect = firstCard.getBoundingClientRect();
+          spacer.style.width = `${Math.max(0, window.innerWidth / 2 - (rect.left + rect.width / 2))}px`;
         }
 
-        // Pass 2: layout has settled with the spacer applied — now measure
-        // real scroll distance so the CTA's centre (not the track's raw
-        // right edge) is what the animation targets. This guarantees the
-        // CTA reaches full brightness/centre before the section releases.
+        // Pass 2 — grow trailing spacer, then measure every stop.
         requestAnimationFrame(() => {
-          const cta = ctaRef.current;
-          const lastCard = cardRefs.current[projects.length - 1];
+          if (endSpacer) endSpacer.style.width = `${window.innerWidth / 2}px`;
 
-          let scrollDist = Math.max(0, track.scrollWidth - window.innerWidth);
-          if (cta) {
-            const rect = cta.getBoundingClientRect();
-            const ctaCenter = rect.left + rect.width / 2;
-            // +32px safety margin so the CTA always fully reaches dead-centre
-            // even if late webfont/layout shifts nudge its measured width.
-            scrollDist = Math.max(scrollDist, ctaCenter - window.innerWidth / 2 + 32);
-          }
-          if (scrollDist <= 0) return;
+          requestAnimationFrame(() => {
+            resetCardTransforms();
+            gsap.set(track, { x: 0 });
 
-          // Distance to bring the LAST project card to dead-centre — used to
-          // carve out an explicit "hold" stop there, so it never gets rushed
-          // past on the way to the CTA.
-          let lastCardDist = 0;
-          if (lastCard) {
-            const rect = lastCard.getBoundingClientRect();
-            const cardCenter = rect.left + rect.width / 2;
-            lastCardDist = Math.min(scrollDist, Math.max(0, cardCenter - window.innerWidth / 2));
-          }
+            const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+            const cta = ctaRef.current;
+            const cardStops = cards.map(centerOffset);
+            const ctaStop = cta ? centerOffset(cta) : 0;
+            const scrollDist = Math.max(...cardStops, ctaStop, 0);
+            const lastIdx = projects.length - 1;
+            const lastCardStop = cardStops[lastIdx] ?? 0;
 
-          // Extra scroll runway (×1.28 — 20% faster than the previous ×1.6)
-          // so the horizontal slide feels slower than 1:1 scroll but snappier
-          // than before, without changing the x range.
-          const runway = scrollDist * 1.28;
-          section.style.height = `${window.innerHeight + runway}px`;
+            if (scrollDist <= 0 || lastCardStop <= 0) return;
 
-          gsap.set(track, { x: 0 });
-          applyLoom();
+            const RUNWAY_MULT = 1.85;
+            const HOLD_PER_CARD = 0.04;
+            const HOLD_LAST_CARD = 0.22;
+            const HOLD_CTA = 0.10;
+            const runway = scrollDist * RUNWAY_MULT;
 
-          // Timeline with two explicit "hold" stops carved out of the scroll
-          // budget: one when the last card reaches dead-centre, one when the
-          // CTA does. Without these, a plain linear tween just sweeps through
-          // both positions in a single continuous motion, so scrub lag (or a
-          // fast scroll) can blow straight past the last card's centred
-          // moment and land it dimmed/off-centre with nothing to show for it.
-          const cardTravel = lastCardDist;
-          const ctaTravel  = Math.max(0, scrollDist - lastCardDist);
-          const totalTravel = cardTravel + ctaTravel || 1;
-          const HOLD_CARD = 0.08;
-          const HOLD_CTA  = 0.12;
-          const motionBudget = 1 - HOLD_CARD - HOLD_CTA;
-          const seg1 = motionBudget * (cardTravel / totalTravel);
-          const seg2 = motionBudget * (ctaTravel / totalTravel);
+            // Let GSAP pin manage spacing — drop manual height + CSS sticky.
+            section.style.height = "";
+            gsap.set(track, { x: 0 });
+            applyLoom();
 
-          tween = gsap.timeline({
-            scrollTrigger: {
-              trigger: section,
-              start: "top top",
-              end: () => `+=${runway}`,
-              scrub: 1.1,
-              invalidateOnRefresh: true,
-              onUpdate(self) {
-                setProgress(self.progress);
-                applyLoom();
+            // Build one motion+hold step per card so card 6 gets its own
+            // centred moment (not buried at the end of a single long tween).
+            const motionBudget = 1 - HOLD_PER_CARD * Math.max(0, cardStops.length - 2)
+              - HOLD_LAST_CARD - HOLD_CTA;
+
+            const tl = gsap.timeline({
+              scrollTrigger: {
+                trigger: section,
+                start: "top top",
+                end: () => `+=${runway}`,
+                pin: sticky,
+                scrub: true,
+                anticipatePin: 1,
+                invalidateOnRefresh: true,
+                onUpdate(self) {
+                  setProgress(self.progress);
+                  applyLoom();
+                },
               },
-            },
-          })
-            .to(track, { x: -lastCardDist, ease: "none", duration: seg1 })
-            .to({}, { duration: HOLD_CARD })
-            .to(track, { x: -scrollDist, ease: "none", duration: seg2 })
-            .to({}, { duration: HOLD_CTA });
+            });
+
+            let prevStop = 0;
+            cardStops.forEach((stop, i) => {
+              if (i === 0) return; // card 1 already centred at scroll start
+              const travel = Math.max(0, stop - prevStop);
+              const dur = motionBudget * (travel / scrollDist);
+              if (dur > 0.001) {
+                tl.to(track, { x: -stop, ease: "none", duration: dur });
+              }
+              if (i === lastIdx) {
+                tl.to({}, { duration: HOLD_LAST_CARD });
+              } else if (i > 0) {
+                tl.to({}, { duration: HOLD_PER_CARD });
+              }
+              prevStop = stop;
+            });
+
+            const ctaTravel = Math.max(0, scrollDist - prevStop);
+            if (ctaTravel > 0) {
+              tl.to(track, {
+                x: -scrollDist,
+                ease: "none",
+                duration: motionBudget * (ctaTravel / scrollDist),
+              });
+            }
+            tl.to({}, { duration: HOLD_CTA });
+
+            tween = tl;
+            ScrollTrigger.refresh();
+          });
         });
       });
     };
 
     const r1 = requestAnimationFrame(() => requestAnimationFrame(setup));
-    const onResize = () => { if (section) section.style.height = ""; setup(); };
+    const onResize = () => setup();
     window.addEventListener("resize", onResize);
+    void document.fonts.ready.then(() => setup());
 
     return () => {
       cancelAnimationFrame(r1);
@@ -414,7 +442,8 @@ export function Projects() {
   return (
     <section id="projects" ref={sectionRef} className="relative">
       <div
-        className="sticky top-0 h-screen overflow-hidden"
+        ref={stickyRef}
+        className="h-screen overflow-hidden"
         style={{ perspective: "1600px", perspectiveOrigin: "50% 52%" }}
       >
         {/* Ambient radial */}
@@ -504,7 +533,7 @@ export function Projects() {
             <div
               ref={ctaRef}
               className="flex shrink-0 flex-col items-center justify-center"
-              style={{ width: "min(60vw, 320px)", marginRight: "64px", willChange: "transform, filter" }}
+              style={{ width: "min(60vw, 320px)", willChange: "transform, filter" }}
             >
               <Link href="#contact" data-cursor="interactive" className="group flex flex-col items-center gap-4 text-center">
                 <motion.span
@@ -534,6 +563,9 @@ export function Projects() {
                 </motion.span>
               </Link>
             </div>
+
+            {/* Trailing spacer — guarantees enough track width to centre CTA */}
+            <div ref={endSpacerRef} className="shrink-0" style={{ width: 0 }} aria-hidden />
           </div>
         </div>
 

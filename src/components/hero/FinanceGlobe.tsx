@@ -17,10 +17,12 @@ import { usePerfFlags } from "@/components/providers/Providers";
 
 /* ─── Constants ──────────────────────────────────────────────── */
 const R = 2;
+const GLOBE_SCALE = 0.78; // uniform scale — keeps the full sphere + rings inside view
 const DRAG_SENSITIVITY = 0.006;
 const AUTO_SPIN = 0.0014; // radians per frame when idle
-// Outermost ring sits at R * 1.52 — pad it a little so nothing kisses the edge.
-const GLOBE_MAX_EXTENT = R * 1.52 * 1.15;
+// World-space radius after scale: rings (×1.52) + label orbit (×1.25), plus margin.
+const GLOBE_MAX_EXTENT = Math.max(R * 1.52, R * 1.25) * GLOBE_SCALE * 1.1;
+const FIT_MARGIN = 1.38; // extra breathing room so nothing kisses the canvas edge
 
 /* ─── Term data with tooltip context ────────────────────────── */
 const TERMS = [
@@ -188,7 +190,7 @@ function TermLabels({
       {TERMS.map((t, i) => {
         const isActive = active === t.label;
         return (
-          <Html key={t.label} position={positions[i]} center occlude={false}>
+          <Html key={t.label} position={positions[i]} center occlude={false} distanceFactor={6.5}>
             <button
               type="button"
               onPointerEnter={() => onEnter(t)}
@@ -297,7 +299,7 @@ function GlobeGroup({
   });
 
   return (
-    <group ref={ref}>
+    <group ref={ref} scale={GLOBE_SCALE}>
       <GlobeCore highlighted={active !== null} />
       <GlobeWireframe />
       <TermLabels active={active} onEnter={onEnter} onLeave={onLeave} />
@@ -308,20 +310,19 @@ function GlobeGroup({
   );
 }
 
-/** Keeps the whole globe (incl. outer rings) inside the frustum at any
- * container aspect ratio, by pushing the camera back as needed. This makes
- * the globe read as "smaller" on tighter/narrower containers while always
- * showing 100% of it, instead of letting the outer rings clip off-screen. */
 function CameraFit() {
   const { camera, size } = useThree();
 
   useFrame(() => {
     const cam = camera as THREE.PerspectiveCamera;
+    if (size.width < 1 || size.height < 1) return;
+
     const aspect = size.width / size.height;
-    const vFov = (cam.fov * Math.PI) / 180;
-    const limitingAspect = Math.min(1, aspect);
-    const dist = GLOBE_MAX_EXTENT / (Math.tan(vFov / 2) * limitingAspect);
-    cam.position.z = THREE.MathUtils.lerp(cam.position.z, dist, 0.15);
+    const tanHalf = Math.tan((cam.fov * Math.PI) / 180 / 2);
+    // Fit against both vertical and horizontal frustum limits.
+    const distV = GLOBE_MAX_EXTENT / tanHalf;
+    const distH = GLOBE_MAX_EXTENT / (tanHalf * aspect);
+    cam.position.z = Math.max(distV, distH) * FIT_MARGIN;
   });
 
   return null;
@@ -480,7 +481,7 @@ export function FinanceGlobe() {
     >
       <Canvas
         dpr={[1, dpr]}
-        camera={{ position: [0, 0, 6.5], fov: 40 }}
+        camera={{ position: [0, 0, 11], fov: 36 }}
         gl={{ antialias: false, alpha: true, powerPreference: "high-performance", stencil: false, depth: true }}
         style={{ background: "transparent" }}
       >
@@ -496,11 +497,11 @@ export function FinanceGlobe() {
         </Suspense>
       </Canvas>
 
-      {/* Category legend — large screens only, top-left to avoid tooltip/hint overlap */}
+      {/* Category legend — bottom-left of globe on large screens */}
       <motion.div
-        className="pointer-events-none absolute left-4 top-5 z-10 hidden flex-col gap-1.5 lg:flex"
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
+        className="pointer-events-none absolute bottom-8 left-4 z-10 hidden flex-col gap-1.5 lg:flex"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 2, duration: 0.7 }}
       >
         {Object.entries(CAT_LABELS).map(([key, label]) => (

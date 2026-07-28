@@ -171,9 +171,9 @@ export function Hero() {
         <FinanceGlobe />
         {/* fade the left edge on desktop so globe bleeds behind text */}
         <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-2/5 bg-gradient-to-r from-[#030303] to-transparent md:block" />
-        {/* fade top and bottom */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#030303] to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#030303] to-transparent" />
+        {/* fade top and bottom — kept short so the full globe stays visible */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#030303] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#030303] to-transparent" />
       </div>
 
       {/* ── Text ── left column ── */}
