@@ -6,9 +6,10 @@ import { useEffect, useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { projects } from "@/data/resume";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
-import { gsap, registerGsap } from "@/lib/gsap";
+import { gsap, registerGsap, ScrollTrigger } from "@/lib/gsap";
 import { usePerfFlags } from "@/components/providers/Providers";
 
+/* ─── Project card ────────────────────────────────────────────── */
 function ProjectCard({
   project,
   index,
@@ -25,15 +26,11 @@ function ProjectCard({
       className="block h-full"
     >
       <div className="group relative flex h-full flex-col border border-white/10 bg-[#060810] p-7 transition-all duration-500 hover:border-accent-blue/40 hover:bg-[#040916] sm:p-9">
-        {/* Corner glow */}
         <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-accent-violet/0 blur-3xl transition duration-500 group-hover:bg-accent-violet/22" />
         <div className="pointer-events-none absolute -bottom-10 -left-8 h-36 w-36 rounded-full bg-accent-blue/0 blur-3xl transition duration-500 group-hover:bg-accent-blue/16" />
-
-        {/* Top shine line */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-blue/0 to-transparent transition duration-500 group-hover:via-accent-blue/70" />
 
         <div className="relative z-10 flex h-full flex-col">
-          {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-2">
               <span className="section-num">
@@ -51,7 +48,6 @@ function ProjectCard({
             </motion.span>
           </div>
 
-          {/* Title */}
           <div className="mt-12 flex-1">
             <h3 className="font-display text-3xl font-bold leading-[1.1] text-white transition duration-400 sm:text-[2.2rem]">
               {project.title.toUpperCase()}
@@ -61,7 +57,6 @@ function ProjectCard({
             </p>
           </div>
 
-          {/* Metrics */}
           <div className="mt-10 grid grid-cols-2 gap-3">
             {metrics.map((m, mi) => (
               <div
@@ -82,7 +77,6 @@ function ProjectCard({
             ))}
           </div>
 
-          {/* CTA text */}
           <div className="mt-7 flex items-center gap-2 font-sans text-[9px] uppercase tracking-[0.32em] text-white/25 transition group-hover:text-accent-blue/80">
             <span>Case Study</span>
             <span className="h-px w-0 bg-accent-blue transition-all duration-500 group-hover:w-10" />
@@ -93,15 +87,14 @@ function ProjectCard({
   );
 }
 
-/** Finance ticker of terms that scrolls horizontally */
+/* ─── Finance ticker ──────────────────────────────────────────── */
 function FinanceTicker() {
   const TERMS = [
-    "EBITDA", "ROI", "IRR", "NPV", "CAGR", "SHARPE RATIO",
-    "P&L ANALYSIS", "MIS REPORTING", "ALPHA", "VOLATILITY",
-    "ARIMA", "REGRESSION", "FORECASTING", "VaR", "SQL AUTOMATION",
+    "EBITDA","ROI","IRR","NPV","CAGR","SHARPE RATIO",
+    "P&L ANALYSIS","MIS REPORTING","ALPHA","VOLATILITY",
+    "ARIMA","REGRESSION","FORECASTING","VaR","SQL AUTOMATION",
   ];
   const doubled = [...TERMS, ...TERMS];
-
   return (
     <div className="relative overflow-hidden border-y border-white/8 py-3">
       <div className="ticker-track">
@@ -116,115 +109,157 @@ function FinanceTicker() {
   );
 }
 
+/* ─── Main section ────────────────────────────────────────────── */
 export function Projects() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null); // controls scroll space height
+  const stickyRef = useRef<HTMLDivElement>(null);  // the sticky frame (h-screen)
+  const trackRef  = useRef<HTMLDivElement>(null);  // translates horizontally
+
   const { lite } = usePerfFlags();
 
   useEffect(() => {
     if (lite) return;
     registerGsap();
 
-    const section = sectionRef.current;
-    const track = trackRef.current;
-    if (!section || !track) return;
+    const wrapper = wrapperRef.current;
+    const track   = trackRef.current;
+    if (!wrapper || !track) return;
 
-    const ctx = gsap.context(() => {
-      // scrollWidth of the flex track vs viewport width
-      const getScrollDist = () => track.scrollWidth - window.innerWidth;
+    // Kill any existing ScrollTriggers on this wrapper before rebuilding
+    const existing = ScrollTrigger.getAll().filter(
+      (t) => t.vars.trigger === wrapper,
+    );
+    existing.forEach((t) => t.kill());
 
-      gsap.to(track, {
-        x: () => -getScrollDist(),
-        ease: "none",
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: () => `+=${getScrollDist()}`,
-          scrub: 0.8,
-          pin: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
+    let st: ReturnType<typeof ScrollTrigger.create> | null = null;
+
+    const setup = () => {
+      st?.kill();
+
+      // How far the track needs to travel = track width − viewport width
+      const scrollDist = Math.max(0, track.scrollWidth - window.innerWidth);
+      if (scrollDist === 0) return;
+
+      // Wrapper height creates the vertical scroll space for GSAP to work against.
+      // sticky inner = 100vh, wrapper = 100vh + scrollDist so the sticky rides
+      // through exactly scrollDist pixels of scroll.
+      wrapper.style.height = `${window.innerHeight + scrollDist}px`;
+
+      gsap.set(track, { x: 0 });
+
+      st = ScrollTrigger.create({
+        trigger: wrapper,
+        start: "top top",
+        end: `+=${scrollDist}`,
+        scrub: 1,
+        onUpdate(self) {
+          gsap.set(track, { x: -scrollDist * self.progress });
         },
       });
-    }, section);
+    };
 
-    return () => ctx.revert();
+    // Small rAF delay so the track has finished painting and scrollWidth is stable
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(setup);
+    });
+
+    const onResize = () => setup();
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+      st?.kill();
+    };
   }, [lite]);
 
-  return (
-    <section
-      ref={sectionRef}
-      id="projects"
-      className="relative overflow-hidden"
-    >
-      {/* ── Section header (outside pin zone) ── */}
-      <div className="relative z-10 px-5 pt-20 sm:px-8 sm:pt-28 md:px-12 md:pt-36 lg:px-16">
+  /* ── Lite / mobile: plain vertical grid ── */
+  if (lite) {
+    return (
+      <section id="projects" className="relative px-5 py-20 sm:px-8 sm:py-28 md:px-12 md:py-36 lg:px-16">
         <div className="mx-auto max-w-[90rem]">
-          {/* ── Terminal-style label ── */}
           <div className="mb-6 flex items-center gap-4">
             <span className="section-num">02 / WORK</span>
             <div className="h-px flex-1 bg-gradient-to-r from-accent-blue/30 to-transparent" />
           </div>
+          <h2 className="section-heading-bold mb-12 max-w-3xl sm:mb-16">
+            WORK THAT<br />MOVED THE<br />NUMBERS.
+          </h2>
+        </div>
+        <FinanceTicker />
+        <div className="mx-auto mt-10 grid max-w-[90rem] gap-4 px-5 sm:gap-5 sm:px-8 md:grid-cols-2 md:px-12 lg:grid-cols-3 lg:px-16">
+          {projects.map((project, i) => (
+            <motion.div
+              key={project.slug}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <ProjectCard project={project} index={i} />
+            </motion.div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
+  /* ── Full mode: CSS sticky + GSAP scroll-driven x translation ── */
+  return (
+    <section id="projects" className="relative">
+
+      {/* ── Visible heading — scrolls away normally ── */}
+      <div className="relative z-10 px-5 pt-20 sm:px-8 sm:pt-28 md:px-12 md:pt-36 lg:px-16">
+        <div className="mx-auto max-w-[90rem]">
+          <div className="mb-6 flex items-center gap-4">
+            <span className="section-num">02 / WORK</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-accent-blue/30 to-transparent" />
+          </div>
           <h2 className="section-heading-bold mb-0 max-w-3xl">
             WORK THAT<br />MOVED THE<br />NUMBERS.
           </h2>
         </div>
       </div>
 
-      {/* ── Ticker ── */}
-      <div className="mt-12 sm:mt-16">
+      <div className="mt-10 sm:mt-14">
         <FinanceTicker />
       </div>
 
-      {/* ── Horizontal scroll rail ── */}
-      <div
-        className={`relative mt-0 ${lite ? "px-5 py-12 sm:px-8 md:px-12 lg:px-16" : "py-12"}`}
-      >
-        {lite ? (
-          /* ── Lite mode: vertical grid ── */
-          <div className="mx-auto grid max-w-[90rem] gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project, i) => (
-              <motion.div
-                key={project.slug}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <ProjectCard project={project} index={i} />
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          /* ── Full mode: horizontal pinned scroll ──
-             The <section> has overflow-hidden so the viewport is the clip boundary.
-             The track uses pl- for left gutter — NO inner overflow-hidden wrapper. */
-          <div className="relative">
-            {/* Left fade */}
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#030303] to-transparent" />
-            {/* Right fade */}
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#030303] to-transparent" />
+      {/*
+        ── Horizontal scroll scaffold ──
+        wrapperRef  → tall div that gives GSAP something to measure scroll against.
+                      Its height is set dynamically: 100vh + scrollDist.
+        stickyRef   → position: sticky; height: 100vh — browser pins this natively.
+        trackRef    → width: max-content flex row — GSAP translates this.
+      */}
+      <div ref={wrapperRef}>
+        <div
+          ref={stickyRef}
+          className="sticky top-0 h-screen overflow-hidden"
+        >
+          {/* Horizontal fades */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#030303] to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#030303] to-transparent" />
 
-            {/* Track — left padding sets start offset; section clips right overflow */}
+          {/* Centred vertically in the sticky frame */}
+          <div className="flex h-full items-center">
+            {/* The flex row that slides left */}
             <div
               ref={trackRef}
-              className="flex gap-5 pl-5 sm:pl-8 md:pl-12 lg:pl-16"
+              className="flex items-stretch gap-5 pl-5 sm:pl-8 md:pl-12 lg:pl-16"
               style={{ width: "max-content" }}
             >
-              {/* Leading copy panel */}
+              {/* Leading blurb */}
               <div
-                className="flex shrink-0 items-end pb-3"
-                style={{ width: "min(70vw, 320px)" }}
+                className="flex shrink-0 flex-col justify-center"
+                style={{ width: "min(65vw, 300px)" }}
               >
-                <div>
-                  <p className="font-body text-sm leading-[1.85] text-white/35 md:text-base">
-                    Turning financial complexity<br />into clarity — one dataset<br />at a time.
-                  </p>
-                  <div className="mt-6 flex items-center gap-3 font-sans text-[9px] uppercase tracking-[0.35em] text-white/20">
-                    <span className="h-px w-8 bg-white/20" />
-                    <span>Scroll to explore</span>
-                  </div>
+                <p className="font-body text-sm leading-[1.85] text-white/35 md:text-base">
+                  Turning financial complexity<br />into clarity — one dataset<br />at a time.
+                </p>
+                <div className="mt-6 flex items-center gap-3 font-sans text-[9px] uppercase tracking-[0.35em] text-white/20">
+                  <span className="h-px w-8 bg-white/20" />
+                  <span>Scroll to explore</span>
                 </div>
               </div>
 
@@ -234,8 +269,8 @@ export function Projects() {
                   key={project.slug}
                   className="shrink-0"
                   style={{
-                    width: "min(82vw, 480px)",
-                    height: "clamp(380px, 54vh, 540px)",
+                    width: "min(80vw, 460px)",
+                    height: "clamp(360px, 52vh, 520px)",
                   }}
                 >
                   <ProjectCard project={project} index={i} />
@@ -244,8 +279,8 @@ export function Projects() {
 
               {/* Trailing CTA */}
               <div
-                className="flex shrink-0 items-center justify-center pr-12"
-                style={{ width: "min(70vw, 340px)" }}
+                className="flex shrink-0 flex-col items-center justify-center pr-16"
+                style={{ width: "min(65vw, 320px)" }}
               >
                 <Link
                   href="#contact"
@@ -265,7 +300,7 @@ export function Projects() {
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
