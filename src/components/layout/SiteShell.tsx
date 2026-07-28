@@ -17,9 +17,16 @@ const CinematicIntro = dynamic(
 
 function ShellInner({ children }: { children: ReactNode }) {
   useLenisGsap();
-  const { enableCursor } = usePerfFlags();
+  const { enableCursor, lite } = usePerfFlags();
   const [revealed, setRevealed] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+
+  useEffect(() => {
+    if (lite || sessionStorage.getItem("intro-seen") === "1") {
+      setShowIntro(false);
+      setRevealed(true);
+    }
+  }, [lite]);
 
   useEffect(() => {
     if (showIntro) {
@@ -37,6 +44,7 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   const onReveal = useCallback(() => setRevealed(true), []);
   const onIntroComplete = useCallback(() => {
+    sessionStorage.setItem("intro-seen", "1");
     setShowIntro(false);
     setRevealed(true);
   }, []);
@@ -61,9 +69,9 @@ function ShellInner({ children }: { children: ReactNode }) {
             "clip-path 680ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease",
         }}
       >
-        <AmbientBackground />
-        <div className="noise" aria-hidden />
-        <div className="scan-lines" aria-hidden />
+        {!lite && <AmbientBackground />}
+        {!lite && <div className="noise" aria-hidden />}
+        {!lite && <div className="scan-lines" aria-hidden />}
         {enableCursor && revealed ? <CustomCursor /> : null}
         <Navigation />
         <div className="relative z-10">{children}</div>

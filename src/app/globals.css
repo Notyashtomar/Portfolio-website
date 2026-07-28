@@ -281,6 +281,16 @@ body.no-cursor button {
   }
 }
 
+body.reduce-motion .ambient-aurora,
+body.reduce-motion .ticker-track {
+  animation: none !important;
+}
+
+body.reduce-motion .noise,
+body.reduce-motion .scan-lines {
+  display: none;
+}
+
 @keyframes pulse-glow {
   0%,
   100% {

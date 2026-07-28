@@ -10,12 +10,20 @@ export function useLenisGsap() {
 
   useEffect(() => {
     registerGsap();
+
+    // Lite tier: native scroll — skip Lenis overhead entirely.
+    if (lite) {
+      ScrollTrigger.config({ limitCallbacks: true });
+      ScrollTrigger.refresh();
+      return;
+    }
+
     const lenis = new Lenis({
-      lerp: lite ? 0.16 : 0.12,
-      duration: lite ? 0.85 : 1,
+      lerp: 0.12,
+      duration: 1,
       smoothWheel: true,
       syncTouch: false,
-      wheelMultiplier: lite ? 1.1 : 0.95,
+      wheelMultiplier: 0.95,
       touchMultiplier: 1.4,
     });
 
@@ -34,7 +42,7 @@ export function useLenisGsap() {
     return () => {
       cancelAnimationFrame(frame);
       lenis.destroy();
-      ScrollTrigger.getAll().forEach((t) => t.kill());
+      // Each component owns its ScrollTriggers — don't kill globally.
     };
   }, [lite]);
 }

@@ -93,10 +93,8 @@ export function Providers({ children }: { children: ReactNode }) {
 
 export function usePerfFlags() {
   const { performanceMode, tier } = useSettings();
-  const flags = tierToFlags(tier);
-  return {
-    ...flags,
-    performanceMode,
-    tier,
-  };
+  return useMemo(
+    () => ({ ...tierToFlags(tier), performanceMode, tier }),
+    [performanceMode, tier],
+  );
 }

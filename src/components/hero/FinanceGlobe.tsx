@@ -6,6 +6,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import {
   Suspense,
   useCallback,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -17,12 +18,13 @@ import { usePerfFlags } from "@/components/providers/Providers";
 
 /* ─── Constants ──────────────────────────────────────────────── */
 const R = 2;
-const GLOBE_SCALE = 0.78; // uniform scale — keeps the full sphere + rings inside view
+const GLOBE_SCALE = 0.58; // smaller uniform scale — full sphere + rings must stay inside view
 const DRAG_SENSITIVITY = 0.006;
 const AUTO_SPIN = 0.0014; // radians per frame when idle
-// World-space radius after scale: rings (×1.52) + label orbit (×1.25), plus margin.
-const GLOBE_MAX_EXTENT = Math.max(R * 1.52, R * 1.25) * GLOBE_SCALE * 1.1;
-const FIT_MARGIN = 1.38; // extra breathing room so nothing kisses the canvas edge
+// Bounding radius after scale: outer ring (×1.52) + drag-tilt buffer for vertical fit.
+const GLOBE_MAX_EXTENT = R * 1.52 * GLOBE_SCALE * 1.42;
+const FIT_MARGIN = 1.82; // generous margin so top/bottom never clip
+const CAMERA_FOV = 32;
 
 /* ─── Term data with tooltip context ────────────────────────── */
 const TERMS = [
@@ -178,10 +180,12 @@ function TermLabels({
   active,
   onEnter,
   onLeave,
+  dense,
 }: {
   active: string | null;
   onEnter: (t: Term) => void;
   onLeave: () => void;
+  dense: boolean;
 }) {
   const positions = useMemo(() => fibSphere(TERMS.length, R * 1.25), []);
 
@@ -189,6 +193,19 @@ function TermLabels({
     <>
       {TERMS.map((t, i) => {
         const isActive = active === t.label;
+        if (dense && !isActive) {
+          return (
+            <mesh
+              key={t.label}
+              position={positions[i]}
+              onPointerEnter={() => onEnter(t)}
+              onPointerLeave={onLeave}
+            >
+              <sphereGeometry args={[0.07, 6, 6]} />
+              <meshBasicMaterial color={t.color} transparent opacity={0.5} />
+            </mesh>
+          );
+        }
         return (
           <Html key={t.label} position={positions[i]} center occlude={false} distanceFactor={6.5}>
             <button
@@ -275,12 +292,14 @@ function GlobeGroup({
   active,
   onEnter,
   onLeave,
+  denseLabels,
 }: {
   mouse: MutableRefObject<{ x: number; y: number }>;
   drag: MutableRefObject<{ rotY: number; rotX: number; spinning: boolean }>;
   active: string | null;
   onEnter: (t: Term) => void;
   onLeave: () => void;
+  denseLabels: boolean;
 }) {
   const ref = useRef<THREE.Group>(null);
 
@@ -302,7 +321,7 @@ function GlobeGroup({
     <group ref={ref} scale={GLOBE_SCALE}>
       <GlobeCore highlighted={active !== null} />
       <GlobeWireframe />
-      <TermLabels active={active} onEnter={onEnter} onLeave={onLeave} />
+      <TermLabels active={active} onEnter={onEnter} onLeave={onLeave} dense={denseLabels} />
       <Ring radius={R * 1.2}  tilt={Math.PI / 6}   speed={0.14}  color="#4f8cff" opacity={0.4} />
       <Ring radius={R * 1.38} tilt={-Math.PI / 4}  speed={-0.09} color="#8b5cf6" opacity={0.28} />
       <Ring radius={R * 1.52} tilt={Math.PI / 2.5} speed={0.06}  color="#4f8cff" opacity={0.15} />
@@ -313,17 +332,22 @@ function GlobeGroup({
 function CameraFit() {
   const { camera, size } = useThree();
 
-  useFrame(() => {
+  useLayoutEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     if (size.width < 1 || size.height < 1) return;
 
+    cam.fov = CAMERA_FOV;
+    cam.updateProjectionMatrix();
+
     const aspect = size.width / size.height;
-    const tanHalf = Math.tan((cam.fov * Math.PI) / 180 / 2);
-    // Fit against both vertical and horizontal frustum limits.
+    const tanHalf = Math.tan((CAMERA_FOV * Math.PI) / 180 / 2);
     const distV = GLOBE_MAX_EXTENT / tanHalf;
     const distH = GLOBE_MAX_EXTENT / (tanHalf * aspect);
     cam.position.z = Math.max(distV, distH) * FIT_MARGIN;
-  });
+    cam.position.x = 0;
+    cam.position.y = 0;
+    cam.lookAt(0, 0, 0);
+  }, [camera, size.width, size.height]);
 
   return null;
 }
@@ -346,11 +370,20 @@ function Scene({
       <pointLight position={[-4, -2, 2]} intensity={14} color="#8b5cf6" />
       <pointLight position={[0, -4, 0]} intensity={8} color="#ff3d9a" />
       <CameraFit />
-      <GlobeGroup mouse={mouse} drag={drag} active={active} onEnter={onEnter} onLeave={onLeave} />
-      <Particles count={isHigh ? 90 : 55} />
-      <EffectComposer multisampling={0}>
-        <Bloom intensity={isHigh ? 2.2 : 1.4} luminanceThreshold={0.08} luminanceSmoothing={0.92} mipmapBlur />
-      </EffectComposer>
+      <GlobeGroup
+        mouse={mouse}
+        drag={drag}
+        active={active}
+        onEnter={onEnter}
+        onLeave={onLeave}
+        denseLabels={!isHigh}
+      />
+      <Particles count={isHigh ? 90 : 40} />
+      {isHigh && (
+        <EffectComposer multisampling={0}>
+          <Bloom intensity={2.2} luminanceThreshold={0.08} luminanceSmoothing={0.92} mipmapBlur />
+        </EffectComposer>
+      )}
     </>
   );
 }
@@ -472,7 +505,7 @@ export function FinanceGlobe() {
 
   return (
     <div
-      className="absolute inset-0 select-none"
+      className="absolute inset-0 select-none overflow-hidden px-[2%] py-[7%]"
       style={{ cursor: pointer.current.down ? "grabbing" : "grab" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -481,7 +514,7 @@ export function FinanceGlobe() {
     >
       <Canvas
         dpr={[1, dpr]}
-        camera={{ position: [0, 0, 11], fov: 36 }}
+        camera={{ position: [0, 0, 14], fov: CAMERA_FOV }}
         gl={{ antialias: false, alpha: true, powerPreference: "high-performance", stencil: false, depth: true }}
         style={{ background: "transparent" }}
       >

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { profile } from "@/data/resume";
@@ -20,14 +20,18 @@ export function Navigation() {
   const { scrollY } = useScroll();
   const [visible, setVisible] = useState(false);
   const [open, setOpen] = useState(false);
+  const visibleRef = useRef(false);
 
   useMotionValueEvent(scrollY, "change", (v) => {
-    // Show nav sooner on mobile/tablet so users can navigate
     const threshold =
       typeof window !== "undefined" && window.innerWidth < 1024
         ? 80
         : window.innerHeight * 0.75;
-    setVisible(v > threshold);
+    const next = v > threshold;
+    if (visibleRef.current !== next) {
+      visibleRef.current = next;
+      setVisible(next);
+    }
   });
 
   return (

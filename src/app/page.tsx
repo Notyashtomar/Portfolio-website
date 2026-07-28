@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import { Hero } from "@/components/hero/Hero";
+import { LazySection } from "@/components/motion/LazySection";
 import { SectionTransition } from "@/components/motion/SectionTransition";
 
 const About = dynamic(() =>
@@ -30,13 +31,21 @@ export default function HomePage() {
       <SectionTransition />
       <Experience />
       <SectionTransition />
-      <Projects />
+      <LazySection minHeight="100vh">
+        <Projects />
+      </LazySection>
       <SectionTransition />
-      <Skills />
+      <LazySection minHeight="80vh">
+        <Skills />
+      </LazySection>
       <SectionTransition />
-      <Achievements />
+      <LazySection>
+        <Achievements />
+      </LazySection>
       <SectionTransition />
-      <Contact />
+      <LazySection minHeight="80vh">
+        <Contact />
+      </LazySection>
       <footer className="relative z-10 border-t border-white/6 px-4 py-10 text-center sm:px-6 sm:py-14 md:px-12">
         <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-white/25 sm:tracking-[0.4em]">
           © {new Date().getFullYear()} Yash Raj Singh Tomar

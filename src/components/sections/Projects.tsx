@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion, useMotionValue, useSpring } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useSpring, type MotionValue } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { projects } from "@/data/resume";
@@ -134,7 +134,7 @@ function FinanceTicker() {
 }
 
 /* ─── Spotlight that follows the centered card ─────────────────── */
-function Spotlight({ x }: { x: number }) {
+function Spotlight({ x }: { x: MotionValue<number> }) {
   const sx = useSpring(x, { stiffness: 50, damping: 16 });
   return (
     <motion.div
@@ -201,6 +201,9 @@ export function Projects() {
   const [hoveredIdx, setHoveredIdx]   = useState<number | null>(null);
   const [ctaActive, setCtaActive]     = useState(false);
   const spotlightX = useMotionValue(0);
+  const centerIdxRef = useRef(0);
+  const ctaActiveRef = useRef(false);
+  const progressRef  = useRef(0);
 
   const { lite } = usePerfFlags();
 
@@ -267,8 +270,15 @@ export function Projects() {
       }
 
       const ctaWins = ctaDist < bestDist;
-      setCtaActive(ctaWins);
-      setCenterIdx(ctaWins ? -1 : bestIdx);
+      const nextCenter = ctaWins ? -1 : bestIdx;
+      if (centerIdxRef.current !== nextCenter) {
+        centerIdxRef.current = nextCenter;
+        setCenterIdx(nextCenter);
+      }
+      if (ctaActiveRef.current !== ctaWins) {
+        ctaActiveRef.current = ctaWins;
+        setCtaActive(ctaWins);
+      }
 
       if (ctaWins && cta) {
         const r = cta.getBoundingClientRect();
@@ -355,7 +365,10 @@ export function Projects() {
                 anticipatePin: 1,
                 invalidateOnRefresh: true,
                 onUpdate(self) {
-                  setProgress(self.progress);
+                  if (Math.abs(self.progress - progressRef.current) > 0.008) {
+                    progressRef.current = self.progress;
+                    setProgress(self.progress);
+                  }
                   applyLoom();
                 },
               },
@@ -395,12 +408,17 @@ export function Projects() {
     };
 
     const r1 = requestAnimationFrame(() => requestAnimationFrame(setup));
-    const onResize = () => setup();
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(setup, 200);
+    };
     window.addEventListener("resize", onResize);
     void document.fonts.ready.then(() => setup());
 
     return () => {
       cancelAnimationFrame(r1);
+      clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
       tween?.kill();
       ScrollTrigger.getAll().filter((t) => t.vars.trigger === section).forEach((t) => t.kill());
@@ -450,7 +468,7 @@ export function Projects() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_55%,rgba(79,140,255,0.07),transparent)]" />
 
         {/* Spotlight on centered card */}
-        <Spotlight x={spotlightX.get()} />
+        <Spotlight x={spotlightX} />
 
         {/* Top bar */}
         <div className="absolute inset-x-0 top-0 z-20 px-5 pt-5 sm:px-8 md:px-12 lg:px-16">

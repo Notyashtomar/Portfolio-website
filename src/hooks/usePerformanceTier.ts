@@ -19,10 +19,13 @@ function detectTier(): PerformanceTier {
 }
 
 export function usePerformanceTier() {
-  const [tier, setTier] = useState<PerformanceTier>("balanced");
+  const [tier, setTier] = useState<PerformanceTier>(() =>
+    typeof window === "undefined" ? "balanced" : detectTier(),
+  );
 
   useEffect(() => {
-    setTier(detectTier());
+    const next = detectTier();
+    setTier((prev) => (prev === next ? prev : next));
   }, []);
 
   return tier;
