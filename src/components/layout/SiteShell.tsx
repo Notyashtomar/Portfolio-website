@@ -63,6 +63,7 @@ function ShellInner({ children }: { children: ReactNode }) {
       >
         <AmbientBackground />
         <div className="noise" aria-hidden />
+        <div className="scan-lines" aria-hidden />
         {enableCursor && revealed ? <CustomCursor /> : null}
         <Navigation />
         <div className="relative z-10">{children}</div>

@@ -491,3 +491,154 @@ body.no-cursor button {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   GOBOLD AESTHETIC — terminal / scan-line / bold UI
+   ═══════════════════════════════════════════════════ */
+
+/* ── Scan-line overlay ── */
+.scan-lines {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.04) 3px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* ── Hero typography ── */
+.hero-name {
+  font-family: var(--font-clash);
+  font-size: clamp(2.6rem, 9vw, 7.5rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  color: #fff;
+}
+
+/* ── Terminal-style small labels ── */
+.hero-tag {
+  font-family: var(--font-cabinet);
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(79, 140, 255, 0.75);
+}
+
+.hero-tag-dim {
+  font-family: var(--font-cabinet);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.22);
+}
+
+/* ── CTA buttons ── */
+.hero-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.75rem;
+  font-family: var(--font-cabinet);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #030303;
+  background: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.hero-cta-primary:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.hero-cta-ghost {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.75rem;
+  font-family: var(--font-cabinet);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.hero-cta-ghost:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.45);
+  transform: translateY(-1px);
+}
+
+/* ── Section number labels (gobold style) ── */
+.section-num {
+  font-family: var(--font-clash);
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: rgba(79, 140, 255, 0.5);
+  text-transform: uppercase;
+}
+
+/* ── Gobold bold section header ── */
+.section-heading-bold {
+  font-family: var(--font-clash);
+  font-size: clamp(2rem, 6vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.97;
+  color: #ffffff;
+}
+
+/* ── Horizontal scroll track ── */
+.h-scroll-track {
+  display: flex;
+  gap: 1.5rem;
+  width: max-content;
+  will-change: transform;
+}
+
+.h-scroll-panel {
+  width: min(85vw, 500px);
+  flex-shrink: 0;
+}
+
+/* ── Marquee ticker ── */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker 18s linear infinite;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* ── Terminal border pulse ── */
+@keyframes border-pulse {
+  0%, 100% { border-color: rgba(79, 140, 255, 0.18); }
+  50%       { border-color: rgba(79, 140, 255, 0.55); }
+}
+
+.terminal-card {
+  border: 1px solid rgba(79, 140, 255, 0.18);
+  background: rgba(4, 12, 30, 0.6);
+  animation: border-pulse 4s ease-in-out infinite;
+}

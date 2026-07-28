@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
+import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { useRef, type MouseEvent } from "react";
 import { projects } from "@/data/resume";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
-import { SplitReveal } from "@/components/motion/SplitReveal";
+import { gsap, registerGsap } from "@/lib/gsap";
 import { usePerfFlags } from "@/components/providers/Providers";
-import { cn } from "@/lib/utils";
 
 function ProjectCard({
   project,
@@ -17,158 +16,245 @@ function ProjectCard({
   project: (typeof projects)[number];
   index: number;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { lite } = usePerfFlags();
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const springX = useSpring(mx, { stiffness: 180, damping: 24 });
-  const springY = useSpring(my, { stiffness: 180, damping: 24 });
-  const glow = useMotionTemplate`radial-gradient(520px circle at ${springX}px ${springY}px, rgba(79,140,255,0.22), rgba(139,92,246,0.08), transparent 45%)`;
-
-  const onMove = (e: MouseEvent<HTMLDivElement>) => {
-    if (lite) return;
-    const rect = ref.current?.getBoundingClientRect();
-    if (!rect) return;
-    mx.set(e.clientX - rect.left);
-    my.set(e.clientY - rect.top);
-  };
-
-  const onLeave = () => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    mx.set(rect.width / 2);
-    my.set(rect.height / 2);
-  };
-
   const metrics = project.metrics.filter((m) => m.numeric > 0).slice(0, 2);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 48 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{
-        delay: index * 0.1,
-        duration: 0.75,
-        ease: [0.16, 1, 0.3, 1],
-      }}
-      className="h-full"
+    <Link
+      href={`/projects/${project.slug}`}
+      data-cursor="interactive"
+      className="block h-full"
     >
-      <Link
-        href={`/projects/${project.slug}`}
-        data-cursor="interactive"
-        className="block h-full"
-      >
-        <motion.div
-          ref={ref}
-          onMouseMove={onMove}
-          onMouseLeave={onLeave}
-          whileHover={lite ? undefined : { y: -8 }}
-          transition={{ type: "spring", stiffness: 320, damping: 26, mass: 0.7 }}
-          className={cn(
-            "group interactive-card relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-[24px] border border-white/8 bg-white/[0.025] p-5 sm:min-h-[340px] sm:rounded-[28px] sm:p-6 md:p-8 lg:min-h-[400px]",
-            "transition-[border-color,box-shadow] duration-400 hover:border-accent-blue/35",
-            "hover:shadow-[0_30px_90px_rgba(79,140,255,0.14),0_0_0_1px_rgba(79,140,255,0.08)]",
-          )}
-        >
-          {!lite ? (
-            <motion.div
-              className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400 group-hover:opacity-100"
-              style={{ background: glow }}
-            />
-          ) : null}
+      <div className="group relative flex h-full flex-col border border-white/10 bg-[#060810] p-7 transition-all duration-500 hover:border-accent-blue/40 hover:bg-[#040916] sm:p-9">
+        {/* Corner glow */}
+        <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-accent-violet/0 blur-3xl transition duration-500 group-hover:bg-accent-violet/22" />
+        <div className="pointer-events-none absolute -bottom-10 -left-8 h-36 w-36 rounded-full bg-accent-blue/0 blur-3xl transition duration-500 group-hover:bg-accent-blue/16" />
 
-          {/* Corner accent sweep */}
-          <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-accent-violet/0 blur-3xl transition duration-500 group-hover:bg-accent-violet/20" />
-          <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-accent-blue/0 blur-3xl transition duration-500 group-hover:bg-accent-blue/15" />
+        {/* Top shine line */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-blue/0 to-transparent transition duration-500 group-hover:via-accent-blue/70" />
 
-          {/* Top shine line */}
-          <motion.div
-            className="pointer-events-none absolute inset-x-0 top-0 h-px origin-left bg-gradient-to-r from-transparent via-accent-blue to-transparent opacity-0 group-hover:opacity-100"
-            initial={false}
-            whileHover={{ scaleX: 1 }}
-          />
-
-          <div className="relative z-10 flex h-full flex-col">
-            <div className="mb-auto flex items-start justify-between gap-4">
-              <span className="font-sans text-[10px] uppercase tracking-[0.32em] text-accent-violet transition group-hover:text-accent-blue">
+        <div className="relative z-10 flex h-full flex-col">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-2">
+              <span className="section-num">
+                {String(index + 1).padStart(2, "0")} / PROJECT
+              </span>
+              <span className="font-sans text-[10px] uppercase tracking-[0.32em] text-accent-violet/80 transition group-hover:text-accent-blue">
                 {project.subtitle}
               </span>
-              <motion.span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/35 transition group-hover:border-accent-blue/40 group-hover:bg-accent-blue/15 group-hover:text-white"
-                whileHover={{ rotate: 45 }}
-              >
-                <ArrowUpRight className="h-4 w-4 transition duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </motion.span>
             </div>
-
-            <div className="mt-10 sm:mt-14">
-              <h3 className="font-display text-2xl font-semibold leading-[1.15] text-white transition duration-500 group-hover:text-shimmer sm:text-3xl md:text-[2.1rem]">
-                {project.title}
-              </h3>
-              <p className="font-body mt-5 text-sm leading-[1.8] text-muted transition group-hover:text-white/70">
-                {project.tagline}
-              </p>
-            </div>
-
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10">
-              {metrics.map((metric, mi) => (
-                <motion.div
-                  key={metric.label}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    delay: 0.35 + index * 0.1 + mi * 0.08,
-                    duration: 0.55,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                  className="rounded-2xl border border-white/8 bg-black/30 px-3 py-3 transition duration-300 group-hover:border-accent-blue/30 group-hover:bg-accent-blue/[0.07] sm:px-4 sm:py-4"
-                >
-                  <p className="font-display text-2xl font-semibold text-white sm:text-3xl">
-                    <AnimatedCounter
-                      value={metric.numeric}
-                      suffix={metric.suffix}
-                      duration={1.4 + mi * 0.15}
-                    />
-                  </p>
-                  <p className="font-sans mt-2 text-[10px] uppercase tracking-[0.16em] text-white/45 sm:tracking-[0.2em]">
-                    {metric.label}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="mt-6 flex items-center gap-2 font-sans text-[10px] uppercase tracking-[0.28em] text-white/30 transition group-hover:text-accent-blue/80">
-              <span>View case study</span>
-              <span className="h-px w-0 bg-accent-blue transition-all duration-500 group-hover:w-8" />
-            </div>
+            <motion.span
+              className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/12 bg-white/[0.025] text-white/30 transition group-hover:border-accent-blue/50 group-hover:bg-accent-blue/15 group-hover:text-white"
+              whileHover={{ rotate: 45 }}
+            >
+              <ArrowUpRight className="h-4 w-4" />
+            </motion.span>
           </div>
-        </motion.div>
-      </Link>
-    </motion.div>
+
+          {/* Title */}
+          <div className="mt-12 flex-1">
+            <h3 className="font-display text-3xl font-bold leading-[1.1] text-white transition duration-400 sm:text-[2.2rem]">
+              {project.title.toUpperCase()}
+            </h3>
+            <p className="font-body mt-5 text-sm leading-[1.85] text-white/45 transition group-hover:text-white/65">
+              {project.tagline}
+            </p>
+          </div>
+
+          {/* Metrics */}
+          <div className="mt-10 grid grid-cols-2 gap-3">
+            {metrics.map((m, mi) => (
+              <div
+                key={m.label}
+                className="border border-white/8 bg-black/40 p-4 transition duration-300 group-hover:border-accent-blue/25 group-hover:bg-accent-blue/[0.06]"
+              >
+                <p className="font-display text-3xl font-bold text-white">
+                  <AnimatedCounter
+                    value={m.numeric}
+                    suffix={m.suffix}
+                    duration={1.4 + mi * 0.15}
+                  />
+                </p>
+                <p className="font-sans mt-1.5 text-[9px] uppercase tracking-[0.22em] text-white/35">
+                  {m.label}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA text */}
+          <div className="mt-7 flex items-center gap-2 font-sans text-[9px] uppercase tracking-[0.32em] text-white/25 transition group-hover:text-accent-blue/80">
+            <span>Case Study</span>
+            <span className="h-px w-0 bg-accent-blue transition-all duration-500 group-hover:w-10" />
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/** Finance ticker of terms that scrolls horizontally */
+function FinanceTicker() {
+  const TERMS = [
+    "EBITDA", "ROI", "IRR", "NPV", "CAGR", "SHARPE RATIO",
+    "P&L ANALYSIS", "MIS REPORTING", "ALPHA", "VOLATILITY",
+    "ARIMA", "REGRESSION", "FORECASTING", "VaR", "SQL AUTOMATION",
+  ];
+  const doubled = [...TERMS, ...TERMS];
+
+  return (
+    <div className="relative overflow-hidden border-y border-white/8 py-3">
+      <div className="ticker-track">
+        {doubled.map((t, i) => (
+          <span key={i} className="flex items-center gap-6 px-6">
+            <span className="font-sans text-[10px] uppercase tracking-[0.35em] text-white/25">{t}</span>
+            <span className="h-px w-5 bg-white/15" />
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
 export function Projects() {
-  return (
-    <section id="projects" className="relative px-4 py-20 sm:px-6 sm:py-32 md:px-12 md:py-44 lg:px-16">
-      <div className="mx-auto max-w-[90rem]">
-        <p className="font-sans mb-6 text-[11px] uppercase tracking-[0.45em] text-accent-magenta/80">
-          Projects
-        </p>
-        <SplitReveal
-          text="Work that moved the numbers."
-          as="h2"
-          mode="words"
-          className="mb-12 max-w-4xl text-[clamp(2rem,6vw,5rem)] font-semibold leading-[1.05] text-white sm:mb-20 md:mb-28"
-        />
+  const sectionRef = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const { lite } = usePerfFlags();
 
-        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-7">
-          {projects.map((project, index) => (
-            <ProjectCard key={project.slug} project={project} index={index} />
-          ))}
+  useEffect(() => {
+    if (lite) return;
+    registerGsap();
+
+    const section = sectionRef.current;
+    const track = trackRef.current;
+    if (!section || !track) return;
+
+    const ctx = gsap.context(() => {
+      const totalWidth = track.scrollWidth;
+      const viewWidth = track.parentElement?.clientWidth ?? window.innerWidth;
+      const scrollDist = totalWidth - viewWidth;
+
+      if (scrollDist <= 0) return;
+
+      gsap.to(track, {
+        x: -scrollDist,
+        ease: "none",
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: () => `+=${scrollDist + viewWidth * 0.5}`,
+          scrub: 0.8,
+          pin: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+        },
+      });
+    }, section);
+
+    return () => ctx.revert();
+  }, [lite]);
+
+  return (
+    <section
+      ref={sectionRef}
+      id="projects"
+      className="relative"
+    >
+      {/* ── Section header (outside pin zone) ── */}
+      <div className="relative z-10 px-5 pt-20 sm:px-8 sm:pt-28 md:px-12 md:pt-36 lg:px-16">
+        <div className="mx-auto max-w-[90rem]">
+          {/* ── Terminal-style label ── */}
+          <div className="mb-6 flex items-center gap-4">
+            <span className="section-num">02 / WORK</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-accent-blue/30 to-transparent" />
+          </div>
+
+          <h2 className="section-heading-bold mb-0 max-w-3xl">
+            WORK THAT<br />MOVED THE<br />NUMBERS.
+          </h2>
         </div>
+      </div>
+
+      {/* ── Ticker ── */}
+      <div className="mt-12 sm:mt-16">
+        <FinanceTicker />
+      </div>
+
+      {/* ── Horizontal scroll rail ── */}
+      <div
+        className={`relative mt-0 overflow-hidden ${lite ? "px-5 py-12 sm:px-8 md:px-12 lg:px-16" : "py-16"}`}
+      >
+        {lite ? (
+          /* ── Lite mode: vertical grid ── */
+          <div className="mx-auto grid max-w-[90rem] gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project, i) => (
+              <motion.div
+                key={project.slug}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <ProjectCard project={project} index={i} />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          /* ── Full mode: horizontal pinned scroll ── */
+          <>
+            {/* Left fade */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#030303] to-transparent" />
+            {/* Right fade */}
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#030303] to-transparent" />
+
+            <div className="overflow-hidden px-5 sm:px-8 md:px-12 lg:px-16">
+              <div ref={trackRef} className="h-scroll-track py-4">
+                {/* Leading spacer */}
+                <div className="h-scroll-panel flex items-end pb-3">
+                  <div className="w-full">
+                    <p className="font-body text-sm leading-[1.85] text-white/35 md:text-base">
+                      Turning financial complexity<br />into clarity — one dataset<br />at a time.
+                    </p>
+                    <div className="mt-6 flex items-center gap-3 font-sans text-[9px] uppercase tracking-[0.35em] text-white/20">
+                      <span className="h-px w-8 bg-white/20" />
+                      <span>Scroll to explore</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Project cards */}
+                {projects.map((project, i) => (
+                  <div
+                    key={project.slug}
+                    className="h-scroll-panel"
+                    style={{ height: "clamp(380px, 56vh, 560px)" }}
+                  >
+                    <ProjectCard project={project} index={i} />
+                  </div>
+                ))}
+
+                {/* Trailing CTA */}
+                <div className="h-scroll-panel flex items-center justify-center">
+                  <Link
+                    href="#contact"
+                    data-cursor="interactive"
+                    className="group flex flex-col items-center gap-4 text-center"
+                  >
+                    <span className="font-display text-4xl font-bold text-white/20 transition group-hover:text-white/60 sm:text-5xl">
+                      LET'S BUILD
+                    </span>
+                    <span className="font-display text-4xl font-bold text-white/20 transition group-hover:text-accent-blue sm:text-5xl">
+                      SOMETHING.
+                    </span>
+                    <span className="mt-2 font-sans text-[10px] uppercase tracking-[0.4em] text-accent-blue/50">
+                      Get in touch ↗
+                    </span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

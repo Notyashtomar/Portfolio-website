@@ -1,30 +1,41 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { gsap, registerGsap } from "@/lib/gsap";
 import { usePerfFlags } from "@/components/providers/Providers";
 import { profile } from "@/data/resume";
-import { GlowButton } from "@/components/ui/GlowButton";
 
-const PlasmaScene = dynamic(
-  () => import("./PlasmaScene").then((m) => m.PlasmaScene),
-  { ssr: false, loading: () => <div className="hero-fallback-glow absolute inset-0" /> },
+const FinanceGlobe = dynamic(
+  () => import("./FinanceGlobe").then((m) => m.FinanceGlobe),
+  { ssr: false, loading: () => <div className="absolute inset-0 hero-fallback-glow" /> },
 );
+
+const ROLES = [
+  { label: "Data Analytics", tag: "ANALYTICS" },
+  { label: "MIS Reporting", tag: "REPORTING" },
+  { label: "Forecasting", tag: "FORECASTING" },
+  { label: "Automation", tag: "AUTOMATION" },
+];
+
+const STATS = [
+  { value: "3+", label: "YRS EXP" },
+  { value: "15+", label: "REPORTS AUTOMATED" },
+  { value: "₹500Cr", label: "AUM TRACKED" },
+];
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const lightRef = useRef<HTMLDivElement>(null);
-  const [roleIndex, setRoleIndex] = useState(0);
+  const [roleIdx, setRoleIdx] = useState(0);
   const { lite } = usePerfFlags();
 
   useEffect(() => {
     const id = window.setInterval(() => {
-      setRoleIndex((i) => (i + 1) % profile.roles.length);
-    }, 3000);
+      setRoleIdx((i) => (i + 1) % ROLES.length);
+    }, 2800);
     return () => window.clearInterval(id);
   }, []);
 
@@ -37,15 +48,14 @@ export function Hero() {
 
     const ctx = gsap.context(() => {
       gsap.to(content, {
-        y: -80,
-        opacity: 0.2,
-        scale: 0.95,
+        y: -70,
+        opacity: 0.15,
         ease: "none",
         scrollTrigger: {
           trigger: section,
           start: "top top",
           end: "bottom top",
-          scrub: 0.6,
+          scrub: 0.5,
         },
       });
     }, section);
@@ -53,137 +63,183 @@ export function Hero() {
     return () => ctx.revert();
   }, [lite]);
 
-  useEffect(() => {
-    if (lite) return;
-    let raf = 0;
-    let x = 0;
-    let y = 0;
-    const move = (e: MouseEvent) => {
-      x = e.clientX;
-      y = e.clientY;
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        if (lightRef.current) {
-          lightRef.current.style.transform = `translate(${x - 300}px, ${y - 300}px)`;
-        }
-        raf = 0;
-      });
-    };
-    window.addEventListener("mousemove", move, { passive: true });
-    return () => {
-      window.removeEventListener("mousemove", move);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [lite]);
-
-  const nameParts = profile.displayName.split(" ");
-
   return (
     <section
       ref={sectionRef}
       id="hero"
-      className="relative flex min-h-[100svh] items-end overflow-hidden pb-14 pt-16 sm:pb-20 sm:pt-24 md:items-center md:pb-0 md:pt-0"
+      className="relative flex min-h-[100svh] overflow-hidden"
     >
-      <PlasmaScene />
+      {/* ── Globe — right half ── */}
+      <div className="absolute right-0 top-0 h-full w-full md:w-[58%] lg:w-[55%]">
+        <FinanceGlobe />
+        {/* fade the left edge on desktop so globe bleeds behind text */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-2/5 bg-gradient-to-r from-[#030303] to-transparent md:block" />
+        {/* fade top and bottom */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#030303] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#030303] to-transparent" />
+      </div>
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-[#030303]/15 to-[#030303]" />
-      {!lite ? (
-        <div
-          ref={lightRef}
-          className="pointer-events-none absolute left-0 top-0 h-[600px] w-[600px] rounded-full opacity-60"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(79,140,255,0.14) 0%, transparent 65%)",
-            willChange: "transform",
-          }}
-        />
-      ) : null}
-
+      {/* ── Text ── left column ── */}
       <div
         ref={contentRef}
-        className="relative z-10 mx-auto w-full max-w-[90rem] px-4 sm:px-6 md:px-12 lg:px-16"
+        className="relative z-10 flex w-full flex-col justify-center px-5 pb-20 pt-24 sm:px-8 md:w-[52%] md:px-12 md:pb-0 lg:px-20 lg:pr-0"
       >
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
+        {/* ── Status row ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="font-sans mb-6 text-[10px] uppercase tracking-[0.28em] text-white/45 sm:mb-8 sm:text-[11px] sm:tracking-[0.45em]"
+          transition={{ delay: 0.15, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-10 flex flex-wrap items-center gap-4"
         >
-          {profile.location} · {profile.title}
-        </motion.p>
+          <span className="flex items-center gap-2">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent-blue" style={{ boxShadow: "0 0 6px #4f8cff" }} />
+            <span className="hero-tag">SIGNAL · ACTIVE</span>
+          </span>
+          <span className="hero-tag-dim">INDEX 001 / PORTFOLIO</span>
+        </motion.div>
 
-        <h1 className="hero-title-glow font-display max-w-[14ch] text-[clamp(2.1rem,8.5vw,7rem)] font-semibold leading-[0.95] tracking-[-0.04em] text-white sm:leading-[0.92]">
-          {nameParts.map((word, wi) => (
-            <span key={word} className="block overflow-hidden">
+        {/* ── Horizontal rule ── */}
+        <motion.div
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ delay: 0.25, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-10 h-px origin-left bg-gradient-to-r from-accent-blue/60 via-white/15 to-transparent"
+        />
+
+        {/* ── Name ── */}
+        <h1 className="hero-name leading-none tracking-[-0.04em] text-white">
+          {["YASH RAJ", "SINGH TOMAR"].map((line, li) => (
+            <span key={line} className="block overflow-hidden">
               <motion.span
-                className="inline-block"
-                initial={{ y: "100%", opacity: 0 }}
+                className="block"
+                initial={{ y: "110%", opacity: 0 }}
                 animate={{ y: "0%", opacity: 1 }}
                 transition={{
-                  delay: 0.35 + wi * 0.12,
-                  duration: 0.85,
+                  delay: 0.35 + li * 0.13,
+                  duration: 0.9,
                   ease: [0.16, 1, 0.3, 1],
                 }}
               >
-                {word}
+                {line}
               </motion.span>
             </span>
           ))}
         </h1>
 
-        <div className="mt-6 min-h-[2.5rem] sm:mt-10 sm:min-h-[3rem] md:min-h-[3.5rem]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={profile.roles[roleIndex]}
-              initial={{ y: 28, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -28, opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="font-display text-base text-accent-blue sm:text-xl md:text-3xl"
-            >
-              {profile.roles[roleIndex]}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.6 }}
-          className="font-body mt-6 max-w-md text-sm leading-[1.8] text-muted sm:mt-8 md:text-base"
-        >
-          Turning financial complexity into clarity — through analytics, MIS
-          reporting, and automation that moves the business forward.
-        </motion.p>
-
+        {/* ── Role list — gobold services style ── */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-8 space-y-1 sm:mt-10"
+        >
+          {ROLES.map((role, i) => (
+            <motion.div
+              key={role.label}
+              className="group flex cursor-default items-center gap-3"
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7 + i * 0.08, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-accent-blue/50 transition group-hover:text-accent-blue">
+                +
+              </span>
+              <span className="font-display text-base font-medium text-white/60 transition group-hover:text-white sm:text-lg md:text-xl">
+                {role.label.toUpperCase()}
+              </span>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* ── Animated role badge ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.0, duration: 0.5 }}
+          className="mt-8 sm:mt-10"
+        >
+          <div className="inline-flex items-center gap-2 rounded-full border border-accent-blue/25 bg-accent-blue/8 px-4 py-1.5">
+            <span className="h-1 w-1 rounded-full bg-accent-blue animate-pulse" />
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={ROLES[roleIdx].tag}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="font-sans text-[10px] uppercase tracking-[0.35em] text-accent-blue"
+              >
+                OUTPUT: {ROLES[roleIdx].tag}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* ── Divider ── */}
+        <motion.div
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
           transition={{ delay: 1.05, duration: 0.6 }}
-          className="mt-8 flex flex-wrap items-center gap-4 sm:mt-12 sm:gap-5"
+          className="mb-8 mt-10 h-px origin-left bg-gradient-to-r from-white/12 via-white/6 to-transparent sm:mt-12"
+        />
+
+        {/* ── CTA ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.15, duration: 0.55 }}
+          className="flex flex-wrap items-center gap-4"
         >
           <Link href="#projects" data-cursor="interactive">
-            <GlowButton variant="primary">View work</GlowButton>
+            <button className="hero-cta-primary">
+              VIEW WORK <span className="ml-2 text-base">↗</span>
+            </button>
           </Link>
           <Link href="#contact" data-cursor="interactive">
-            <GlowButton variant="ghost">Get in touch</GlowButton>
+            <button className="hero-cta-ghost">GET IN TOUCH</button>
           </Link>
+        </motion.div>
+
+        {/* ── Stats row ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.3, duration: 0.55 }}
+          className="mt-12 flex flex-wrap gap-8 sm:mt-16"
+        >
+          {STATS.map((s) => (
+            <div key={s.label} className="flex flex-col gap-0.5">
+              <span className="font-display text-2xl font-semibold text-white sm:text-3xl">{s.value}</span>
+              <span className="font-sans text-[9px] uppercase tracking-[0.35em] text-white/30">{s.label}</span>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* ── Bottom label row ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.45, duration: 0.5 }}
+          className="mt-8 flex flex-wrap gap-5"
+        >
+          {["SUBJECT: DATA", `TIER: ANALYST`, `LOCATION: ${profile.location.split(",")[0].toUpperCase()}`].map((label) => (
+            <span key={label} className="hero-tag-dim">{label}</span>
+          ))}
         </motion.div>
       </div>
 
+      {/* ── Bottom scroll indicator ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.4 }}
-        className="absolute bottom-10 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex"
+        transition={{ delay: 1.6 }}
+        className="absolute bottom-8 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 md:flex"
       >
-        <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-white/30">
-          Enter
-        </span>
+        <span className="font-sans text-[9px] uppercase tracking-[0.45em] text-white/25">Scroll</span>
         <motion.span
-          className="h-12 w-px bg-gradient-to-b from-accent-blue/80 to-transparent"
-          animate={{ scaleY: [0.4, 1, 0.4], opacity: [0.3, 1, 0.3] }}
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          className="h-10 w-px bg-gradient-to-b from-accent-blue/70 to-transparent"
+          animate={{ scaleY: [0.3, 1, 0.3], opacity: [0.2, 0.9, 0.2] }}
+          transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
         />
       </motion.div>
     </section>
