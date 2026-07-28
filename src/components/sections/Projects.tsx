@@ -189,9 +189,10 @@ function ProgressDots({ progress, total, center }: { progress: number; total: nu
 export function Projects() {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
+  const spacerRef  = useRef<HTMLDivElement>(null);
   const cardRefs   = useRef<(HTMLDivElement | null)[]>([]);
   const [progress, setProgress]       = useState(0);
-  const [centerIdx, setCenterIdx]     = useState(-1);
+  const [centerIdx, setCenterIdx]     = useState(0);
   const [hoveredIdx, setHoveredIdx]   = useState<number | null>(null);
   const spotlightX = useMotionValue(0);
 
@@ -251,42 +252,51 @@ export function Projects() {
       tween?.kill();
       ScrollTrigger.getAll().filter((t) => t.vars.trigger === section).forEach((t) => t.kill());
 
+      const spacer = spacerRef.current;
+      if (spacer) spacer.style.width = "0px";
+      gsap.set(track, { x: 0 });
+
+      // Pass 1: measure natural position of card 0, then grow the spacer
+      // so card 0's centre lands exactly on the viewport centre at scroll start.
       requestAnimationFrame(() => {
-        const scrollDist = Math.max(0, track.scrollWidth - window.innerWidth);
-        if (scrollDist === 0) return;
+        const firstCard = cardRefs.current[0];
+        if (spacer && firstCard) {
+          const rect   = firstCard.getBoundingClientRect();
+          const center = rect.left + rect.width / 2;
+          const delta  = Math.max(0, window.innerWidth / 2 - center);
+          spacer.style.width = `${delta}px`;
+        }
 
-        section.style.height = `${window.innerHeight + scrollDist}px`;
+        // Pass 2: layout has settled with the spacer applied — now measure
+        // real scroll distance and build the trigger.
+        requestAnimationFrame(() => {
+          const scrollDist = Math.max(0, track.scrollWidth - window.innerWidth);
+          if (scrollDist === 0) return;
 
-        // Initial state: all cards off-right, tilted, invisible
-        cardRefs.current.forEach((card) => {
-          if (card) gsap.set(card, { opacity: 0, scale: 0.88, rotateY: 16, y: 40 });
-        });
+          // Extra scroll runway (×1.6) so the horizontal slide feels slower
+          // per pixel of vertical scroll, without changing the x range.
+          const runway = scrollDist * 1.6;
+          section.style.height = `${window.innerHeight + runway}px`;
 
-        gsap.set(track, { x: 0 });
+          gsap.set(track, { x: 0 });
+          applyLoom();
 
-        tween = gsap.to(track, {
-          x: -scrollDist,
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: () => `+=${scrollDist}`,
-            scrub: 1.4,
-            invalidateOnRefresh: true,
-            onEnter() {
-              cardRefs.current.forEach((card, i) => {
-                if (!card) return;
-                gsap.to(card, { opacity: 1, y: 0, delay: i * 0.07, duration: 0.8, ease: "power3.out" });
-              });
+          tween = gsap.to(track, {
+            x: -scrollDist,
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top top",
+              end: () => `+=${runway}`,
+              scrub: 2,
+              invalidateOnRefresh: true,
+              onUpdate(self) {
+                setProgress(self.progress);
+                applyLoom();
+              },
             },
-            onUpdate(self) {
-              setProgress(self.progress);
-              applyLoom();
-            },
-          },
+          });
         });
-
-        applyLoom();
       });
     };
 
@@ -394,6 +404,9 @@ export function Projects() {
                 <span>Scroll to explore</span>
               </div>
             </div>
+
+            {/* Dynamic spacer — grown via JS so card 1 centres exactly at scroll start */}
+            <div ref={spacerRef} className="shrink-0" style={{ width: 0 }} aria-hidden />
 
             {/* Project cards */}
             {projects.map((project, i) => (
