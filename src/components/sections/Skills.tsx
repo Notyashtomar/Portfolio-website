@@ -11,24 +11,52 @@ type Pos = { id: string; x: number; y: number };
 const CORE = { x: 50, y: 50 };
 
 /**
- * Two-ring layout: 6 outer (r=30) + 6 inner (r=18), inner offset 30°.
- * Pre-verified — all adjacent cross-ring centers are ≥ 17 units apart
- * (~114 px on the 672 px stage), preventing pill label collision.
+ * Hardcoded constellation positions — each node's (x%, y%) is manually
+ * placed so that its pill label never clips a neighbour, even at active
+ * scale-1.18.  Label widths are accounted for; left/right stage edges
+ * are respected (overflow-hidden stage = no clip past 0 / 100%).
+ *
+ * Worst-case pill widths used:
+ *   "Financial Analysis" ~140px = 10.5% of 672px stage (half = 5.25)
+ *   "MIS Reporting" / "Data Cleaning" / "Visualization" ~110px (half ~4.1%)
+ *   Short labels (SQL, EDA, P.BI) ~55–80px (half ~2–3%)
  */
+const NODE_POS: Record<string, { x: number; y: number }> = {
+  sql:      { x: 72, y: 17 }, // top-right
+  excel:    { x: 26, y: 70 }, // bottom-left  — left edge: 26-8.9=17.1% ✓
+  pbi:      { x: 70, y: 70 }, // bottom-right
+  python:   { x: 80, y: 50 }, // mid-right
+  fa:       { x: 20, y: 38 }, // mid-left upper — "Financial Analysis" left: 20-10.5=9.5%→64px ✓
+  clean:    { x: 50, y: 14 }, // top-centre
+  eda:      { x: 76, y: 34 }, // right-upper
+  dash:     { x: 32, y: 82 }, // bottom-left
+  mis:      { x: 20, y: 62 }, // mid-left lower — same x as fa, 24% gap in y ✓
+  forecast: { x: 67, y: 83 }, // bottom-right
+  viz:      { x: 50, y: 88 }, // bottom-centre
+  stake:    { x: 76, y: 61 }, // right-lower
+};
+
 function layoutNodes(): Pos[] {
-  return skillNodes.map((node, i) => {
-    const isInner = i >= 6;
-    const ring    = isInner ? 18 : 30;
-    const idx     = isInner ? i - 6 : i;
-    const offset  = isInner ? Math.PI / 6 : 0; // 30° stagger keeps rings interleaved
-    const angle   = (idx / 6) * Math.PI * 2 - Math.PI / 2 + offset;
-    return {
-      id: node.id,
-      x: CORE.x + Math.cos(angle) * ring,
-      y: CORE.y + Math.sin(angle) * ring,
-    };
-  });
+  return skillNodes.map((node) => ({
+    id: node.id,
+    x: NODE_POS[node.id]?.x ?? CORE.x,
+    y: NODE_POS[node.id]?.y ?? CORE.y,
+  }));
 }
+
+/**
+ * Hand-picked ring edges between semantically related nodes.
+ * Replaces the old "adjacent in array" ring which made no sense
+ * for a non-circular constellation layout.
+ */
+const RING_EDGES: [string, string][] = [
+  ["sql",   "clean"],  ["clean",  "eda"],   ["eda",   "sql"],   // data-eng cluster (top)
+  ["pbi",   "dash"],   ["dash",   "mis"],   ["mis",   "fa"],    // reporting cluster (left-bottom)
+  ["excel", "fa"],     ["excel",  "forecast"],                  // finance cluster
+  ["viz",   "dash"],   ["viz",    "forecast"],                  // visual cluster (bottom)
+  ["stake", "pbi"],    ["stake",  "python"],                    // stakeholder cluster (right)
+  ["python","eda"],                                             // tech bridge
+];
 
 /* ── Animated data-pulse dot that travels along a spoke ── */
 function DataPulse({
@@ -71,14 +99,15 @@ export function Skills() {
 
   const connectedIds = useMemo(() => {
     if (!active) return new Set<string>();
-    const idx = positions.findIndex((p) => p.id === active);
     const set = new Set([active]);
-    if (idx >= 0) {
-      set.add(positions[(idx + 1) % positions.length].id);
-      set.add(positions[(idx - 1 + positions.length) % positions.length].id);
+    // Spoke connections: core is always connected
+    // Ring connections from RING_EDGES
+    for (const [a, b] of RING_EDGES) {
+      if (a === active) set.add(b);
+      if (b === active) set.add(a);
     }
     return set;
-  }, [active, positions]);
+  }, [active]);
 
   const spokeLinks = useMemo(
     () => positions.map((p, i) => ({ p, i, id: p.id, key: `spoke-${p.id}` })),
@@ -86,22 +115,16 @@ export function Skills() {
   );
 
   const ringLinks = useMemo(() => {
-    const res: { a: Pos; b: Pos; key: string }[] = [];
-    for (let i = 0; i < positions.length; i++) {
-      res.push({
-        a: positions[i],
-        b: positions[(i + 1) % positions.length],
-        key: `ring-${positions[i].id}`,
-      });
-    }
-    return res;
+    return RING_EDGES.flatMap(([aId, bId]) => {
+      const a = positions.find((p) => p.id === aId);
+      const b = positions.find((p) => p.id === bId);
+      if (!a || !b) return [];
+      return [{ a, b, key: `ring-${aId}-${bId}` }];
+    });
   }, [positions]);
 
   const isRingHot = (aId: string, bId: string) =>
-    !!active &&
-    (aId === active || bId === active) &&
-    connectedIds.has(aId) &&
-    connectedIds.has(bId);
+    !!active && (aId === active || bId === active);
 
   return (
     <section
