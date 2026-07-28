@@ -32,7 +32,7 @@ function ScrambleText({ text, trigger, className }: { text: string; trigger: boo
         }).join(""),
       );
       if (frame >= total) clearInterval(id);
-    }, 35);
+    }, 88);
     return () => clearInterval(id);
   }, [text, trigger]);
   return <span className={className}>{out}</span>;
@@ -495,7 +495,7 @@ function TypewriterLine() {
       setText(full.slice(0, i + 1));
       i++;
       if (i >= full.length) clearInterval(id);
-    }, 38);
+    }, 95);
     return () => clearInterval(id);
   }, []);
 
