@@ -300,6 +300,8 @@ export function Projects() {
         // CTA reaches full brightness/centre before the section releases.
         requestAnimationFrame(() => {
           const cta = ctaRef.current;
+          const lastCard = cardRefs.current[projects.length - 1];
+
           let scrollDist = Math.max(0, track.scrollWidth - window.innerWidth);
           if (cta) {
             const rect = cta.getBoundingClientRect();
@@ -310,6 +312,16 @@ export function Projects() {
           }
           if (scrollDist <= 0) return;
 
+          // Distance to bring the LAST project card to dead-centre — used to
+          // carve out an explicit "hold" stop there, so it never gets rushed
+          // past on the way to the CTA.
+          let lastCardDist = 0;
+          if (lastCard) {
+            const rect = lastCard.getBoundingClientRect();
+            const cardCenter = rect.left + rect.width / 2;
+            lastCardDist = Math.min(scrollDist, Math.max(0, cardCenter - window.innerWidth / 2));
+          }
+
           // Extra scroll runway (×1.28 — 20% faster than the previous ×1.6)
           // so the horizontal slide feels slower than 1:1 scroll but snappier
           // than before, without changing the x range.
@@ -319,11 +331,21 @@ export function Projects() {
           gsap.set(track, { x: 0 });
           applyLoom();
 
-          // Timeline (not a bare tween) so the horizontal slide finishes at
-          // 85% of the runway, leaving the final 15% of scroll as a "hold" —
-          // the 6th card / CTA sit fully centred and in focus for a beat
-          // before the section releases, instead of the scrub lag leaving
-          // them perpetually short of dead-centre right at the very end.
+          // Timeline with two explicit "hold" stops carved out of the scroll
+          // budget: one when the last card reaches dead-centre, one when the
+          // CTA does. Without these, a plain linear tween just sweeps through
+          // both positions in a single continuous motion, so scrub lag (or a
+          // fast scroll) can blow straight past the last card's centred
+          // moment and land it dimmed/off-centre with nothing to show for it.
+          const cardTravel = lastCardDist;
+          const ctaTravel  = Math.max(0, scrollDist - lastCardDist);
+          const totalTravel = cardTravel + ctaTravel || 1;
+          const HOLD_CARD = 0.08;
+          const HOLD_CTA  = 0.12;
+          const motionBudget = 1 - HOLD_CARD - HOLD_CTA;
+          const seg1 = motionBudget * (cardTravel / totalTravel);
+          const seg2 = motionBudget * (ctaTravel / totalTravel);
+
           tween = gsap.timeline({
             scrollTrigger: {
               trigger: section,
@@ -337,8 +359,10 @@ export function Projects() {
               },
             },
           })
-            .to(track, { x: -scrollDist, ease: "none", duration: 0.85 })
-            .to({}, { duration: 0.15 });
+            .to(track, { x: -lastCardDist, ease: "none", duration: seg1 })
+            .to({}, { duration: HOLD_CARD })
+            .to(track, { x: -scrollDist, ease: "none", duration: seg2 })
+            .to({}, { duration: HOLD_CTA });
         });
       });
     };
