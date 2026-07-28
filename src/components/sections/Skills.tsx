@@ -13,7 +13,8 @@ const CORE = { x: 50, y: 50 };
 function layoutNodes(): Pos[] {
   return skillNodes.map((node, i) => {
     const angle = (i / skillNodes.length) * Math.PI * 2 - Math.PI / 2;
-    const ring = i % 3 === 0 ? 36 : i % 3 === 1 ? 28 : 20;
+    // Tighter radii so labels never clip the stage's overflow-hidden edge
+    const ring = i % 3 === 0 ? 28 : i % 3 === 1 ? 21 : 15;
     return {
       id: node.id,
       x: CORE.x + Math.cos(angle) * ring,
@@ -116,7 +117,7 @@ export function Skills() {
         </div>
 
         {/* Desktop: network visualization */}
-        <div className="relative mx-auto hidden max-w-4xl lg:block">
+        <div className="relative mx-auto hidden max-w-2xl lg:block xl:max-w-3xl">
           <div
             ref={stageRef}
             className="skills-stage relative aspect-square overflow-hidden rounded-[36px] border border-white/8 bg-[#05070d]"
@@ -147,7 +148,7 @@ export function Skills() {
               </>
             ) : null}
 
-            <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100">
+            <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" overflow="visible">
               <defs>
                 <linearGradient id="skill-line" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#4f8cff" />
