@@ -605,14 +605,9 @@ body.no-cursor button {
 /* ── Horizontal scroll track ── */
 .h-scroll-track {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.25rem;
   width: max-content;
   will-change: transform;
-}
-
-.h-scroll-panel {
-  width: min(85vw, 500px);
-  flex-shrink: 0;
 }
 
 /* ── Marquee ticker ── */

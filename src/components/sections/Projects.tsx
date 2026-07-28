@@ -130,19 +130,16 @@ export function Projects() {
     if (!section || !track) return;
 
     const ctx = gsap.context(() => {
-      const totalWidth = track.scrollWidth;
-      const viewWidth = track.parentElement?.clientWidth ?? window.innerWidth;
-      const scrollDist = totalWidth - viewWidth;
-
-      if (scrollDist <= 0) return;
+      // scrollWidth of the flex track vs viewport width
+      const getScrollDist = () => track.scrollWidth - window.innerWidth;
 
       gsap.to(track, {
-        x: -scrollDist,
+        x: () => -getScrollDist(),
         ease: "none",
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: () => `+=${scrollDist + viewWidth * 0.5}`,
+          end: () => `+=${getScrollDist()}`,
           scrub: 0.8,
           pin: true,
           anticipatePin: 1,
@@ -158,7 +155,7 @@ export function Projects() {
     <section
       ref={sectionRef}
       id="projects"
-      className="relative"
+      className="relative overflow-hidden"
     >
       {/* ── Section header (outside pin zone) ── */}
       <div className="relative z-10 px-5 pt-20 sm:px-8 sm:pt-28 md:px-12 md:pt-36 lg:px-16">
@@ -182,7 +179,7 @@ export function Projects() {
 
       {/* ── Horizontal scroll rail ── */}
       <div
-        className={`relative mt-0 overflow-hidden ${lite ? "px-5 py-12 sm:px-8 md:px-12 lg:px-16" : "py-16"}`}
+        className={`relative mt-0 ${lite ? "px-5 py-12 sm:px-8 md:px-12 lg:px-16" : "py-12"}`}
       >
         {lite ? (
           /* ── Lite mode: vertical grid ── */
@@ -200,60 +197,74 @@ export function Projects() {
             ))}
           </div>
         ) : (
-          /* ── Full mode: horizontal pinned scroll ── */
-          <>
+          /* ── Full mode: horizontal pinned scroll ──
+             The <section> has overflow-hidden so the viewport is the clip boundary.
+             The track uses pl- for left gutter — NO inner overflow-hidden wrapper. */
+          <div className="relative">
             {/* Left fade */}
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#030303] to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#030303] to-transparent" />
             {/* Right fade */}
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#030303] to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#030303] to-transparent" />
 
-            <div className="overflow-hidden px-5 sm:px-8 md:px-12 lg:px-16">
-              <div ref={trackRef} className="h-scroll-track py-4">
-                {/* Leading spacer */}
-                <div className="h-scroll-panel flex items-end pb-3">
-                  <div className="w-full">
-                    <p className="font-body text-sm leading-[1.85] text-white/35 md:text-base">
-                      Turning financial complexity<br />into clarity — one dataset<br />at a time.
-                    </p>
-                    <div className="mt-6 flex items-center gap-3 font-sans text-[9px] uppercase tracking-[0.35em] text-white/20">
-                      <span className="h-px w-8 bg-white/20" />
-                      <span>Scroll to explore</span>
-                    </div>
+            {/* Track — left padding sets start offset; section clips right overflow */}
+            <div
+              ref={trackRef}
+              className="flex gap-5 pl-5 sm:pl-8 md:pl-12 lg:pl-16"
+              style={{ width: "max-content" }}
+            >
+              {/* Leading copy panel */}
+              <div
+                className="flex shrink-0 items-end pb-3"
+                style={{ width: "min(70vw, 320px)" }}
+              >
+                <div>
+                  <p className="font-body text-sm leading-[1.85] text-white/35 md:text-base">
+                    Turning financial complexity<br />into clarity — one dataset<br />at a time.
+                  </p>
+                  <div className="mt-6 flex items-center gap-3 font-sans text-[9px] uppercase tracking-[0.35em] text-white/20">
+                    <span className="h-px w-8 bg-white/20" />
+                    <span>Scroll to explore</span>
                   </div>
-                </div>
-
-                {/* Project cards */}
-                {projects.map((project, i) => (
-                  <div
-                    key={project.slug}
-                    className="h-scroll-panel"
-                    style={{ height: "clamp(380px, 56vh, 560px)" }}
-                  >
-                    <ProjectCard project={project} index={i} />
-                  </div>
-                ))}
-
-                {/* Trailing CTA */}
-                <div className="h-scroll-panel flex items-center justify-center">
-                  <Link
-                    href="#contact"
-                    data-cursor="interactive"
-                    className="group flex flex-col items-center gap-4 text-center"
-                  >
-                    <span className="font-display text-4xl font-bold text-white/20 transition group-hover:text-white/60 sm:text-5xl">
-                      LET'S BUILD
-                    </span>
-                    <span className="font-display text-4xl font-bold text-white/20 transition group-hover:text-accent-blue sm:text-5xl">
-                      SOMETHING.
-                    </span>
-                    <span className="mt-2 font-sans text-[10px] uppercase tracking-[0.4em] text-accent-blue/50">
-                      Get in touch ↗
-                    </span>
-                  </Link>
                 </div>
               </div>
+
+              {/* Project cards */}
+              {projects.map((project, i) => (
+                <div
+                  key={project.slug}
+                  className="shrink-0"
+                  style={{
+                    width: "min(82vw, 480px)",
+                    height: "clamp(380px, 54vh, 540px)",
+                  }}
+                >
+                  <ProjectCard project={project} index={i} />
+                </div>
+              ))}
+
+              {/* Trailing CTA */}
+              <div
+                className="flex shrink-0 items-center justify-center pr-12"
+                style={{ width: "min(70vw, 340px)" }}
+              >
+                <Link
+                  href="#contact"
+                  data-cursor="interactive"
+                  className="group flex flex-col items-center gap-4 text-center"
+                >
+                  <span className="font-display text-4xl font-bold text-white/18 transition group-hover:text-white/60 sm:text-5xl">
+                    LET&apos;S BUILD
+                  </span>
+                  <span className="font-display text-4xl font-bold text-white/18 transition group-hover:text-accent-blue sm:text-5xl">
+                    SOMETHING.
+                  </span>
+                  <span className="mt-2 font-sans text-[10px] uppercase tracking-[0.4em] text-accent-blue/50">
+                    Get in touch ↗
+                  </span>
+                </Link>
+              </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </section>
