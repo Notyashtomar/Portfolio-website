@@ -22,25 +22,47 @@ const AUTO_SPIN = 0.0014; // radians per frame when idle
 
 /* ─── Term data with tooltip context ────────────────────────── */
 const TERMS = [
-  { label: "EBITDA",     color: "#4f8cff", detail: "Tracked EBITDA trends for portfolio companies feeding leadership dashboards." },
-  { label: "ROI",        color: "#8b5cf6", detail: "Automated ROI reporting across fund investments using Excel & Power BI." },
-  { label: "IRR",        color: "#4f8cff", detail: "Built IRR computation pipelines for deal evaluation and exit modelling." },
-  { label: "NPV",        color: "#ff3d9a", detail: "NPV models for capex planning and multi-year financial projection decks." },
-  { label: "CAGR",       color: "#8b5cf6", detail: "Portfolio CAGR surfaces surfaced in executive reports and investor updates." },
-  { label: "Sharpe",     color: "#4f8cff", detail: "Risk-adjusted return analysis used in fund strategy presentations." },
-  { label: "P&L",        color: "#ff3d9a", detail: "Automated P&L dashboards cutting monthly close time by 35%." },
-  { label: "MIS",        color: "#4f8cff", detail: "End-to-end MIS pipeline serving leadership at Bird & Wistful." },
-  { label: "Alpha",      color: "#8b5cf6", detail: "Alpha attribution analysis for fund strategies via Python & Excel." },
-  { label: "Beta",       color: "#4f8cff", detail: "Beta-adjusted risk analysis wired into investor reporting workflows." },
-  { label: "Volatility", color: "#ff3d9a", detail: "Rolling volatility models powering risk management and compliance." },
-  { label: "ARIMA",      color: "#8b5cf6", detail: "ARIMA time-series models for revenue and expense forecasting." },
-  { label: "Python",     color: "#4f8cff", detail: "Python scripts for data pipelines, automation, and ML forecasting." },
-  { label: "SQL",        color: "#8b5cf6", detail: "Advanced SQL cutting data extraction time by 40% at SLA." },
-  { label: "Forecasting",color: "#4f8cff", detail: "Multi-horizon models powering executive strategy sessions." },
-  { label: "VaR",        color: "#ff3d9a", detail: "Value at Risk computation for portfolio risk and compliance." },
-  { label: "Risk Mgmt",  color: "#8b5cf6", detail: "Integrated risk frameworks covering market, credit, and ops risk." },
-  { label: "Regression", color: "#4f8cff", detail: "Multiple regression for cost-driver and performance attribution." },
+  /* ── Finance Ratios ── */
+  { label: "EBITDA",      color: "#4f8cff", cat: "Ratios",   detail: "Tracked EBITDA trends for portfolio companies feeding leadership dashboards." },
+  { label: "ROI",         color: "#4f8cff", cat: "Ratios",   detail: "Automated ROI reporting across fund investments using Excel & Power BI." },
+  { label: "IRR",         color: "#4f8cff", cat: "Ratios",   detail: "Built IRR computation pipelines for deal evaluation and exit modelling." },
+  { label: "NPV",         color: "#4f8cff", cat: "Ratios",   detail: "NPV models for capex planning and multi-year financial projection decks." },
+  { label: "CAGR",        color: "#4f8cff", cat: "Ratios",   detail: "Portfolio CAGR surfaces surfaced in executive reports and investor updates." },
+  { label: "Sharpe",      color: "#4f8cff", cat: "Ratios",   detail: "Risk-adjusted return analysis used in fund strategy presentations." },
+  { label: "VaR",         color: "#4f8cff", cat: "Ratios",   detail: "Value at Risk computation for portfolio risk and compliance." },
+  /* ── Finance Tools ── */
+  { label: "SAP FICO",    color: "#22d3ee", cat: "Tools",    detail: "ERP-level financial control — GL, AP/AR, and cost-centre mapping using SAP FICO for audit-ready reporting." },
+  { label: "DCF Model",   color: "#22d3ee", cat: "Tools",    detail: "Discounted Cash Flow modeling to derive intrinsic equity value from multi-year free-cash-flow projections." },
+  { label: "Valuation",   color: "#22d3ee", cat: "Tools",    detail: "Business valuation via DCF, EV/EBITDA, and P/E comparable-company analysis to support investment decisions." },
+  { label: "LBO Model",   color: "#22d3ee", cat: "Tools",    detail: "Leveraged Buyout modeling — debt waterfalls, IRR sensitivity tables, and exit-multiple analysis for PE deals." },
+  { label: "M&A",         color: "#22d3ee", cat: "Tools",    detail: "Merger & Acquisition analytics: synergy mapping, accretion/dilution tests, and deal-structure modelling." },
+  { label: "P&L",         color: "#22d3ee", cat: "Tools",    detail: "Automated P&L dashboards cutting monthly close time by 35% at Bird Group." },
+  { label: "MIS",         color: "#22d3ee", cat: "Tools",    detail: "End-to-end MIS pipeline serving leadership at Bird Group and Wistful Finance." },
+  /* ── Analytics ── */
+  { label: "Alpha",       color: "#ff3d9a", cat: "Analytics", detail: "Alpha attribution analysis for fund strategies via Python & Excel." },
+  { label: "Beta",        color: "#ff3d9a", cat: "Analytics", detail: "Beta-adjusted risk analysis wired into investor reporting workflows." },
+  { label: "Volatility",  color: "#ff3d9a", cat: "Analytics", detail: "Rolling volatility models powering risk management and compliance." },
+  { label: "ARIMA",       color: "#ff3d9a", cat: "Analytics", detail: "ARIMA time-series models for revenue and expense forecasting." },
+  { label: "Regression",  color: "#ff3d9a", cat: "Analytics", detail: "Multiple regression for cost-driver and performance attribution." },
+  { label: "Forecasting", color: "#ff3d9a", cat: "Analytics", detail: "Multi-horizon forecast models powering executive strategy sessions." },
+  { label: "Risk Mgmt",   color: "#ff3d9a", cat: "Analytics", detail: "Integrated risk frameworks covering market, credit, and operational risk." },
+  /* ── Engineering ── */
+  { label: "Python",      color: "#8b5cf6", cat: "Eng",      detail: "Python scripts for data pipelines, automation, and ML forecasting." },
+  { label: "SQL",         color: "#8b5cf6", cat: "Eng",      detail: "Advanced SQL cutting data extraction time by 40% at SLA." },
 ] as const;
+
+const CAT_COLORS: Record<string, string> = {
+  Ratios:    "#4f8cff",
+  Tools:     "#22d3ee",
+  Analytics: "#ff3d9a",
+  Eng:       "#8b5cf6",
+};
+const CAT_LABELS: Record<string, string> = {
+  Ratios:    "Finance Ratios",
+  Tools:     "Finance Tools",
+  Analytics: "Analytics",
+  Eng:       "Engineering",
+};
 
 type Term = (typeof TERMS)[number];
 
@@ -317,21 +339,56 @@ function Tooltip({ term }: { term: Term | null }) {
       {term ? (
         <motion.div
           key={term.label}
-          initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          exit={{ opacity: 0, y: 8, filter: "blur(6px)" }}
+          initial={{ opacity: 0, y: 14, scale: 0.96, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: 8, scale: 0.97, filter: "blur(6px)" }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="pointer-events-none absolute bottom-8 left-1/2 z-20 w-64 -translate-x-1/2 overflow-hidden rounded-2xl border border-accent-blue/30 bg-black/85 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_32px_rgba(79,140,255,0.18)] backdrop-blur-xl md:left-auto md:right-8 md:translate-x-0"
+          className="pointer-events-none absolute bottom-8 left-1/2 z-20 w-72 -translate-x-1/2 overflow-hidden rounded-2xl bg-black/90 shadow-[0_20px_60px_rgba(0,0,0,0.7),0_0_40px_rgba(79,140,255,0.18)] backdrop-blur-xl md:left-auto md:right-8 md:translate-x-0"
+          style={{ border: `1px solid ${term.color}44` }}
         >
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-blue to-transparent" />
-          <div className="mb-2 flex items-center gap-2">
-            <span
-              className="inline-block h-1.5 w-1.5 rounded-full"
-              style={{ background: term.color, boxShadow: `0 0 6px ${term.color}` }}
+          {/* Top accent bar */}
+          <motion.div
+            className="absolute inset-x-0 top-0 h-px"
+            style={{ background: `linear-gradient(90deg, transparent, ${term.color}, transparent)` }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+
+          <div className="p-4">
+            {/* Header row */}
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <motion.span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ background: term.color }}
+                  animate={{ boxShadow: [`0 0 4px ${term.color}88`, `0 0 12px ${term.color}`, `0 0 4px ${term.color}88`] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <p className="font-display text-[15px] font-bold tracking-wide text-white">{term.label}</p>
+              </div>
+              {/* Category badge */}
+              <span
+                className="shrink-0 rounded px-2 py-0.5 font-sans text-[9px] uppercase tracking-[0.22em]"
+                style={{ background: `${term.color}18`, color: term.color, border: `1px solid ${term.color}33` }}
+              >
+                {CAT_LABELS[term.cat]}
+              </span>
+            </div>
+
+            <p className="font-body text-[11px] leading-[1.8] text-white/60">{term.detail}</p>
+
+            {/* Bottom scan line */}
+            <motion.div
+              className="mt-3 h-px w-full"
+              style={{ background: `linear-gradient(90deg, ${term.color}55, transparent)` }}
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             />
-            <p className="font-display text-base font-bold text-white">{term.label}</p>
+            <p className="mt-1.5 font-sans text-[9px] uppercase tracking-[0.28em] text-white/25">
+              SIGNAL · {term.cat.toUpperCase()} · ACTIVE
+            </p>
           </div>
-          <p className="font-body text-xs leading-[1.75] text-white/55">{term.detail}</p>
         </motion.div>
       ) : null}
     </AnimatePresence>
@@ -416,6 +473,24 @@ export function FinanceGlobe() {
           />
         </Suspense>
       </Canvas>
+
+      {/* Category legend — desktop bottom-left */}
+      <motion.div
+        className="pointer-events-none absolute bottom-8 left-6 z-10 hidden flex-col gap-1.5 md:flex"
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 2, duration: 0.7 }}
+      >
+        {Object.entries(CAT_LABELS).map(([key, label]) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ background: CAT_COLORS[key], boxShadow: `0 0 5px ${CAT_COLORS[key]}88` }}
+            />
+            <span className="font-sans text-[8px] uppercase tracking-[0.24em] text-white/35">{label}</span>
+          </div>
+        ))}
+      </motion.div>
 
       {/* Drag hint */}
       <AnimatePresence>
