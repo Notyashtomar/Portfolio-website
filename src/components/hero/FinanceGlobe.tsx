@@ -497,11 +497,11 @@ export function FinanceGlobe() {
         </Suspense>
       </Canvas>
 
-      {/* Category legend — bottom-left of globe on large screens */}
+      {/* Category legend — bottom-left of globe */}
       <motion.div
         className="pointer-events-none absolute bottom-8 left-4 z-10 hidden flex-col gap-1.5 lg:flex"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 2, duration: 0.7 }}
       >
         {Object.entries(CAT_LABELS).map(([key, label]) => (
