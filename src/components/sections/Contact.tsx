@@ -1,83 +1,164 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useMotionValue, useSpring } from "framer-motion";
-import { Download, Mail, Phone, ExternalLink, ArrowRight } from "lucide-react";
+import {
+  FormEvent, useCallback, useEffect, useRef, useState,
+} from "react";
+import {
+  AnimatePresence, motion,
+  useMotionValue, useSpring, useTransform,
+} from "framer-motion";
+import { Download, Mail, Phone, ExternalLink, ArrowRight, Send } from "lucide-react";
 import { profile } from "@/data/resume";
 
-/* ── Animated terminal clock ── */
-function TerminalClock() {
-  const [time, setTime] = useState("");
+/* ══════════════════════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════════════════════ */
+
+/** Scrambles text on mount, character by character. */
+const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+function ScrambleText({ text, trigger, className }: { text: string; trigger: boolean; className?: string }) {
+  const [out, setOut] = useState(text);
   useEffect(() => {
-    const update = () => setTime(new Date().toLocaleTimeString("en-IN", { hour12: false }));
-    update();
-    const id = setInterval(update, 1000);
+    if (!trigger) return;
+    let frame = 0;
+    const total = 28;
+    const id = setInterval(() => {
+      frame++;
+      setOut(
+        text.split("").map((ch, i) => {
+          if (ch === " " || ch === "\n") return ch;
+          if (frame / total > i / text.length) return ch;
+          return GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+        }).join(""),
+      );
+      if (frame >= total) clearInterval(id);
+    }, 35);
+    return () => clearInterval(id);
+  }, [text, trigger]);
+  return <span className={className}>{out}</span>;
+}
+
+/** Live clock. */
+function TerminalClock() {
+  const [t, setT] = useState("");
+  useEffect(() => {
+    const upd = () => setT(new Date().toLocaleTimeString("en-IN", { hour12: false }));
+    upd();
+    const id = setInterval(upd, 1000);
     return () => clearInterval(id);
   }, []);
+  return <span className="font-mono tabular-nums text-accent-blue/55">{t}</span>;
+}
+
+/** Animated dot‑grid background. */
+function DotGrid() {
   return (
-    <span className="font-mono tabular-nums text-accent-blue/70">{time}</span>
+    <div
+      className="pointer-events-none absolute inset-0 opacity-[0.07]"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle, rgba(79,140,255,0.8) 1px, transparent 1px)",
+        backgroundSize: "32px 32px",
+      }}
+    />
   );
 }
 
-/* ── Animated background data streams ── */
-function DataStreams() {
-  const cols = [12, 25, 38, 55, 68, 82];
+/** Pulsing radial ring that emanates from center. */
+function PulseRing({ delay = 0 }: { delay?: number }) {
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {cols.map((left, i) => (
-        <motion.div
-          key={left}
-          className="absolute top-0 w-px"
-          style={{ left: `${left}%`, height: "100%" }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.06, 0.12, 0.06, 0] }}
-          transition={{ delay: i * 0.4, duration: 4 + i * 0.6, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <div
-            className="h-full w-full"
-            style={{
-              background: `linear-gradient(to bottom, transparent, rgba(79,140,255,0.35) ${20 + i * 5}%, rgba(139,92,246,0.2) ${50 + i * 4}%, transparent)`,
-            }}
+    <motion.div
+      className="pointer-events-none absolute left-1/2 top-1/2 rounded-full border border-accent-blue/12"
+      style={{ translateX: "-50%", translateY: "-50%" }}
+      initial={{ width: 100, height: 100, opacity: 0.6 }}
+      animate={{ width: 900, height: 900, opacity: 0 }}
+      transition={{ duration: 5, delay, repeat: Infinity, ease: "easeOut" }}
+    />
+  );
+}
+
+/** Signal-strength bars (0–1). */
+function SignalMeter({ strength }: { strength: number }) {
+  const bars = 5;
+  return (
+    <div className="flex items-end gap-[3px]" style={{ height: 18 }}>
+      {Array.from({ length: bars }).map((_, i) => {
+        const h = 5 + (i / (bars - 1)) * 13;
+        const lit = strength >= (i + 1) / bars;
+        const col = i < 2 ? "#ef4444" : i < 4 ? "#f59e0b" : "#22c55e";
+        return (
+          <motion.div
+            key={i}
+            className="w-[4px] rounded-sm"
+            style={{ height: h }}
+            animate={{ backgroundColor: lit ? col : "rgba(255,255,255,0.1)", opacity: lit ? 1 : 0.28 }}
+            transition={{ duration: 0.25 }}
           />
-        </motion.div>
-      ))}
-      {/* Horizontal scan lines */}
-      {[0, 1, 2].map((k) => (
-        <motion.div
-          key={k}
-          className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-blue/10 to-transparent"
-          initial={{ top: "10%" }}
-          animate={{ top: ["10%", "90%", "10%"] }}
-          transition={{ duration: 8 + k * 2, delay: k * 2.5, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-/* ── Magnetic link ── */
-function MagneticLink({
-  href,
-  children,
-  className,
-}: {
-  href: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
+/** 3-D tilt wrapper — follows cursor. */
+function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rx = useMotionValue(0);
+  const ry = useMotionValue(0);
+  const srx = useSpring(rx, { stiffness: 150, damping: 22 });
+  const sry = useSpring(ry, { stiffness: 150, damping: 22 });
+
+  const onMove = useCallback((e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    const nx = (e.clientX - r.left) / r.width - 0.5;
+    const ny = (e.clientY - r.top) / r.height - 0.5;
+    ry.set(nx * 14);
+    rx.set(-ny * 10);
+  }, [rx, ry]);
+  const onLeave = useCallback(() => { rx.set(0); ry.set(0); }, [rx, ry]);
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      style={{ rotateX: srx, rotateY: sry, transformStyle: "preserve-3d", perspective: 900 }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/** Status badge with pulsing dot. */
+function StatusBadge({ label, value, active }: { label: string; value: string; active?: boolean }) {
+  return (
+    <div className="flex items-center gap-2">
+      <motion.span
+        className={`h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-400" : "bg-accent-blue"}`}
+        animate={active ? { scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] } : {}}
+        transition={{ duration: 1.6, repeat: Infinity }}
+      />
+      <span className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/30">{label}</span>
+      <span className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/65">{value}</span>
+    </div>
+  );
+}
+
+/** Magnetic link that physically shifts toward the cursor. */
+function MagLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLAnchorElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const sx = useSpring(x, { stiffness: 280, damping: 20 });
-  const sy = useSpring(y, { stiffness: 280, damping: 20 });
+  const sx = useSpring(x, { stiffness: 300, damping: 22 });
+  const sy = useSpring(y, { stiffness: 300, damping: 22 });
 
   const onMove = (e: React.MouseEvent) => {
     if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    x.set((e.clientX - cx) * 0.35);
-    y.set((e.clientY - cy) * 0.35);
+    const r = ref.current.getBoundingClientRect();
+    x.set((e.clientX - (r.left + r.width / 2)) * 0.3);
+    y.set((e.clientY - (r.top + r.height / 2)) * 0.3);
   };
   const onLeave = () => { x.set(0); y.set(0); };
 
@@ -96,334 +177,523 @@ function MagneticLink({
   );
 }
 
-/* ── Blinking cursor ── */
-function Cursor() {
-  return (
-    <motion.span
-      animate={{ opacity: [1, 0, 1] }}
-      transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
-      className="inline-block w-0.5 h-4 bg-accent-blue align-middle ml-0.5"
-    />
-  );
-}
-
-/* ── Status badge ── */
-function StatusBadge({ label, value, active = false }: { label: string; value: string; active?: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      <motion.div
-        className={`h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-400" : "bg-accent-blue"}`}
-        animate={active ? { scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] } : {}}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <span className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/35">{label}</span>
-      <span className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/70">{value}</span>
-    </div>
-  );
-}
-
+/* ══════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════════════════════════ */
 export function Contact() {
-  const [sent, setSent] = useState(false);
+  const sectionRef   = useRef<HTMLElement>(null);
+  const [inView, setInView]   = useState(false);
+  const [sent, setSent]       = useState(false);
+  const [sending, setSending] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
+  const [nameVal, setNameVal] = useState("");
+  const [msgVal, setMsgVal]   = useState("");
+
+  /* Signal strength: increases as user fills the form */
+  const formStrength = Math.min(1,
+    (nameVal.length > 0 ? 0.3 : 0) +
+    (nameVal.length > 3 ? 0.2 : 0) +
+    (msgVal.length > 0 ? 0.2 : 0) +
+    (msgVal.length > 20 ? 0.3 : 0),
+  );
+
+  /* Trigger scramble once in view */
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setInView(true); },
+      { threshold: 0.2 },
+    );
+    if (sectionRef.current) obs.observe(sectionRef.current);
+    return () => obs.disconnect();
+  }, []);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const name = String(data.get("name") || "");
+    setSending(true);
+    const data   = new FormData(e.currentTarget);
+    const name   = String(data.get("name") || "");
     const message = String(data.get("message") || "");
-    const subject = encodeURIComponent(`Portfolio inquiry from ${name || "visitor"}`);
-    const body = encodeURIComponent(message);
-    window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
-    setSent(true);
+    const sub    = encodeURIComponent(`Portfolio inquiry from ${name || "visitor"}`);
+    const body   = encodeURIComponent(message);
+    setTimeout(() => {
+      window.location.href = `mailto:${profile.email}?subject=${sub}&body=${body}`;
+      setSending(false);
+      setSent(true);
+    }, 1400);
   };
 
   return (
     <section
       id="contact"
+      ref={sectionRef}
       className="relative overflow-hidden px-4 py-20 sm:px-6 sm:py-32 md:px-12 md:py-44 lg:px-16"
     >
-      {/* Background */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(79,140,255,0.07),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(139,92,246,0.07),transparent_55%)]" />
-      <DataStreams />
+      {/* ── Background layers ── */}
+      <DotGrid />
+      <PulseRing delay={0} />
+      <PulseRing delay={2} />
+      <PulseRing delay={4} />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_80%,rgba(79,140,255,0.07),transparent)]" />
 
       <div className="relative mx-auto max-w-[90rem]">
-        {/* System header bar */}
+
+        {/* ── System bar ── */}
         <motion.div
-          className="mb-10 flex items-center justify-between border border-white/8 rounded-xl px-4 py-3 bg-white/[0.02] sm:mb-14"
-          initial={{ opacity: 0, y: -12 }}
+          className="mb-10 flex items-center justify-between rounded-xl border border-white/8 bg-white/[0.02] px-4 py-3 sm:mb-14"
+          initial={{ opacity: 0, y: -16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <span className="section-num">05 / CONTACT</span>
-            <StatusBadge label="Signal" value="Active" active />
-            <StatusBadge label="Status" value="Open to work" active />
+            <StatusBadge label="Signal"  value="Active"       active />
+            <StatusBadge label="Status"  value="Open to work" active />
           </div>
           <div className="hidden items-center gap-2 sm:flex">
-            <span className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/30">SYS · </span>
+            <span className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/25">SYS · </span>
             <TerminalClock />
           </div>
         </motion.div>
 
-        {/* Big headline */}
-        <motion.h2
-          className="mb-12 max-w-4xl text-[clamp(2rem,6vw,5rem)] font-semibold leading-[1.05] text-white sm:mb-20"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        >
-          Let&apos;s build the next
-          <br />
-          <span className="text-accent-blue">decision system.</span>
-          <Cursor />
-        </motion.h2>
+        {/* ── Scramble headline ── */}
+        <div className="mb-14 sm:mb-20">
+          <motion.h2
+            className="max-w-5xl text-[clamp(2.2rem,6.5vw,5.5rem)] font-semibold leading-[1.03] text-white"
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <ScrambleText text="Let's build the next" trigger={inView} />
+            <br />
+            <span className="text-accent-blue">
+              <ScrambleText text="decision system." trigger={inView} />
+            </span>
+          </motion.h2>
+          {/* Underline scan */}
+          <motion.div
+            className="mt-4 h-px bg-gradient-to-r from-accent-blue/60 via-accent-violet/40 to-transparent"
+            initial={{ scaleX: 0, transformOrigin: "left" }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          />
+        </div>
 
-        <div className="grid gap-8 sm:gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-          {/* ── Left: contact channels ── */}
+        {/* ── Two columns ── */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-12">
+
+          {/* LEFT — Contact channels + status */}
           <div className="space-y-4">
+
             {/* Email */}
-            <motion.div
-              className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[#05070d] p-5 transition-colors hover:border-accent-blue/30"
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
+            {[
+              { href: `mailto:${profile.email}`,  icon: <Mail className="h-5 w-5" />, label: "Email",    value: profile.email,               color: "#4f8cff", colorClass: "accent-blue" },
+              { href: `tel:${profile.phone.replace(/\s/g,"")}`, icon: <Phone className="h-5 w-5"/>, label: "Phone", value: profile.phone, color: "#8b5cf6", colorClass: "accent-violet" },
+              { href: profile.linkedin, icon: <ExternalLink className="h-5 w-5" />, label: "LinkedIn", value: "yashraj-s-tomar200114", color: "#0ea5e9", colorClass: "[#0ea5e9]" },
+            ].map(({ href, icon, label, value, color, colorClass }, i) => (
               <motion.div
-                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-blue/50 to-transparent opacity-0 group-hover:opacity-100"
-                transition={{ duration: 0.3 }}
-              />
-              <MagneticLink
-                href={`mailto:${profile.email}`}
-                className="flex items-center gap-4"
+                key={label}
+                className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[#05070d]"
+                initial={{ opacity: 0, x: -24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ borderColor: `${color}40` }}
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-accent-blue/20 bg-accent-blue/10 text-accent-blue transition group-hover:border-accent-blue/50 group-hover:bg-accent-blue/20">
-                  <Mail className="h-5 w-5" />
-                </span>
-                <span>
-                  <span className="font-sans block text-[9px] uppercase tracking-[0.28em] text-muted mb-1">
-                    Email
+                {/* Animated top glow on hover */}
+                <motion.div
+                  className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
+                />
+                <MagLink href={href} className="flex items-center gap-4 p-5">
+                  <span
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-all duration-300 group-hover:scale-110"
+                    style={{
+                      borderColor: `${color}25`,
+                      backgroundColor: `${color}10`,
+                      color: color,
+                    }}
+                  >
+                    {icon}
                   </span>
-                  <span className="font-body text-white group-hover:text-accent-blue transition-colors">
-                    {profile.email}
+                  <span>
+                    <span className="font-sans block text-[9px] uppercase tracking-[0.28em] text-muted mb-1">{label}</span>
+                    <span className="font-body text-white/80 transition-colors duration-300 group-hover:text-white">{value}</span>
                   </span>
-                </span>
-                <ArrowRight className="ml-auto h-4 w-4 text-white/20 transition group-hover:text-accent-blue group-hover:translate-x-1" />
-              </MagneticLink>
-            </motion.div>
-
-            {/* Phone */}
-            <motion.div
-              className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[#05070d] p-5 transition-colors hover:border-accent-violet/30"
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.07 }}
-            >
-              <motion.div
-                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-violet/50 to-transparent opacity-0 group-hover:opacity-100"
-                transition={{ duration: 0.3 }}
-              />
-              <MagneticLink
-                href={`tel:${profile.phone.replace(/\s/g, "")}`}
-                className="flex items-center gap-4"
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-accent-violet/20 bg-accent-violet/10 text-accent-violet transition group-hover:border-accent-violet/50 group-hover:bg-accent-violet/20">
-                  <Phone className="h-5 w-5" />
-                </span>
-                <span>
-                  <span className="font-sans block text-[9px] uppercase tracking-[0.28em] text-muted mb-1">
-                    Phone
-                  </span>
-                  <span className="font-body text-white group-hover:text-accent-violet transition-colors">
-                    {profile.phone}
-                  </span>
-                </span>
-                <ArrowRight className="ml-auto h-4 w-4 text-white/20 transition group-hover:text-accent-violet group-hover:translate-x-1" />
-              </MagneticLink>
-            </motion.div>
-
-            {/* LinkedIn */}
-            <motion.div
-              className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[#05070d] p-5 transition-colors hover:border-[#0ea5e9]/30"
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.14 }}
-            >
-              <MagneticLink
-                href={profile.linkedin}
-                className="flex items-center gap-4"
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#0ea5e9]/20 bg-[#0ea5e9]/10 text-[#0ea5e9] transition group-hover:border-[#0ea5e9]/50">
-                  <ExternalLink className="h-5 w-5" />
-                </span>
-                <span>
-                  <span className="font-sans block text-[9px] uppercase tracking-[0.28em] text-muted mb-1">
-                    LinkedIn
-                  </span>
-                  <span className="font-body text-white group-hover:text-[#0ea5e9] transition-colors">
-                    yashraj-s-tomar200114
-                  </span>
-                </span>
-                <ArrowRight className="ml-auto h-4 w-4 text-white/20 transition group-hover:text-[#0ea5e9] group-hover:translate-x-1" />
-              </MagneticLink>
-            </motion.div>
+                  <ArrowRight className="ml-auto h-4 w-4 text-white/15 transition-all duration-300 group-hover:translate-x-1 group-hover:text-white/60" />
+                </MagLink>
+              </motion.div>
+            ))}
 
             {/* Download resume */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -24 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.21 }}
+              transition={{ delay: 0.28, duration: 0.55 }}
             >
-              <MagneticLink
+              <MagLink
                 href={profile.resumeFile}
-                className="group flex w-full items-center justify-center gap-2.5 rounded-2xl border border-white/15 bg-white px-6 py-4 font-sans text-sm font-medium tracking-wide text-black transition hover:border-white hover:shadow-[0_0_50px_rgba(255,255,255,0.18)]"
+                className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-white/15 bg-white px-6 py-4 font-sans text-sm font-semibold tracking-wide text-black transition hover:shadow-[0_0_50px_rgba(255,255,255,0.15)]"
               >
-                <Download className="h-4 w-4 transition group-hover:-translate-y-0.5" />
+                <motion.div
+                  className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-15deg] bg-gradient-to-r from-transparent via-black/8 to-transparent"
+                  animate={{ x: ["-100%", "200%"] }}
+                  transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
+                />
+                <Download className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
                 Download Resume
-              </MagneticLink>
+              </MagLink>
             </motion.div>
 
-            {/* Availability block */}
+            {/* Availability widget */}
             <motion.div
               className="rounded-2xl border border-white/6 bg-[#05070d] p-5"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.28 }}
+              transition={{ delay: 0.35, duration: 0.5 }}
             >
-              <p className="font-sans text-[9px] uppercase tracking-[0.32em] text-white/30 mb-3">
-                Availability · Current
+              <p className="font-sans text-[9px] uppercase tracking-[0.32em] text-white/25 mb-4">
+                System · Availability
               </p>
-              <div className="space-y-2">
-                <StatusBadge label="Full-time" value="Open" active />
-                <StatusBadge label="Freelance" value="Open" active />
-                <StatusBadge label="Location" value="New Delhi / Remote" />
+              <div className="space-y-2.5">
+                <StatusBadge label="Full-time"   value="Open"              active />
+                <StatusBadge label="Freelance"   value="Open"              active />
+                <StatusBadge label="Location"    value="New Delhi / Remote"       />
+                <StatusBadge label="Timezone"    value="IST (UTC+5:30)"          />
+              </div>
+
+              {/* Uptime bar */}
+              <div className="mt-4">
+                <div className="flex justify-between mb-1.5">
+                  <span className="font-sans text-[8px] uppercase tracking-[0.28em] text-white/20">Response Rate</span>
+                  <span className="font-sans text-[8px] text-emerald-400/80">100%</span>
+                </div>
+                <div className="h-1 rounded-full bg-white/8 overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-accent-blue"
+                    initial={{ width: 0 }}
+                    whileInView={{ width: "100%" }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.6, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                </div>
               </div>
             </motion.div>
           </div>
 
-          {/* ── Right: terminal form ── */}
+          {/* RIGHT — Terminal form with 3D tilt */}
           <motion.div
-            className="relative overflow-hidden rounded-2xl border border-white/8 bg-[#05070d]"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 28 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Terminal title bar */}
-            <div className="flex items-center gap-2 border-b border-white/8 px-5 py-3">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-              <span className="ml-3 font-mono text-[10px] uppercase tracking-[0.24em] text-white/30">
-                contact.sh — bash
-              </span>
-            </div>
+            <TiltCard className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#05070d]">
+              {/* Holographic shimmer border */}
+              <motion.div
+                className="pointer-events-none absolute inset-0 rounded-2xl"
+                animate={{ opacity: [0, 0.4, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                style={{
+                  background: "linear-gradient(135deg, rgba(79,140,255,0.08) 0%, rgba(139,92,246,0.08) 50%, rgba(255,61,154,0.08) 100%)",
+                }}
+              />
 
-            <div className="p-5 sm:p-8">
-              {/* Prompt line */}
-              <div className="mb-6 font-mono text-[11px] text-white/30">
-                <span className="text-emerald-400">~/portfolio</span>
-                <span className="text-white/50"> $ </span>
-                <span className="text-accent-blue">send_message</span>
-                <span className="text-white/40"> --to yashtomar142001</span>
+              {/* Terminal title bar */}
+              <div className="flex items-center justify-between border-b border-white/8 px-5 py-3">
+                <div className="flex items-center gap-2">
+                  {["#ff5f57", "#febc2e", "#28c840"].map((c) => (
+                    <motion.span
+                      key={c}
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: c }}
+                      whileHover={{ scale: 1.3 }}
+                    />
+                  ))}
+                  <span className="ml-3 font-mono text-[10px] uppercase tracking-[0.22em] text-white/30">
+                    contact.sh — bash
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <SignalMeter strength={formStrength} />
+                </div>
               </div>
 
-              <form onSubmit={onSubmit} className="space-y-5">
-                {/* Name */}
-                <div className="relative">
-                  <label
-                    htmlFor="name"
-                    className="font-mono mb-2 block text-[10px] text-white/35"
-                  >
-                    <span className="text-accent-blue"># </span>--name
-                    {focused === "name" && <Cursor />}
-                  </label>
-                  <input
+              <div className="p-5 sm:p-7">
+                {/* Animated typewriter prompt */}
+                <motion.div
+                  className="mb-6 font-mono text-[11px]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <TypewriterLine />
+                </motion.div>
+
+                <form onSubmit={onSubmit} className="space-y-5">
+                  {/* Name field */}
+                  <ScanField
                     id="name"
-                    name="name"
-                    required
+                    label="--name"
+                    placeholder="Your full name"
+                    type="input"
+                    value={nameVal}
+                    onChange={setNameVal}
+                    focused={focused === "name"}
                     onFocus={() => setFocused("name")}
                     onBlur={() => setFocused(null)}
-                    className="font-body w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 text-sm text-white outline-none transition focus:border-accent-blue/50 focus:shadow-[0_0_24px_rgba(79,140,255,0.12)] placeholder:text-white/20"
-                    placeholder="Your name"
                   />
-                </div>
 
-                {/* Message */}
-                <div className="relative">
-                  <label
-                    htmlFor="message"
-                    className="font-mono mb-2 block text-[10px] text-white/35"
-                  >
-                    <span className="text-accent-blue"># </span>--message
-                    {focused === "message" && <Cursor />}
-                  </label>
-                  <textarea
+                  {/* Message field */}
+                  <ScanField
                     id="message"
-                    name="message"
-                    required
-                    rows={5}
+                    label="--message"
+                    placeholder="Tell me about your project or opportunity..."
+                    type="textarea"
+                    value={msgVal}
+                    onChange={setMsgVal}
+                    focused={focused === "message"}
                     onFocus={() => setFocused("message")}
                     onBlur={() => setFocused(null)}
-                    className="font-body w-full resize-none rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 text-sm text-white outline-none transition focus:border-accent-blue/50 focus:shadow-[0_0_24px_rgba(79,140,255,0.12)] placeholder:text-white/20"
-                    placeholder="Tell me about your project..."
+                    rows={5}
+                    maxLength={400}
                   />
-                </div>
 
-                {/* Submit */}
-                <motion.button
-                  type="submit"
-                  data-cursor="interactive"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="relative w-full overflow-hidden rounded-xl bg-accent-blue px-6 py-4 font-sans text-sm font-semibold tracking-wide text-white transition hover:bg-accent-blue/90"
-                >
-                  {/* Shimmer */}
-                  <motion.div
-                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/15"
-                    animate={{ x: ["-100%", "200%"] }}
-                    transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1.5, ease: "easeInOut" }}
-                  />
-                  <AnimatePresence mode="wait">
-                    {sent ? (
-                      <motion.span
-                        key="sent"
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <motion.span animate={{ rotate: [0, 360] }} transition={{ duration: 0.5 }}>✓</motion.span>
-                        Opening mail client…
-                      </motion.span>
-                    ) : (
-                      <motion.span
-                        key="send"
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        Execute · Send Message
-                        <ArrowRight className="h-4 w-4" />
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
+                  {/* Submit button */}
+                  <MorphButton sending={sending} sent={sent} />
 
-                {/* Footer prompt */}
-                <p className="font-mono text-[9px] text-white/20">
-                  <span className="text-emerald-400">✓</span> Encryption: TLS 1.3 · Routed via mailto protocol
-                </p>
-              </form>
-            </div>
+                  {/* Footer */}
+                  <p className="font-mono text-[9px] text-white/18">
+                    <span className="text-emerald-400">✓</span> Encryption: TLS 1.3 · Routed via mailto protocol
+                  </p>
+                </form>
+              </div>
+            </TiltCard>
           </motion.div>
         </div>
       </div>
     </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SUB-COMPONENTS
+══════════════════════════════════════════════════════════════ */
+
+/** Types out the terminal prompt char by char. */
+function TypewriterLine() {
+  const full = "~/portfolio $ send_message --to yashtomar142001";
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    let i = 0;
+    const id = setInterval(() => {
+      setText(full.slice(0, i + 1));
+      i++;
+      if (i >= full.length) clearInterval(id);
+    }, 38);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <span className="text-white/30">
+      <span className="text-emerald-400">~/portfolio</span>
+      <span className="text-white/45"> $ </span>
+      <span className="text-accent-blue">
+        {text.includes("$") ? text.split("$ ")[1]?.split(" --")[0] : ""}
+      </span>
+      <span className="text-white/40">
+        {text.includes("--") ? " " + text.split("--").slice(1).map((s) => "--" + s).join("") : ""}
+      </span>
+      <motion.span
+        className="inline-block w-[7px] h-[13px] bg-accent-blue/80 ml-0.5 align-middle"
+        animate={{ opacity: [1, 0, 1] }}
+        transition={{ duration: 0.85, repeat: Infinity, ease: "linear" }}
+      />
+    </span>
+  );
+}
+
+/** Input/textarea with animated scan line on focus + character counter ring. */
+function ScanField({
+  id, label, placeholder, type, value, onChange,
+  focused, onFocus, onBlur, rows, maxLength,
+}: {
+  id: string; label: string; placeholder: string;
+  type: "input" | "textarea"; value: string;
+  onChange: (v: string) => void; focused: boolean;
+  onFocus: () => void; onBlur: () => void;
+  rows?: number; maxLength?: number;
+}) {
+  const pct = maxLength ? value.length / maxLength : 0;
+  const r = 10, circ = 2 * Math.PI * r;
+
+  return (
+    <div className="relative">
+      <div className="mb-1.5 flex items-center justify-between">
+        <label htmlFor={id} className="font-mono text-[10px] text-white/30">
+          <span className="text-accent-blue"># </span>{label}
+          <AnimatePresence>
+            {focused && (
+              <motion.span
+                key="cursor"
+                className="ml-0.5 inline-block h-[11px] w-[5px] bg-accent-blue/80 align-middle"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [1, 0, 1] }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.85, repeat: Infinity, ease: "linear" }}
+              />
+            )}
+          </AnimatePresence>
+        </label>
+        {maxLength && (
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono text-[8px] text-white/20 tabular-nums">
+              {value.length}/{maxLength}
+            </span>
+            <svg width="24" height="24" className="-rotate-90">
+              <circle cx="12" cy="12" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
+              <motion.circle
+                cx="12" cy="12" r={r}
+                fill="none"
+                stroke={pct > 0.85 ? "#ef4444" : "#4f8cff"}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeDasharray={circ}
+                animate={{ strokeDashoffset: circ * (1 - pct) }}
+                transition={{ duration: 0.2 }}
+              />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/40 transition-colors duration-300"
+        style={{ borderColor: focused ? "rgba(79,140,255,0.45)" : undefined,
+                 boxShadow: focused ? "0 0 28px rgba(79,140,255,0.10)" : undefined }}
+      >
+        {/* Animated scan line */}
+        <AnimatePresence>
+          {focused && (
+            <motion.div
+              className="pointer-events-none absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-blue/50 to-transparent"
+              initial={{ top: "0%" }}
+              animate={{ top: ["0%", "100%", "0%"] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+          )}
+        </AnimatePresence>
+
+        {type === "input" ? (
+          <input
+            id={id}
+            name={id}
+            required
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            className="w-full bg-transparent px-4 py-3.5 text-sm text-white outline-none placeholder:text-white/18 font-body"
+          />
+        ) : (
+          <textarea
+            id={id}
+            name={id}
+            required
+            rows={rows ?? 5}
+            value={value}
+            maxLength={maxLength}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            className="w-full resize-none bg-transparent px-4 py-3.5 text-sm text-white outline-none placeholder:text-white/18 font-body"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Submit button that morphs: idle → sending → sent. */
+function MorphButton({ sending, sent }: { sending: boolean; sent: boolean }) {
+  return (
+    <motion.button
+      type="submit"
+      disabled={sending || sent}
+      data-cursor="interactive"
+      whileHover={!sending && !sent ? { scale: 1.02 } : {}}
+      whileTap={!sending && !sent ? { scale: 0.97 } : {}}
+      className="relative w-full overflow-hidden rounded-xl px-6 py-4 font-sans text-sm font-semibold tracking-wide text-white"
+      animate={{
+        backgroundColor: sent
+          ? "#22c55e"
+          : sending
+          ? "#1d4ed8"
+          : "#4f8cff",
+      }}
+      transition={{ duration: 0.4 }}
+    >
+      {/* Shimmer sweep */}
+      {!sent && (
+        <motion.div
+          className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/15"
+          animate={{ x: ["-100%", "220%"] }}
+          transition={{ duration: 2, repeat: Infinity, repeatDelay: 1.2, ease: "easeInOut" }}
+        />
+      )}
+
+      {/* Sending: progress bar */}
+      {sending && (
+        <motion.div
+          className="pointer-events-none absolute bottom-0 left-0 h-0.5 bg-white/40"
+          initial={{ width: "0%" }}
+          animate={{ width: "100%" }}
+          transition={{ duration: 1.3, ease: "easeInOut" }}
+        />
+      )}
+
+      <AnimatePresence mode="wait">
+        {sent ? (
+          <motion.span
+            key="sent"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center gap-2"
+          >
+            <motion.span animate={{ rotate: [0, 360] }} transition={{ duration: 0.5 }}>✓</motion.span>
+            Message Transmitted
+          </motion.span>
+        ) : sending ? (
+          <motion.span
+            key="sending"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center gap-2"
+          >
+            <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}>
+              ⟳
+            </motion.span>
+            Transmitting…
+          </motion.span>
+        ) : (
+          <motion.span
+            key="idle"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center gap-2"
+          >
+            Execute · Send Message
+            <Send className="h-4 w-4" />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
   );
 }
