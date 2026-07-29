@@ -18,13 +18,16 @@ import { usePerfFlags } from "@/components/providers/Providers";
 
 /* ─── Constants ──────────────────────────────────────────────── */
 const R = 2;
-const GLOBE_SCALE = 0.58; // smaller uniform scale — full sphere + rings must stay inside view
+const GLOBE_SCALE = 1.48; // +30% vs prior 1.14 — camera is decoupled so this enlarges on-screen size
 const DRAG_SENSITIVITY = 0.006;
-const AUTO_SPIN = 0.0014; // radians per frame when idle
-// Bounding radius after scale: outer ring (×1.52) + drag-tilt buffer for vertical fit.
-const GLOBE_MAX_EXTENT = R * 1.52 * GLOBE_SCALE * 1.42;
-const FIT_MARGIN = 1.82; // generous margin so top/bottom never clip
-const CAMERA_FOV = 32;
+const AUTO_SPIN = 0.0014;
+// Camera fit radius is independent of GLOBE_SCALE — raising scale enlarges the globe on screen.
+const FIT_RADIUS = R * 1.52 * 1.06;
+const FIT_MARGIN = 1.008; // ~100% vertical fill of the hero canvas
+const CAMERA_FOV = 27;
+const GLOBE_Y_SHIFT = 0.1; // fraction of visible height — shifts globe upward
+const LABEL_RADIUS = R * 1.018; // sit on the wireframe sphere — not outside it
+const HTML_DISTANCE = 6.5; // original label scale — fixed px, not tied to globe scale
 
 /* ─── Term data with tooltip context ────────────────────────── */
 const TERMS = [
@@ -175,6 +178,159 @@ function GlobeCore({ highlighted }: { highlighted: boolean }) {
   );
 }
 
+/* ─── Detail card anchored to a globe point ─────────────────── */
+function TermDetailCard({ term, flipX }: { term: Term; flipX: "left" | "right" }) {
+  const anchor =
+    flipX === "right"
+      ? "left-full top-1/2 ml-4 -translate-y-1/2"
+      : "right-full top-1/2 mr-4 -translate-y-1/2";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.94, filter: "blur(6px)" }}
+      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+      exit={{ opacity: 0, scale: 0.96, filter: "blur(4px)" }}
+      transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+      className={`pointer-events-none absolute ${anchor} z-50 w-72 overflow-hidden rounded-2xl bg-black/90 shadow-[0_20px_60px_rgba(0,0,0,0.7),0_0_40px_rgba(79,140,255,0.18)] backdrop-blur-xl`}
+      style={{ border: `1px solid ${term.color}44` }}
+    >
+      <div
+        className="absolute inset-x-0 top-0 h-px"
+        style={{ background: `linear-gradient(90deg, rgba(0,0,0,0), ${term.color}, rgba(0,0,0,0))` }}
+      />
+      <div className="p-4">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ background: term.color, boxShadow: `0 0 8px ${term.color}` }}
+            />
+            <p className="font-display text-[15px] font-bold tracking-wide text-white">{term.label}</p>
+          </div>
+          <span
+            className="shrink-0 rounded px-2 py-0.5 font-sans text-[9px] uppercase tracking-[0.22em]"
+            style={{ background: `${term.color}18`, color: term.color, border: `1px solid ${term.color}33` }}
+          >
+            {CAT_LABELS[term.cat]}
+          </span>
+        </div>
+        <p className="font-body text-[11px] leading-[1.8] text-white/60">{term.detail}</p>
+        <div
+          className="mt-3 h-px w-full"
+          style={{ background: `linear-gradient(90deg, ${term.color}55, rgba(0,0,0,0))` }}
+        />
+        <p className="mt-1.5 font-sans text-[9px] uppercase tracking-[0.28em] text-white/25">
+          SIGNAL · {term.cat.toUpperCase()} · ACTIVE
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+const CARD_WIDTH = 288;
+const HERO_TEXT_RATIO = 0.54;
+
+/* ─── Single term label + anchored detail card ───────────────── */
+function TermLabelItem({
+  term,
+  position,
+  isActive,
+  dimOthers,
+  onEnter,
+  onLeave,
+  dense,
+}: {
+  term: Term;
+  position: [number, number, number];
+  isActive: boolean;
+  dimOthers: boolean;
+  onEnter: (t: Term) => void;
+  onLeave: () => void;
+  dense: boolean;
+}) {
+  const anchorRef = useRef<THREE.Group>(null);
+  const { camera, size } = useThree();
+  const world = useMemo(() => new THREE.Vector3(), []);
+  const [flipX, setFlipX] = useState<"left" | "right">("right");
+
+  useFrame(() => {
+    if (!anchorRef.current) return;
+    anchorRef.current.getWorldPosition(world);
+    world.project(camera);
+    const screenX = (world.x * 0.5 + 0.5) * size.width;
+    const heroEdge =
+      typeof window !== "undefined" ? window.innerWidth * HERO_TEXT_RATIO : size.width * 0.5;
+
+    if (screenX < heroEdge + CARD_WIDTH * 0.4) {
+      setFlipX("right");
+    } else if (screenX > size.width - CARD_WIDTH * 0.5) {
+      setFlipX("left");
+    } else {
+      setFlipX("right");
+    }
+  });
+
+  if (dense && !isActive) {
+    return (
+      <mesh
+        position={position}
+        onPointerEnter={() => onEnter(term)}
+        onPointerLeave={onLeave}
+      >
+        <sphereGeometry args={[0.07, 6, 6]} />
+        <meshBasicMaterial color={term.color} transparent opacity={0.5} />
+      </mesh>
+    );
+  }
+
+  return (
+    <group ref={anchorRef} position={position}>
+      <Html
+        center
+        occlude={false}
+        distanceFactor={HTML_DISTANCE}
+        zIndexRange={isActive ? [1000, 500] : [500, 0]}
+      >
+        <div className="relative" style={{ pointerEvents: "auto" }} onPointerLeave={onLeave}>
+          <button
+            type="button"
+            onPointerEnter={() => onEnter(term)}
+            onClick={() => (isActive ? onLeave() : onEnter(term))}
+            style={{
+              color: isActive ? "#ffffff" : term.color,
+              background: isActive ? `${term.color}22` : "rgba(0,0,0,0)",
+              border: isActive ? `1px solid ${term.color}66` : "1px solid rgba(0,0,0,0)",
+              borderRadius: "4px",
+              padding: isActive ? "2px 7px" : "2px 5px",
+              fontFamily: "'Cabinet Grotesk', 'Satoshi', monospace",
+              fontSize: "10px",
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+              cursor: "pointer",
+              userSelect: "none",
+              outline: "none",
+              opacity: dimOthers ? 0.35 : 0.88,
+              transform: isActive ? "scale(1.25)" : "scale(1)",
+              textShadow: isActive
+                ? `0 0 20px ${term.color}, 0 0 40px ${term.color}88`
+                : `0 0 12px ${term.color}88`,
+              boxShadow: isActive ? `0 0 20px ${term.color}44` : "none",
+              transition: "all 0.2s ease",
+            }}
+          >
+            {term.label}
+          </button>
+          <AnimatePresence>
+            {isActive ? <TermDetailCard term={term} flipX={flipX} /> : null}
+          </AnimatePresence>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
 /* ─── Interactive term labels ────────────────────────────────── */
 function TermLabels({
   active,
@@ -187,60 +343,22 @@ function TermLabels({
   onLeave: () => void;
   dense: boolean;
 }) {
-  const positions = useMemo(() => fibSphere(TERMS.length, R * 1.25), []);
+  const positions = useMemo(() => fibSphere(TERMS.length, LABEL_RADIUS), []);
 
   return (
     <>
-      {TERMS.map((t, i) => {
-        const isActive = active === t.label;
-        if (dense && !isActive) {
-          return (
-            <mesh
-              key={t.label}
-              position={positions[i]}
-              onPointerEnter={() => onEnter(t)}
-              onPointerLeave={onLeave}
-            >
-              <sphereGeometry args={[0.07, 6, 6]} />
-              <meshBasicMaterial color={t.color} transparent opacity={0.5} />
-            </mesh>
-          );
-        }
-        return (
-          <Html key={t.label} position={positions[i]} center occlude={false} distanceFactor={6.5}>
-            <button
-              type="button"
-              onPointerEnter={() => onEnter(t)}
-              onPointerLeave={onLeave}
-              onClick={() => isActive ? onLeave() : onEnter(t)}
-              style={{
-                color: isActive ? "#ffffff" : t.color,
-                background: isActive ? `${t.color}22` : "transparent",
-                border: isActive ? `1px solid ${t.color}66` : "1px solid transparent",
-                borderRadius: "4px",
-                padding: isActive ? "2px 7px" : "2px 5px",
-                fontFamily: "'Cabinet Grotesk', 'Satoshi', monospace",
-                fontSize: "10px",
-                fontWeight: 700,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
-                cursor: "pointer",
-                userSelect: "none",
-                outline: "none",
-                opacity: active && !isActive ? 0.35 : 0.88,
-                transform: isActive ? "scale(1.25)" : "scale(1)",
-                textShadow: isActive ? `0 0 20px ${t.color}, 0 0 40px ${t.color}88` : `0 0 12px ${t.color}88`,
-                boxShadow: isActive ? `0 0 20px ${t.color}44` : "none",
-                transition: "all 0.2s ease",
-                pointerEvents: "all",
-              }}
-            >
-              {t.label}
-            </button>
-          </Html>
-        );
-      })}
+      {TERMS.map((t, i) => (
+        <TermLabelItem
+          key={t.label}
+          term={t}
+          position={positions[i]}
+          isActive={active === t.label}
+          dimOthers={active !== null && active !== t.label}
+          onEnter={onEnter}
+          onLeave={onLeave}
+          dense={dense}
+        />
+      ))}
     </>
   );
 }
@@ -302,6 +420,15 @@ function GlobeGroup({
   denseLabels: boolean;
 }) {
   const ref = useRef<THREE.Group>(null);
+  const { camera, size } = useThree();
+
+  useLayoutEffect(() => {
+    if (!ref.current) return;
+    const cam = camera as THREE.PerspectiveCamera;
+    const tanHalf = Math.tan((CAMERA_FOV * Math.PI) / 180 / 2);
+    const visibleH = 2 * cam.position.z * tanHalf;
+    ref.current.position.y = visibleH * GLOBE_Y_SHIFT;
+  }, [camera, size.width, size.height]);
 
   useFrame(() => {
     if (!ref.current) return;
@@ -321,7 +448,12 @@ function GlobeGroup({
     <group ref={ref} scale={GLOBE_SCALE}>
       <GlobeCore highlighted={active !== null} />
       <GlobeWireframe />
-      <TermLabels active={active} onEnter={onEnter} onLeave={onLeave} dense={denseLabels} />
+      <TermLabels
+        active={active}
+        onEnter={onEnter}
+        onLeave={onLeave}
+        dense={denseLabels}
+      />
       <Ring radius={R * 1.2}  tilt={Math.PI / 6}   speed={0.14}  color="#4f8cff" opacity={0.4} />
       <Ring radius={R * 1.38} tilt={-Math.PI / 4}  speed={-0.09} color="#8b5cf6" opacity={0.28} />
       <Ring radius={R * 1.52} tilt={Math.PI / 2.5} speed={0.06}  color="#4f8cff" opacity={0.15} />
@@ -341,8 +473,8 @@ function CameraFit() {
 
     const aspect = size.width / size.height;
     const tanHalf = Math.tan((CAMERA_FOV * Math.PI) / 180 / 2);
-    const distV = GLOBE_MAX_EXTENT / tanHalf;
-    const distH = GLOBE_MAX_EXTENT / (tanHalf * aspect);
+    const distV = FIT_RADIUS / tanHalf;
+    const distH = FIT_RADIUS / (tanHalf * aspect);
     cam.position.z = Math.max(distV, distH) * FIT_MARGIN;
     cam.position.x = 0;
     cam.position.y = 0;
@@ -376,7 +508,7 @@ function Scene({
         active={active}
         onEnter={onEnter}
         onLeave={onLeave}
-        denseLabels={!isHigh}
+        denseLabels={false}
       />
       <Particles count={isHigh ? 90 : 40} />
       {isHigh && (
@@ -385,69 +517,6 @@ function Scene({
         </EffectComposer>
       )}
     </>
-  );
-}
-
-/* ─── Tooltip card ───────────────────────────────────────────── */
-function Tooltip({ term }: { term: Term | null }) {
-  return (
-    <AnimatePresence mode="wait">
-      {term ? (
-        <motion.div
-          key={term.label}
-          initial={{ opacity: 0, y: 14, scale: 0.96, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-          exit={{ opacity: 0, y: 8, scale: 0.97, filter: "blur(6px)" }}
-          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="pointer-events-none absolute bottom-8 left-1/2 z-20 w-72 -translate-x-1/2 overflow-hidden rounded-2xl bg-black/90 shadow-[0_20px_60px_rgba(0,0,0,0.7),0_0_40px_rgba(79,140,255,0.18)] backdrop-blur-xl md:left-auto md:right-8 md:translate-x-0"
-          style={{ border: `1px solid ${term.color}44` }}
-        >
-          {/* Top accent bar */}
-          <motion.div
-            className="absolute inset-x-0 top-0 h-px"
-            style={{ background: `linear-gradient(90deg, transparent, ${term.color}, transparent)` }}
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.5 }}
-          />
-
-          <div className="p-4">
-            {/* Header row */}
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <motion.span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{ background: term.color }}
-                  animate={{ boxShadow: [`0 0 4px ${term.color}88`, `0 0 12px ${term.color}`, `0 0 4px ${term.color}88`] }}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <p className="font-display text-[15px] font-bold tracking-wide text-white">{term.label}</p>
-              </div>
-              {/* Category badge */}
-              <span
-                className="shrink-0 rounded px-2 py-0.5 font-sans text-[9px] uppercase tracking-[0.22em]"
-                style={{ background: `${term.color}18`, color: term.color, border: `1px solid ${term.color}33` }}
-              >
-                {CAT_LABELS[term.cat]}
-              </span>
-            </div>
-
-            <p className="font-body text-[11px] leading-[1.8] text-white/60">{term.detail}</p>
-
-            {/* Bottom scan line */}
-            <motion.div
-              className="mt-3 h-px w-full"
-              style={{ background: `linear-gradient(90deg, ${term.color}55, transparent)` }}
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <p className="mt-1.5 font-sans text-[9px] uppercase tracking-[0.28em] text-white/25">
-              SIGNAL · {term.cat.toUpperCase()} · ACTIVE
-            </p>
-          </div>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
   );
 }
 
@@ -505,7 +574,7 @@ export function FinanceGlobe() {
 
   return (
     <div
-      className="absolute inset-0 select-none overflow-hidden px-[2%] py-[7%]"
+      className="absolute inset-0 select-none"
       style={{ cursor: pointer.current.down ? "grabbing" : "grab" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -514,7 +583,7 @@ export function FinanceGlobe() {
     >
       <Canvas
         dpr={[1, dpr]}
-        camera={{ position: [0, 0, 14], fov: CAMERA_FOV }}
+        camera={{ position: [0, 0, 7.2], fov: CAMERA_FOV }}
         gl={{ antialias: false, alpha: true, powerPreference: "high-performance", stencil: false, depth: true }}
         style={{ background: "transparent" }}
       >
@@ -530,12 +599,12 @@ export function FinanceGlobe() {
         </Suspense>
       </Canvas>
 
-      {/* Category legend — bottom-left of globe */}
+      {/* Category legend — below the globe */}
       <motion.div
-        className="pointer-events-none absolute bottom-8 left-4 z-10 hidden flex-col gap-1.5 lg:flex"
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 2, duration: 0.7 }}
+        className="pointer-events-none absolute bottom-10 left-1/2 z-10 hidden -translate-x-1/2 flex-wrap items-center justify-center gap-x-5 gap-y-1.5 lg:flex"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.6, duration: 0.7 }}
       >
         {Object.entries(CAT_LABELS).map(([key, label]) => (
           <div key={key} className="flex items-center gap-1.5">
@@ -562,8 +631,6 @@ export function FinanceGlobe() {
           </motion.p>
         ) : null}
       </AnimatePresence>
-
-      <Tooltip term={activeTerm} />
     </div>
   );
 }

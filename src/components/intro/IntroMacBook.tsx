@@ -270,6 +270,9 @@ export function IntroMacBook({ progress, entering, mouse, lite }: Props) {
         camera={{ position: [0, 1.35, 5.2], fov: 42, near: 0.1, far: 40 }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         shadows={!lite}
+        onCreated={({ gl }) => {
+          gl.shadowMap.type = THREE.PCFShadowMap;
+        }}
       >
         <Suspense fallback={null}>
           <SceneInner

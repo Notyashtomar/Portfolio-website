@@ -52,7 +52,11 @@ function StatPill({ stat, delay }: { stat: (typeof STATS)[number]; delay: number
       />
       <motion.div
         className="relative flex flex-col gap-0.5 rounded-xl border border-transparent px-3 py-2 transition-colors duration-300"
-        animate={hovered ? { borderColor: "rgba(79,140,255,0.2)", backgroundColor: "rgba(79,140,255,0.05)" } : {}}
+        animate={
+          hovered
+            ? { borderColor: "rgba(79,140,255,0.2)", backgroundColor: "rgba(79,140,255,0.05)" }
+            : { borderColor: "rgba(0,0,0,0)", backgroundColor: "rgba(0,0,0,0)" }
+        }
       >
         <motion.span
           className="font-display font-semibold text-white"
@@ -167,13 +171,13 @@ export function Hero() {
       className="relative flex min-h-[100svh] overflow-hidden"
     >
       {/* ── Globe — right half ── */}
-      <div className="absolute right-0 top-0 flex h-full w-full items-center justify-center overflow-hidden md:w-[58%] lg:w-[55%]">
+      <div className="absolute right-0 top-0 h-full w-full md:w-[58%] lg:w-[55%]">
         <FinanceGlobe />
         {/* fade the left edge on desktop so globe bleeds behind text */}
         <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-2/5 bg-gradient-to-r from-[#030303] to-transparent md:block" />
-        {/* soft edge fades — kept minimal so the globe is not masked */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-[#030303] to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#030303] to-transparent" />
+        {/* fade top and bottom — kept short so the full globe stays visible */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#030303] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#030303] to-transparent" />
       </div>
 
       {/* ── Text ── left column ── */}

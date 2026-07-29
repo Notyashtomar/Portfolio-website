@@ -605,6 +605,7 @@ function ScanField({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeDasharray={circ}
+                initial={{ strokeDashoffset: circ }}
                 animate={{ strokeDashoffset: circ * (1 - pct) }}
                 transition={{ duration: 0.2 }}
               />

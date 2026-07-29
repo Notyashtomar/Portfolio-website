@@ -2,15 +2,13 @@ import dynamic from "next/dynamic";
 import { Hero } from "@/components/hero/Hero";
 import { LazySection } from "@/components/motion/LazySection";
 import { SectionTransition } from "@/components/motion/SectionTransition";
+import { Projects } from "@/components/sections/Projects";
 
 const About = dynamic(() =>
   import("@/components/sections/About").then((m) => m.About),
 );
 const Experience = dynamic(() =>
   import("@/components/sections/Experience").then((m) => m.Experience),
-);
-const Projects = dynamic(() =>
-  import("@/components/sections/Projects").then((m) => m.Projects),
 );
 const Skills = dynamic(() =>
   import("@/components/sections/Skills").then((m) => m.Skills),
@@ -31,9 +29,7 @@ export default function HomePage() {
       <SectionTransition />
       <Experience />
       <SectionTransition />
-      <LazySection minHeight="100vh">
-        <Projects />
-      </LazySection>
+      <Projects />
       <SectionTransition />
       <LazySection minHeight="80vh">
         <Skills />
@@ -48,7 +44,7 @@ export default function HomePage() {
       </LazySection>
       <footer className="relative z-10 border-t border-white/6 px-4 py-10 text-center sm:px-6 sm:py-14 md:px-12">
         <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-white/25 sm:tracking-[0.4em]">
-          © {new Date().getFullYear()} Yash Raj Singh Tomar
+          © 2026 Yash Raj Singh Tomar
         </p>
       </footer>
     </>

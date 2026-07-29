@@ -19,13 +19,11 @@ function detectTier(): PerformanceTier {
 }
 
 export function usePerformanceTier() {
-  const [tier, setTier] = useState<PerformanceTier>(() =>
-    typeof window === "undefined" ? "balanced" : detectTier(),
-  );
+  // Keep SSR and the first client render identical — detect tier after mount.
+  const [tier, setTier] = useState<PerformanceTier>("balanced");
 
   useEffect(() => {
-    const next = detectTier();
-    setTier((prev) => (prev === next ? prev : next));
+    setTier(detectTier());
   }, []);
 
   return tier;
