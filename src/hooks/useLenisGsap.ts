@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Lenis from "lenis";
-import { registerGsap, ScrollTrigger } from "@/lib/gsap";
+import { gsap, registerGsap, ScrollTrigger } from "@/lib/gsap";
 import { usePerfFlags } from "@/components/providers/Providers";
 
 export function useLenisGsap() {
@@ -19,7 +19,7 @@ export function useLenisGsap() {
     }
 
     const lenis = new Lenis({
-      lerp: 0.12,
+      lerp: 0.1,
       duration: 1,
       smoothWheel: true,
       syncTouch: false,
@@ -29,20 +29,19 @@ export function useLenisGsap() {
 
     lenis.on("scroll", ScrollTrigger.update);
 
-    let frame = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      frame = requestAnimationFrame(raf);
+    // Drive Lenis from GSAP's ticker so scrub animations stay in sync with scroll.
+    const ticker = (time: number) => {
+      lenis.raf(time * 1000);
     };
-    frame = requestAnimationFrame(raf);
+    gsap.ticker.add(ticker);
+    gsap.ticker.lagSmoothing(0);
 
     ScrollTrigger.config({ limitCallbacks: true });
     ScrollTrigger.refresh();
 
     return () => {
-      cancelAnimationFrame(frame);
+      gsap.ticker.remove(ticker);
       lenis.destroy();
-      // Each component owns its ScrollTriggers — don't kill globally.
     };
   }, [lite]);
 }

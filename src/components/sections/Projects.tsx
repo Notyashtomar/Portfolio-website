@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion, useMotionValue, useSpring, type MotionValue } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { projects } from "@/data/resume";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
@@ -207,7 +207,7 @@ export function Projects() {
 
   const { lite } = usePerfFlags();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (lite) return;
     registerGsap();
 
@@ -217,15 +217,20 @@ export function Projects() {
     const trackArea = trackAreaRef.current;
     if (!section || !sticky || !track || !trackArea) return;
 
-    let timeline: gsap.core.Timeline | null = null;
+    let tween: gsap.core.Timeline | null = null;
+    let setupToken = 0;
 
     const getTrackCenter = () => {
       const rect = trackArea.getBoundingClientRect();
       return rect.left + rect.width / 2;
     };
 
-    /** Update active card + spotlight from layout — no GSAP opacity/transform on cards. */
-    const updateUI = () => {
+    const centerOffset = (el: HTMLElement) => {
+      const rect = el.getBoundingClientRect();
+      return rect.left + rect.width / 2 - getTrackCenter();
+    };
+
+    const updateFocus = () => {
       const vwCenter = getTrackCenter();
       let bestDist = Infinity;
       let bestIdx  = -1;
@@ -233,7 +238,8 @@ export function Projects() {
       cardRefs.current.forEach((card, i) => {
         if (!card) return;
         const rect = card.getBoundingClientRect();
-        const d = Math.abs(rect.left + rect.width / 2 - vwCenter);
+        const cx = rect.left + rect.width / 2;
+        const d = Math.abs(cx - vwCenter);
         if (d < bestDist) { bestDist = d; bestIdx = i; }
       });
 
@@ -264,101 +270,137 @@ export function Projects() {
       }
     };
 
-    const centerOffset = (el: HTMLElement) => {
-      const rect = el.getBoundingClientRect();
-      return rect.left + rect.width / 2 - getTrackCenter();
-    };
-
-    const measure = (cards: HTMLDivElement[], cta: HTMLElement | null) => {
+    const measureStops = (cards: HTMLDivElement[], cta: HTMLElement | null) => {
       const cardStops = cards.map((card) => Math.max(0, centerOffset(card)));
       const ctaStop = cta ? Math.max(0, centerOffset(cta)) : 0;
-      const maxX = Math.max(...cardStops, ctaStop, 1);
-      return { cardStops, ctaStop, maxX };
+      return { cardStops, ctaStop };
     };
 
-    const setup = () => {
-      timeline?.scrollTrigger?.kill();
-      timeline?.kill();
+    const buildTimeline = (cardStops: number[], ctaStop: number, maxScroll: number) => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: () => `+=${maxScroll}`,
+          pin: sticky,
+          pinSpacing: true,
+          scrub: true,
+          anticipatePin: 0,
+          invalidateOnRefresh: true,
+          fastScrollEnd: true,
+          onUpdate(self) {
+            if (Math.abs(self.progress - progressRef.current) > 0.008) {
+              progressRef.current = self.progress;
+              setProgress(self.progress);
+            }
+            updateFocus();
+          },
+        },
+      });
+
+      for (let i = 1; i < cardStops.length; i++) {
+        const prev = cardStops[i - 1] ?? 0;
+        const stop = cardStops[i] ?? prev;
+        const travel = Math.max(0, stop - prev);
+        if (travel > 0) {
+          tl.to(track, { x: -stop, ease: "none", duration: travel / maxScroll });
+        }
+      }
+
+      const lastStop = cardStops[cardStops.length - 1] ?? 0;
+      if (ctaStop > lastStop + 1) {
+        tl.to(track, {
+          x: -ctaStop,
+          ease: "none",
+          duration: (ctaStop - lastStop) / maxScroll,
+        });
+      }
+
+      return tl;
+    };
+
+    const setup = (retry = 0) => {
+      const token = ++setupToken;
+
+      tween?.scrollTrigger?.kill();
+      tween?.kill();
+      ScrollTrigger.getAll()
+        .filter((t) => t.vars.trigger === section)
+        .forEach((t) => t.kill());
 
       const spacer = spacerRef.current;
       const endSpacer = endSpacerRef.current;
-      if (spacer) spacer.style.width = "0px";
-      if (endSpacer) endSpacer.style.width = "0px";
       gsap.set(track, { x: 0, clearProps: "transform" });
 
-      requestAnimationFrame(() => {
-        const firstCard = cardRefs.current[0];
-        if (spacer && firstCard) {
-          spacer.style.width = `${Math.max(0, -centerOffset(firstCard))}px`;
-        }
+      const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+      const cta = ctaRef.current;
+      if (cards.length !== projects.length) {
+        if (retry < 12) requestAnimationFrame(() => setup(retry + 1));
+        return;
+      }
 
-        requestAnimationFrame(() => {
-          const areaW = trackArea.getBoundingClientRect().width;
-          if (endSpacer) endSpacer.style.width = `${areaW * 0.5}px`;
+      const firstCard = cards[0];
+      if (spacer && firstCard) {
+        spacer.style.width = `${Math.max(0, -centerOffset(firstCard))}px`;
+      }
 
-          requestAnimationFrame(() => {
-            gsap.set(track, { x: 0 });
+      const areaWidth = trackArea.getBoundingClientRect().width;
+      if (endSpacer) endSpacer.style.width = `${areaWidth * 0.5}px`;
 
-            const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
-            const cta = ctaRef.current;
-            if (cards.length !== projects.length) return;
+      // Force layout so stop measurements reflect spacer widths.
+      void track.offsetWidth;
 
-            let { maxX } = measure(cards, cta);
+      let { cardStops, ctaStop } = measureStops(cards, cta);
+      const lastIdx = projects.length - 1;
+      let lastCardStop = cardStops[lastIdx] ?? 0;
 
-            if (endSpacer && cta) {
-              const { cardStops, ctaStop } = measure(cards, cta);
-              const lastStop = cardStops[projects.length - 1] ?? 0;
-              endSpacer.style.width = `${areaW * 0.45 + Math.max(0, ctaStop - lastStop) + areaW * 0.1}px`;
-            }
+      if (endSpacer && cta) {
+        const extra = Math.max(0, ctaStop - lastCardStop) + areaWidth * 0.2;
+        endSpacer.style.width = `${areaWidth * 0.45 + extra}px`;
+        void track.offsetWidth;
+        ({ cardStops, ctaStop } = measureStops(cards, cta));
+        lastCardStop = cardStops[lastIdx] ?? 0;
+      }
 
-            requestAnimationFrame(() => {
-              gsap.set(track, { x: 0 });
-              ({ maxX } = measure(cards, cta));
-              if (maxX <= 0) return;
+      if (token !== setupToken || !section || !track || !trackArea) return;
 
-              const scrollLen = maxX * 1.3;
+      const maxScroll = Math.max(
+        lastCardStop,
+        ctaStop,
+        areaWidth * 0.5,
+      );
+      if (lastCardStop <= 0) {
+        if (retry < 12) requestAnimationFrame(() => setup(retry + 1));
+        return;
+      }
 
-              timeline = gsap.timeline({
-                scrollTrigger: {
-                  trigger: section,
-                  start: "top top",
-                  end: () => `+=${scrollLen}`,
-                  pin: sticky,
-                  scrub: 1,
-                  invalidateOnRefresh: true,
-                  onUpdate(self) {
-                    if (Math.abs(self.progress - progressRef.current) > 0.008) {
-                      progressRef.current = self.progress;
-                      setProgress(self.progress);
-                    }
-                    updateUI();
-                  },
-                },
-              });
+      gsap.set(track, { x: 0 });
+      tween = buildTimeline(cardStops, ctaStop, maxScroll);
 
-              timeline.to(track, { x: -maxX, ease: "none", duration: 1 });
-              ScrollTrigger.refresh();
-              updateUI();
-            });
-          });
-        });
-      });
+      const st = tween.scrollTrigger;
+      ScrollTrigger.refresh();
+      st?.update();
+      updateFocus();
     };
 
-    const r1 = requestAnimationFrame(() => requestAnimationFrame(setup));
+    setup();
+
     let resizeTimer: ReturnType<typeof setTimeout>;
     const onResize = () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(setup, 250);
+      resizeTimer = setTimeout(() => setup(), 250);
     };
     window.addEventListener("resize", onResize);
 
     return () => {
-      cancelAnimationFrame(r1);
+      setupToken++;
       clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
-      timeline?.scrollTrigger?.kill();
-      timeline?.kill();
+      tween?.scrollTrigger?.kill();
+      tween?.kill();
+      ScrollTrigger.getAll()
+        .filter((t) => t.vars.trigger === section)
+        .forEach((t) => t.kill());
     };
   }, [lite, spotlightX]);
 
@@ -473,7 +515,7 @@ export function Projects() {
                   onMouseEnter={() => setHoveredIdx(i)}
                   onMouseLeave={() => setHoveredIdx(null)}
                   style={{
-                    width: "clamp(280px, 42vw, 420px)",
+                    width: "min(440px, calc(100vw - min(55vw, 240px) - 96px))",
                     height: "clamp(360px, 60vh, 540px)",
                     cursor: "pointer",
                   }}
@@ -491,7 +533,7 @@ export function Projects() {
               <div
                 ref={ctaRef}
                 className="flex shrink-0 flex-col items-center justify-center"
-                style={{ width: "min(50vw, 300px)" }}
+                style={{ width: "min(320px, calc(100vw - min(55vw, 240px) - 96px))" }}
               >
                 <Link href="#contact" data-cursor="interactive" className="group flex flex-col items-center gap-4 text-center">
                   <motion.span
