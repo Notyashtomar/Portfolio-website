@@ -275,6 +275,16 @@ body.no-cursor button {
     radial-gradient(ellipse 50% 40% at 65% 55%, rgba(139, 92, 246, 0.16), transparent 55%);
 }
 
+/* Prevent drei Html wrappers from rendering as solid black blocks over the globe */
+.finance-globe-html {
+  background: transparent !important;
+  pointer-events: none;
+}
+
+.finance-globe-html > * {
+  pointer-events: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ambient-aurora {
     animation: none !important;
@@ -636,7 +646,32 @@ body.reduce-motion .scan-lines {
   animation-play-state: paused;
 }
 
-/* ── Terminal border pulse ── */
+/* ── Story preloader surname shimmer ── */
+.preloader-surname [data-char] {
+  background: linear-gradient(
+    105deg,
+    #ffffff 0%,
+    #c8ddff 38%,
+    #4f8cff 62%,
+    #ffffff 100%
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: preloader-shimmer 2.8s ease-in-out infinite;
+}
+
+@keyframes preloader-shimmer {
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+}
+
 @keyframes border-pulse {
   0%, 100% { border-color: rgba(79, 140, 255, 0.18); }
   50%       { border-color: rgba(79, 140, 255, 0.55); }

@@ -166,16 +166,12 @@ function EducationCard({
 
 /* ── Certification card ── */
 const CERT_DETAIL: Record<string, string> = {
-  "Financial Modelling & Business Analysis":
-    "Mastered DCF, LBO, and 3-statement financial models using Excel — core toolkit for every valuation project I've led.",
-  "Data Analytics & Visualization":
-    "Advanced Tableau and Excel techniques for turning raw data into executive-ready visual narratives.",
+  "Financial Modelling and Business Analysis":
+    "Financial modelling and business analysis from PwC, used in forecasting and MIS work.",
+  "Data Analytics and Visualization":
+    "Analytics and visualization from Macquarie University, applied to Power BI and Excel reporting.",
   "Introduction to Corporate Finance":
-    "Capital structure theory, WACC, and investment appraisal — applied directly to real forecasting and capex models.",
-  "Leadership Skills":
-    "Cross-functional leadership frameworks and decision-making under uncertainty, honed at IIMA's rigorous program.",
-  "How Software Ate Finance":
-    "Stanford's deep-dive into FinTech, algo-trading, and data-first finance — shaping my approach to financial automation.",
+    "Corporate finance from the University of Pennsylvania, supporting forecasting and cost analysis.",
 };
 
 function CertCard({

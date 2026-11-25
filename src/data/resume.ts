@@ -1,72 +1,86 @@
 /**
- * Source of truth: Yash resume format.docx
- * Do not invent roles, metrics, employers, or projects beyond this file.
+ * Source of truth: System Analyst resume + CV (Nov 2026).
+ * Do not invent roles, metrics, employers, or projects beyond those documents.
  */
 
 export const profile = {
   name: "Yash Raj Singh Tomar",
   displayName: "YASH RAJ SINGH TOMAR",
   shortName: "Yash Tomar",
-  title: "Data Analyst",
+  title: "System Analyst & Team Lead",
   location: "New Delhi",
   phone: "+91 9311973552",
-  email: "yashtomar142001@gmail.com",
+  email: "yash.tomar569@gmail.com",
   linkedin: "https://in.linkedin.com/in/yashraj-s-tomar200114",
   resumeFile: "/Yash-Raj-Singh-Tomar-Resume.docx",
   roles: [
-    "Data Analyst",
+    "System Analyst",
+    "Team Lead",
     "MIS Analyst",
     "Business Analyst",
-    "Financial Analyst",
   ],
   summary:
-    "Data Analyst with 2+ years of experience in financial analytics, MIS reporting, and process automation. Improved reporting efficiency by up to 40% using Advanced Excel, SQL, and Power BI. Skilled in transforming large datasets into actionable insights for cost control, forecasting, and business decisions.",
+    "System Analyst and Team Lead with 2+ years in system architecture, business application delivery, and financial analytics. Promoted within 7 months at Bird Group to lead a team that shipped 5 production systems, including a flight data platform used at 18 airports. Expert in prompt engineering, loop engineering, SQL, and Power BI; cut reporting turnaround by up to 40%.",
 } as const;
 
 export const focusAreas = [
   {
+    title: "System Architecture",
+    description:
+      "Own schemas, 3-tier role-based access, audit logging, and integration flows reused across production systems.",
+  },
+  {
+    title: "Delivery Leadership",
+    description:
+      "Run requirement workshops, UAT, rollout, and training with operations, finance, and station heads.",
+  },
+  {
+    title: "Prompt & Loop Engineering",
+    description:
+      "Generate-evaluate-refine cycles for specs, code, tests, and documentation, adopted across the team.",
+  },
+  {
+    title: "Business Applications",
+    description:
+      "FRIS, RMS, SMS, billing, and a suite of CRMs in daily use by operations, finance, and sales.",
+  },
+  {
     title: "Financial Analytics",
     description:
-      "Transform raw financial data into actionable insights through KPI tracking, trend analysis, and business intelligence.",
+      "SQL, Python, Power BI, and Advanced Excel for MIS, KPI reporting, and forecasting.",
   },
   {
-    title: "MIS Reporting",
+    title: "Stakeholder Reporting",
     description:
-      "Automate daily, weekly, and monthly reports to improve operational visibility and decision-making.",
-  },
-  {
-    title: "Dashboard Development",
-    description:
-      "Design interactive dashboards using Power BI, Tableau, and Excel for real-time business monitoring.",
-  },
-  {
-    title: "SQL Automation",
-    description:
-      "Write optimized SQL queries, automate data extraction, and streamline reporting workflows.",
-  },
-  {
-    title: "Financial Forecasting",
-    description:
-      "Build forecasting models to estimate revenue, expenses, and business growth using historical data.",
-  },
-  {
-    title: "Data Visualization",
-    description:
-      "Present complex datasets with clean, intuitive charts and visuals that drive faster decisions.",
+      "Daily, weekly, and monthly reports plus leadership dashboards that cut report preparation time.",
   },
 ] as const;
 
 export const experience = [
   {
-    id: "bird-group",
+    id: "bird-lead",
     company: "Bird Group",
-    role: "MIS Analyst",
-    period: "Sep 2025 – Present",
+    role: "System Analyst and Team Lead",
+    period: "Apr 2026 – Present",
     location: "Delhi",
     highlights: [
-      "Automated Excel-based financial reports and dashboards, improving reporting efficiency by 30%.",
+      "Promoted to System Analyst after 7 months as MIS Analyst and appointed to lead the team building and rolling out enterprise business applications across Bird Group.",
+      "Directed delivery of 5 production systems in 8 months: FRIS, RMS, SMS, Billing Software, and a suite of 4 CRMs, each in daily use by operations, finance, and sales.",
+      "Defined architecture standards (database schemas, 3-tier role-based access, audit logging, integration flows) reused across all 5 systems; owned requirement gathering, UAT, and sign-off with 3 stakeholder groups.",
+      "Established prompt engineering and loop engineering practices (generate-evaluate-refine cycles) adopted by 100% of the team, shrinking documentation and build effort per release.",
+    ],
+  },
+  {
+    id: "bird-mis",
+    company: "Bird Group",
+    role: "MIS Analyst",
+    period: "Sep 2025 – Mar 2026",
+    location: "Delhi",
+    highlights: [
+      "Automated Excel-based financial reports and dashboards, cutting monthly report preparation time by 30%.",
       "Partnered with cross-functional stakeholders to streamline reporting workflows and reduce manual effort by 25%.",
-      "Architected and optimized SQL-driven data pipelines processing 50K+ financial records, reducing data processing time by 35% while elevating KPI visibility and decision intelligence.",
+      "Architected SQL data pipelines processing 50K+ financial records, reducing processing time by 35%.",
+      "Began building internal tools with generative AI to remove repetitive reporting work, which led to the System Analyst role.",
     ],
   },
   {
@@ -76,9 +90,9 @@ export const experience = [
     period: "Sep 2024 – Sep 2025",
     location: "New Delhi",
     highlights: [
-      "Processed and analysed 50K+ financial records using SQL, Python, and Power BI, uncovering key performance trends that improved reporting efficiency by 25% and supported data-driven strategic decisions.",
-      "Engineered automated reporting solutions, reducing data processing turnaround time by 40% and significantly improving operational efficiency.",
-      "Delivered structured insights to senior management using Power BI and SQL, enabling faster strategic decision-making and improving operational efficiency by 20%.",
+      "Uncovered revenue and cost trends in 50K+ records using SQL, Python, and Power BI, raising reporting speed by 25%.",
+      "Engineered automated reporting solutions, reducing data processing turnaround by 40%.",
+      "Presented structured insights to senior management via Power BI, improving operational efficiency by 20%.",
     ],
   },
   {
@@ -88,331 +102,279 @@ export const experience = [
     period: "Jul 2024 – Sep 2024",
     location: "New Delhi",
     highlights: [
-      "Gathered and documented business requirements in collaboration with cross-functional stakeholders, improving process clarity and reducing workflow inefficiencies by 20% using structured documentation and analysis in SQL and Microsoft Excel.",
+      "Documented business requirements with cross-functional stakeholders, reducing workflow inefficiencies by 20% through structured analysis in SQL and Microsoft Excel.",
     ],
   },
 ] as const;
 
 export const projects = [
   {
-    slug: "financial-forecasting",
-    title: "Financial Forecasting Model",
-    subtitle: "Excel · Oct 2023",
+    slug: "fris",
+    title: "Flight Recording Information System",
+    subtitle: "Lead Architect · 2026",
     tagline:
-      "Built dynamic forecasting models on 50,000+ financial records using Excel, enabling budget planning and revenue projections with improved forecasting accuracy.",
+      "Centralized flight data system for Bird Group ground operations, live at 18 international and domestic airports.",
     challenge:
-      "Budget planning and revenue projections needed a reliable forecasting layer across a large historical financial dataset.",
+      "Flight arrivals, departures, delays, and handling lived in station-level records, so head office had no single source of truth.",
     solution:
-      "Built dynamic forecasting models on 50,000+ financial records using Excel to support budget planning and revenue projections with clearer trend visibility.",
-    tech: ["Microsoft Excel", "Forecasting Models", "Financial Analysis"],
+      "Led the team that designed and deployed one database for arrivals, departures, delays, turnaround, and handling, with role-based access and a reporting layer for station staff, supervisors, and head office.",
+    tech: ["System Architecture", "Data Modeling", "RBAC", "Reporting"],
     architecture: [
-      "Historical financial records structured for model inputs",
-      "Dynamic Excel forecasting frameworks for budget and revenue planning",
-      "Accuracy checks against historical performance",
-      "Outputs designed for planning and projection decisions",
+      "One central database for every station",
+      "Role-based access: station users see their data, management sees all stations",
+      "Daily, weekly, and monthly reports plus on-time performance and exceptions",
+      "Requirement gathering with station heads, phased rollout, and training across 18 airports",
     ],
     metrics: [
-      {
-        value: "25%",
-        label: "Forecast accuracy gain",
-        numeric: 25,
-        suffix: "%",
-      },
-      {
-        value: "50K+",
-        label: "Historical records",
-        numeric: 50,
-        suffix: "K+",
-      },
-      { value: "Oct 2023", label: "Delivery", numeric: 0, suffix: "" },
+      { value: "18", label: "Airports live", numeric: 18, suffix: "" },
+      { value: "3", label: "User tiers", numeric: 3, suffix: "" },
+      { value: "2026", label: "Delivery", numeric: 0, suffix: "" },
     ],
     impact:
-      "Improved forecasting accuracy by 25% while enabling stronger budget planning and revenue projections across 50K+ historical records.",
+      "Took FRIS from concept to production at 18 airports, establishing a single source of truth for flight data across stations.",
     lessons: [
-      "Dynamic models outperform static spreadsheets when planning cycles change.",
-      "Forecast quality scales with clean historical coverage.",
+      "Shared architecture standards make multi-station rollout repeatable.",
+      "Phased training is what turns a delivered system into daily use.",
     ],
   },
   {
-    slug: "data-dashboard-development",
-    title: "Executive Financial Dashboard",
-    subtitle: "Excel & Power BI · Feb 2024",
+    slug: "rms",
+    title: "Resource Management System",
+    subtitle: "Project Lead · 2026",
     tagline:
-      "Designed interactive Power BI dashboards to visualize revenue, expenses, profit margins, and KPIs across 60,000+ financial records, reducing manual reporting time.",
+      "Organization-wide platform to register, allocate, and track equipment across every station.",
     challenge:
-      "Leadership needed faster visibility into revenue, expenses, profit margins, and KPIs without slow manual report assembly.",
+      "Equipment lived in manual station registers, so utilization and transfers were invisible to head office.",
     solution:
-      "Designed interactive Power BI dashboards, supported by Excel, to visualize financial performance across 60,000+ records and compress reporting cycles.",
-    tech: ["Excel", "Power BI", "KPI Reporting"],
+      "Built a master register with category, station, status, custodian, and maintenance history, plus allocation and transfer workflows with approval steps and a full audit trail.",
+    tech: ["Workflow Automation", "Audit Trails", "Dashboards"],
     architecture: [
-      "Financial datasets prepared across revenue, expenses, and margins",
-      "Excel as the structured analytical foundation",
-      "Power BI visuals for executive-ready storytelling",
-      "KPI views optimized to cut manual reporting effort",
+      "Master register replacing manual station books",
+      "Allocation and transfer between stations with approvals",
+      "Real-time utilization and availability dashboards",
+      "Alerts on under-utilized or overdue assets",
     ],
     metrics: [
-      {
-        value: "35%",
-        label: "Faster reporting",
-        numeric: 35,
-        suffix: "%",
-      },
-      {
-        value: "60,000+",
-        label: "Data rows",
-        numeric: 60,
-        suffix: "K+",
-      },
-      { value: "Feb 2024", label: "Delivery", numeric: 0, suffix: "" },
+      { value: "100%", label: "Manual registers retired", numeric: 100, suffix: "%" },
+      { value: "1", label: "Source of truth", numeric: 1, suffix: "" },
+      { value: "2026", label: "Delivery", numeric: 0, suffix: "" },
     ],
     impact:
-      "Reduced manual reporting time by 35% while improving visibility into revenue, expenses, profit margins, and KPIs across 60,000+ financial records.",
+      "Retired 100% of manual registers in favour of a single source of truth with real-time utilization reporting.",
     lessons: [
-      "Executive dashboards win when KPIs are immediately actionable.",
-      "Interactive visuals remove friction from recurring leadership reviews.",
+      "Audit trails make station-to-station transfers trustworthy.",
+      "Head-office dashboards only work if station data is the system of record.",
     ],
   },
   {
-    slug: "sql-data-extraction",
-    title: "SQL Data Automation",
-    subtitle: "SQL · Jun 2024",
+    slug: "sms",
+    title: "Staff Management System",
+    subtitle: "Delivery Lead · 2026",
     tagline:
-      "Developed SQL scripts and automated reporting workflows to process 100,000+ records, improving data accuracy and reducing report generation time.",
+      "Rosters, deployment, attendance, and headcount reporting for all stations on one shared data model with RMS.",
     challenge:
-      "Report generation depended on repetitive processing across large record volumes, slowing teams and introducing accuracy risk.",
+      "Workforce planning sat apart from resource tracking, so management could not see people and equipment per station together.",
     solution:
-      "Developed SQL scripts and automated reporting workflows to process 100,000+ records with greater consistency and less manual effort.",
-    tech: ["SQL", "Data Automation", "Reporting Workflows"],
+      "Delivered staff master, rosters, shift deployment, attendance, and headcount reporting on the same data model as RMS.",
+    tech: ["Data Modeling", "Rosters", "Reporting"],
     architecture: [
-      "SQL scripts for structured extraction and transformation",
-      "Automated reporting workflows for recurring generation",
-      "Accuracy checks across large record volumes",
-      "Outputs tuned for faster, cleaner business reporting",
+      "Staff master shared with the RMS station model",
+      "Rosters and deployment by station and shift",
+      "Attendance and headcount reporting",
+      "One view of people and resources per station",
     ],
     metrics: [
-      {
-        value: "40%",
-        label: "Processing efficiency",
-        numeric: 40,
-        suffix: "%",
-      },
-      {
-        value: "100K+",
-        label: "Records processed",
-        numeric: 100,
-        suffix: "K+",
-      },
-      { value: "Jun 2024", label: "Delivery", numeric: 0, suffix: "" },
+      { value: "1", label: "Shared data model", numeric: 1, suffix: "" },
+      { value: "2026", label: "Delivery", numeric: 0, suffix: "" },
+      { value: "All", label: "Stations covered", numeric: 0, suffix: "" },
     ],
     impact:
-      "Improved processing efficiency by 40%, strengthened data accuracy, and reduced report generation time across 100,000+ records.",
+      "Station workforce planning now sits on the same model as equipment, so management sees people and resources together.",
     lessons: [
-      "Automation before the dashboard creates compounding speed gains.",
-      "Consistent SQL workflows protect accuracy at scale.",
+      "Reusing the RMS model avoided a second source of station truth.",
+      "Headcount reporting only lands when rosters and attendance share a schema.",
     ],
   },
   {
-    slug: "financial-planning-budget",
-    title: "Financial Planning & Budget Analysis",
-    subtitle: "Excel · Power BI · Jan 2025",
+    slug: "billing",
+    title: "Billing Software",
+    subtitle: "Solution Architect · 2026",
     tagline:
-      "Built a comprehensive budgeting model to analyze department-wise expenses, revenue forecasts, and budget variance, enabling faster financial planning and executive decision-making.",
+      "Billing engine built from scratch for private and government airport contracts, with configurable rate cards and a full audit trail.",
     challenge:
-      "Department-wise budget tracking was fragmented, causing delayed variance detection and slower executive decision cycles.",
+      "Private and government airport contracts needed different commercial rules without a separate codebase for each.",
     solution:
-      "Built a comprehensive Excel budgeting model integrated with Power BI dashboards to track department expenses, revenue forecasts, and budget variance across 85K+ financial records.",
-    tech: ["Excel", "Power BI", "Budget Modeling", "Variance Analysis"],
+      "Designed configurable rate cards and contract rules per airport, automated invoice generation from operational data, and an approval workflow with credit notes and a complete audit trail.",
+    tech: ["Billing", "Rate Cards", "Audit Trails", "Invoicing"],
     architecture: [
-      "Department-wise expense and revenue data structured in Excel",
-      "Variance analysis layer comparing actuals vs. budgets",
-      "Power BI dashboards for leadership budget reviews",
-      "Automated alerts for budget overruns and forecast shifts",
+      "Configurable rate cards for private and government contracts",
+      "Same engine serves both contract types without code changes",
+      "Automated invoices from operational data",
+      "Approval workflow, credit notes, and full audit trail",
     ],
     metrics: [
-      { value: "28%", label: "Budget accuracy improved", numeric: 28, suffix: "%" },
-      { value: "85K+", label: "Financial records",       numeric: 85, suffix: "K+" },
-      { value: "Jan 2025", label: "Delivery",            numeric: 0,  suffix: "" },
+      { value: "2", label: "Contract types", numeric: 2, suffix: "" },
+      { value: "2026", label: "Delivery", numeric: 0, suffix: "" },
+      { value: "1", label: "Billing engine", numeric: 1, suffix: "" },
     ],
     impact:
-      "Improved budget accuracy by 28% and enabled real-time financial planning decisions across 85,000+ records for executive leadership.",
+      "One configurable engine invoices both private and government airport contracts without code changes per airport.",
     lessons: [
-      "Variance analysis surfaces gaps before they become strategic problems.",
-      "Budget models are most effective when linked directly to leadership dashboards.",
+      "Rate cards belong in configuration, not in branching code.",
+      "Audit trails are part of the product when invoices face compliance review.",
     ],
   },
   {
-    slug: "profitability-cost-analysis",
-    title: "Profitability & Cost Analysis",
-    subtitle: "SQL · Power BI · May 2025",
+    slug: "crm-suite",
+    title: "CRM Platform Suite",
+    subtitle: "Technical Lead · 2026",
     tagline:
-      "Designed a financial analytics dashboard to evaluate gross profit, operating costs, EBITDA trends, and product profitability across multiple business units.",
+      "Four CRM systems — sales, client accounts, customer support, and vendor management — on a shared foundation.",
     challenge:
-      "Leadership lacked a unified view of profitability drivers across product lines and business units, making cost optimization decisions slow.",
+      "Each Bird Group business unit needed its own CRM workflow, and building them separately would have repeated the same access, timeline, and dashboard work.",
     solution:
-      "Built SQL pipelines and Power BI dashboards evaluating EBITDA trends, gross profit, and operating costs across 120K+ transactions for multi-unit profitability analysis.",
-    tech: ["SQL", "Power BI", "EBITDA Analysis", "Cost Modeling"],
+      "Led four CRMs on one foundation: role-based access, activity timeline, notes, attachments, reminders, and management dashboards, using prompt templates for schema, form logic, and tests.",
+    tech: ["CRM", "Prompt Engineering", "Generative AI", "RBAC"],
     architecture: [
-      "SQL extraction and transformation across multi-unit transaction data",
-      "EBITDA and gross margin models built in Power BI",
-      "Operating cost breakdown by product and business unit",
-      "Trend analysis views for quarterly profitability reviews",
+      "Sales CRM: pipeline, follow-ups, conversion tracking",
+      "Client accounts: contracts, contact history, renewals",
+      "Support CRM: tickets, SLA timers, escalation",
+      "Vendor CRM: onboarding, documents, performance reviews",
     ],
     metrics: [
-      { value: "22%", label: "Cost optimization",        numeric: 22,  suffix: "%" },
-      { value: "120K+", label: "Transactions analyzed",  numeric: 120, suffix: "K+" },
-      { value: "May 2025", label: "Delivery",            numeric: 0,   suffix: "" },
+      { value: "4", label: "CRM systems", numeric: 4, suffix: "" },
+      { value: "1", label: "Shared foundation", numeric: 1, suffix: "" },
+      { value: "2026", label: "Delivery", numeric: 0, suffix: "" },
     ],
     impact:
-      "Drove 22% cost optimization by surfacing EBITDA and profitability trends across 120,000+ transactions in real-time Power BI dashboards.",
+      "A shared foundation cut build time for each successive CRM across sales, accounts, support, and vendors.",
     lessons: [
-      "Multi-unit profitability views reveal cross-subsidization that single-unit reporting hides.",
-      "SQL-driven cost models allow faster scenario testing than manual spreadsheets.",
+      "The second CRM is where a shared architecture pays for itself.",
+      "Prompt libraries for schema and tests keep each new CRM consistent.",
     ],
   },
   {
-    slug: "cashflow-kpi-dashboard",
-    title: "Cash Flow & Financial KPI Dashboard",
-    subtitle: "Excel · SQL · Oct 2025",
+    slug: "financial-analytics",
+    title: "Financial Forecasting & SQL Automation",
+    subtitle: "Excel · SQL · Power BI · 2024–2026",
     tagline:
-      "Developed an executive dashboard to monitor cash flow, accounts receivable, accounts payable, liquidity ratios, and working capital, providing real-time visibility into organizational financial health.",
+      "Forecasting models, leadership dashboards, and automated SQL pipelines across Bird Group and Wistful Finance.",
     challenge:
-      "Finance teams lacked real-time cash flow visibility, leading to reactive liquidity management and delayed AP/AR decisions.",
+      "Monthly reporting depended on manual Excel work across large financial datasets, slowing leadership decisions.",
     solution:
-      "Developed an Excel and SQL-powered executive dashboard monitoring cash flow, AR/AP, liquidity ratios, and working capital across 150K+ financial entries.",
-    tech: ["Excel", "SQL", "Cash Flow Modeling", "KPI Dashboards"],
+      "Built forecasting models on 50K+ historical records, interactive Power BI dashboards, and SQL pipelines that pull from multiple sources.",
+    tech: ["Excel", "SQL", "Power BI", "Python"],
     architecture: [
-      "SQL pipelines aggregating AR, AP, and cash flow transaction data",
-      "Excel models computing liquidity ratios and working capital",
-      "Executive KPI dashboard with real-time health indicators",
-      "Automated data refresh for daily financial snapshot delivery",
+      "Forecasting models on historical revenue and cost records",
+      "Power BI dashboards for leadership reporting",
+      "Automated SQL pipelines from multiple sources",
+      "KPI and MIS reports replacing manual monthly assembly",
     ],
     metrics: [
-      { value: "40%", label: "Reporting efficiency",    numeric: 40,  suffix: "%" },
-      { value: "150K+", label: "Financial entries",     numeric: 150, suffix: "K+" },
-      { value: "Oct 2025", label: "Delivery",           numeric: 0,   suffix: "" },
+      { value: "40%", label: "Faster turnaround", numeric: 40, suffix: "%" },
+      { value: "50K+", label: "Records modeled", numeric: 50, suffix: "K+" },
+      { value: "25%", label: "Forecast accuracy", numeric: 25, suffix: "%" },
     ],
     impact:
-      "Delivered 40% reporting efficiency gains by giving finance leadership real-time cash flow and liquidity visibility across 150,000+ financial entries.",
+      "Improved forecast accuracy by 25%, cut report preparation time by 30%, and reduced reporting turnaround by up to 40%.",
     lessons: [
-      "Real-time cash flow dashboards shift finance teams from reactive to proactive liquidity management.",
-      "AR/AP visibility in a single view eliminates the most common working capital blind spots.",
+      "Automation before the dashboard is what compounds reporting speed.",
+      "Leadership adopts a dashboard when it replaces a recurring manual pack.",
     ],
   },
 ] as const;
 
 export const skillCategories = [
   {
+    category: "System Architecture",
+    skills: [
+      "System Architecture",
+      "Solution Design",
+      "Requirements Analysis",
+      "Data Modeling",
+      "Database Design",
+      "API Design",
+      "Role-Based Access Control",
+      "SDLC",
+      "UAT",
+    ],
+  },
+  {
+    category: "AI & Prompt Engineering",
+    skills: [
+      "Prompt Engineering",
+      "Loop Engineering",
+      "Large Language Models",
+      "Agentic Workflows",
+      "Generative AI",
+      "AI-Assisted Development",
+    ],
+  },
+  {
     category: "Data & Analytics",
     skills: [
       "SQL",
       "Python (Pandas)",
-      "Data Cleaning",
-      "Exploratory Data Analysis (EDA)",
+      "Power BI",
+      "Advanced Excel",
+      "MIS Reporting",
+      "Financial Analysis",
+      "Financial Forecasting",
       "Data Visualization",
     ],
   },
   {
-    category: "Finance & Reporting",
+    category: "Leadership",
     skills: [
-      "Financial Analysis",
-      "MIS Reporting",
-      "Financial Forecasting",
-      "Dashboard Development",
+      "Team Leadership",
+      "Project Management",
+      "Stakeholder Management",
+      "Business Requirements",
+      "CRM",
+      "Billing Systems",
     ],
-  },
-  {
-    category: "Tools & Platforms",
-    skills: ["Advanced Excel", "Power BI", "Stakeholder Communication"],
   },
 ] as const;
 
 export const skillNodes = [
-  {
-    id: "sql",
-    label: "SQL",
-    detail: "Extraction, transformation, and multi-source data pipelines.",
-  },
-  {
-    id: "excel",
-    label: "Advanced Excel",
-    detail: "Financial reports, dashboards, and forecasting models.",
-  },
-  {
-    id: "pbi",
-    label: "Power BI",
-    detail: "Interactive dashboards and leadership-ready visualization.",
-  },
-  {
-    id: "python",
-    label: "Python",
-    detail: "Pandas-based analysis for cleaning and insight generation.",
-  },
-  {
-    id: "fa",
-    label: "Financial Analysis",
-    detail: "Cost control, forecasting, and decision-focused analytics.",
-  },
-  {
-    id: "clean",
-    label: "Data Cleaning",
-    detail: "Preparing large datasets for reliable analysis.",
-  },
-  {
-    id: "eda",
-    label: "EDA",
-    detail: "Exploratory analysis to surface trends and performance drivers.",
-  },
-  {
-    id: "dash",
-    label: "Dashboards",
-    detail: "Interactive reporting for KPI visibility and leadership use.",
-  },
-  {
-    id: "mis",
-    label: "MIS Reporting",
-    detail: "Management information systems and automated financial reports.",
-  },
-  {
-    id: "forecast",
-    label: "Forecasting",
-    detail: "Financial forecasting models for planning and cost strategy.",
-  },
-  {
-    id: "viz",
-    label: "Visualization",
-    detail: "Clear visual storytelling from complex financial datasets.",
-  },
-  {
-    id: "stake",
-    label: "Stakeholders",
-    detail: "Cross-functional communication and insight delivery.",
-  },
+  { id: "arch", label: "Architecture", detail: "Schemas, access control, audit, and integration standards." },
+  { id: "sql", label: "SQL", detail: "Pipelines and reporting queries across financial and operational data." },
+  { id: "pbi", label: "Power BI", detail: "Leadership dashboards and a shared reporting layer." },
+  { id: "excel", label: "Advanced Excel", detail: "Financial models, MIS packs, and forecasting." },
+  { id: "prompt", label: "Prompt Engineering", detail: "Shared prompt library and generate-evaluate-refine loops." },
+  { id: "python", label: "Python", detail: "Pandas analysis for cleaning and trend work." },
+  { id: "rbac", label: "Access Control", detail: "3-tier role-based access reused across production systems." },
+  { id: "crm", label: "CRM & Billing", detail: "Four CRMs and a configurable airport billing engine." },
+  { id: "lead", label: "Team Lead", detail: "Sprint planning, reviews, and mentoring at Bird Group." },
+  { id: "uat", label: "UAT", detail: "Requirement sign-off with operations, finance, and stations." },
+  { id: "mis", label: "MIS Reporting", detail: "Automated daily, weekly, and monthly management reports." },
+  { id: "forecast", label: "Forecasting", detail: "Models on 50K+ records with a 25% accuracy gain." },
 ] as const;
 
 export const education = [
   {
     school: "Maharaja Agrasen College, University of Delhi",
-    period: "Aug 2020 – Jun 2023",
-    credential: "Bachelor’s degree (Math and Office Management)",
-    detail: "Focus: Statistics, Probability, Data Analysis · Delhi",
+    period: "2020 – 2023",
+    credential: "Bachelor’s degree, Mathematics and Office Management",
+    detail: "Focus: Statistics, Probability, and Data Analysis",
   },
   {
     school: "JM International School, Delhi",
-    period: "Aug 2020",
-    credential: "Higher Secondary (Physics, Chemistry, Math)",
-    detail: "Score: 90% · Delhi",
+    period: "2020",
+    credential: "Higher Secondary (Physics, Chemistry, Mathematics)",
+    detail: "Score: 90%",
   },
 ] as const;
 
 export const certifications = [
   {
-    title: "Financial Modelling & Business Analysis",
+    title: "Financial Modelling and Business Analysis",
     issuer: "PwC",
     date: "",
     credentialUrl: "",
   },
   {
-    title: "Data Analytics & Visualization",
+    title: "Data Analytics and Visualization",
     issuer: "Macquarie University",
     date: "",
     credentialUrl: "",
@@ -423,55 +385,43 @@ export const certifications = [
     date: "",
     credentialUrl: "",
   },
-  {
-    title: "Leadership Skills",
-    issuer: "Indian Institute of Management Ahmedabad (IIMA)",
-    date: "",
-    credentialUrl: "",
-  },
-  {
-    title: "How Software Ate Finance",
-    issuer: "Stanford University",
-    date: "",
-    credentialUrl: "",
-  },
 ] as const;
 
 export const achievements = [
   {
-    id: "experience",
-    value: 2,
-    suffix: "+",
-    label: "Years Experience",
-    detail: "Financial analytics · MIS · process automation",
+    id: "systems",
+    value: 5,
+    suffix: "",
+    label: "Production Systems",
+    detail: "FRIS, RMS, SMS, Billing, and the CRM suite",
+  },
+  {
+    id: "airports",
+    value: 18,
+    suffix: "",
+    label: "Airports on FRIS",
+    detail: "Flight data live across international and domestic stations",
   },
   {
     id: "efficiency",
     value: 40,
     suffix: "%",
-    label: "Reporting Efficiency",
-    detail: "Peak improvement across Excel, SQL, and Power BI work",
+    label: "Faster Reporting",
+    detail: "Peak turnaround cut with SQL, Power BI, and Excel",
   },
   {
-    id: "records",
-    value: 60,
-    suffix: "K+",
-    label: "Financial Records",
-    detail: "Analyzed across forecasting, dashboards, and SQL automation",
+    id: "promo",
+    value: 7,
+    suffix: " mo",
+    label: "To System Analyst",
+    detail: "Promoted from MIS Analyst and given the team",
   },
   {
-    id: "projects",
-    value: 3,
-    suffix: "",
-    label: "Featured Projects",
-    detail: "Forecasting · Executive dashboards · SQL automation",
-  },
-  {
-    id: "certs",
-    value: certifications.length,
-    suffix: "",
-    label: "Certifications",
-    detail: "PwC · Macquarie · UPenn · IIMA · Stanford",
+    id: "experience",
+    value: 2,
+    suffix: "+",
+    label: "Years Experience",
+    detail: "Architecture, business applications, and financial analytics",
   },
 ] as const;
 

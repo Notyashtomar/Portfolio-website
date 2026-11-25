@@ -1,8 +1,6 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import {
   Suspense,
   useCallback,
@@ -13,69 +11,59 @@ import {
   type MutableRefObject,
 } from "react";
 import * as THREE from "three";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePerfFlags } from "@/components/providers/Providers";
 
-/* ─── Constants ──────────────────────────────────────────────── */
 const R = 2;
-const GLOBE_SCALE = 1.48; // +30% vs prior 1.14 — camera is decoupled so this enlarges on-screen size
+const GLOBE_SCALE = 1.1;
 const DRAG_SENSITIVITY = 0.006;
 const AUTO_SPIN = 0.0014;
-// Camera fit radius is independent of GLOBE_SCALE — raising scale enlarges the globe on screen.
-const FIT_RADIUS = R * 1.52 * 1.06;
-const FIT_MARGIN = 1.008; // ~100% vertical fill of the hero canvas
-const CAMERA_FOV = 27;
-const GLOBE_Y_SHIFT = 0.1; // fraction of visible height — shifts globe upward
-const LABEL_RADIUS = R * 1.018; // sit on the wireframe sphere — not outside it
-const HTML_DISTANCE = 6.5; // original label scale — fixed px, not tied to globe scale
+const FIT_RADIUS = R * 1.52 * GLOBE_SCALE * 1.08;
+const FIT_MARGIN = 1.05;
+const CAMERA_FOV = 34;
+const LABEL_RADIUS = R * 1.02;
 
-/* ─── Term data with tooltip context ────────────────────────── */
 const TERMS = [
-  /* ── Finance Ratios ── */
-  { label: "EBITDA",      color: "#4f8cff", cat: "Ratios",   detail: "Tracked EBITDA trends for portfolio companies feeding leadership dashboards." },
-  { label: "ROI",         color: "#4f8cff", cat: "Ratios",   detail: "Automated ROI reporting across fund investments using Excel & Power BI." },
-  { label: "IRR",         color: "#4f8cff", cat: "Ratios",   detail: "Built IRR computation pipelines for deal evaluation and exit modelling." },
-  { label: "NPV",         color: "#4f8cff", cat: "Ratios",   detail: "NPV models for capex planning and multi-year financial projection decks." },
-  { label: "CAGR",        color: "#4f8cff", cat: "Ratios",   detail: "Portfolio CAGR surfaces surfaced in executive reports and investor updates." },
-  { label: "Sharpe",      color: "#4f8cff", cat: "Ratios",   detail: "Risk-adjusted return analysis used in fund strategy presentations." },
-  { label: "VaR",         color: "#4f8cff", cat: "Ratios",   detail: "Value at Risk computation for portfolio risk and compliance." },
-  /* ── Finance Tools ── */
-  { label: "SAP FICO",    color: "#22d3ee", cat: "Tools",    detail: "ERP-level financial control — GL, AP/AR, and cost-centre mapping using SAP FICO for audit-ready reporting." },
-  { label: "DCF Model",   color: "#22d3ee", cat: "Tools",    detail: "Discounted Cash Flow modeling to derive intrinsic equity value from multi-year free-cash-flow projections." },
-  { label: "Valuation",   color: "#22d3ee", cat: "Tools",    detail: "Business valuation via DCF, EV/EBITDA, and P/E comparable-company analysis to support investment decisions." },
-  { label: "LBO Model",   color: "#22d3ee", cat: "Tools",    detail: "Leveraged Buyout modeling — debt waterfalls, IRR sensitivity tables, and exit-multiple analysis for PE deals." },
-  { label: "M&A",         color: "#22d3ee", cat: "Tools",    detail: "Merger & Acquisition analytics: synergy mapping, accretion/dilution tests, and deal-structure modelling." },
-  { label: "P&L",         color: "#22d3ee", cat: "Tools",    detail: "Automated P&L dashboards cutting monthly close time by 35% at Bird Group." },
-  { label: "MIS",         color: "#22d3ee", cat: "Tools",    detail: "End-to-end MIS pipeline serving leadership at Bird Group and Wistful Finance." },
-  /* ── Analytics ── */
-  { label: "Alpha",       color: "#ff3d9a", cat: "Analytics", detail: "Alpha attribution analysis for fund strategies via Python & Excel." },
-  { label: "Beta",        color: "#ff3d9a", cat: "Analytics", detail: "Beta-adjusted risk analysis wired into investor reporting workflows." },
-  { label: "Volatility",  color: "#ff3d9a", cat: "Analytics", detail: "Rolling volatility models powering risk management and compliance." },
-  { label: "ARIMA",       color: "#ff3d9a", cat: "Analytics", detail: "ARIMA time-series models for revenue and expense forecasting." },
-  { label: "Regression",  color: "#ff3d9a", cat: "Analytics", detail: "Multiple regression for cost-driver and performance attribution." },
-  { label: "Forecasting", color: "#ff3d9a", cat: "Analytics", detail: "Multi-horizon forecast models powering executive strategy sessions." },
-  { label: "Risk Mgmt",   color: "#ff3d9a", cat: "Analytics", detail: "Integrated risk frameworks covering market, credit, and operational risk." },
-  /* ── Engineering ── */
-  { label: "Python",      color: "#8b5cf6", cat: "Eng",      detail: "Python scripts for data pipelines, automation, and ML forecasting." },
-  { label: "SQL",         color: "#8b5cf6", cat: "Eng",      detail: "Advanced SQL cutting data extraction time by 40% at SLA." },
+  { label: "EBITDA", color: "#4f8cff", cat: "Ratios", detail: "Tracked EBITDA trends for portfolio companies feeding leadership dashboards." },
+  { label: "ROI", color: "#4f8cff", cat: "Ratios", detail: "Automated ROI reporting across fund investments using Excel & Power BI." },
+  { label: "IRR", color: "#4f8cff", cat: "Ratios", detail: "Built IRR computation pipelines for deal evaluation and exit modelling." },
+  { label: "NPV", color: "#4f8cff", cat: "Ratios", detail: "NPV models for capex planning and multi-year financial projection decks." },
+  { label: "CAGR", color: "#4f8cff", cat: "Ratios", detail: "Portfolio CAGR surfaced in executive reports and investor updates." },
+  { label: "Sharpe", color: "#4f8cff", cat: "Ratios", detail: "Risk-adjusted return analysis used in fund strategy presentations." },
+  { label: "VaR", color: "#4f8cff", cat: "Ratios", detail: "Value at Risk computation for portfolio risk and compliance." },
+  { label: "SAP FICO", color: "#22d3ee", cat: "Tools", detail: "ERP-level financial control using SAP FICO for audit-ready reporting." },
+  { label: "DCF Model", color: "#22d3ee", cat: "Tools", detail: "Discounted Cash Flow modeling for intrinsic equity value projections." },
+  { label: "Valuation", color: "#22d3ee", cat: "Tools", detail: "Business valuation via DCF, EV/EBITDA, and comparable-company analysis." },
+  { label: "LBO Model", color: "#22d3ee", cat: "Tools", detail: "Leveraged Buyout modeling with debt waterfalls and IRR sensitivity." },
+  { label: "M&A", color: "#22d3ee", cat: "Tools", detail: "Merger & acquisition analytics: synergy mapping and deal-structure modelling." },
+  { label: "P&L", color: "#22d3ee", cat: "Tools", detail: "Automated P&L dashboards cutting monthly close time by 35%." },
+  { label: "MIS", color: "#22d3ee", cat: "Tools", detail: "End-to-end MIS pipeline serving leadership teams." },
+  { label: "Alpha", color: "#ff3d9a", cat: "Analytics", detail: "Alpha attribution analysis for fund strategies via Python & Excel." },
+  { label: "Beta", color: "#ff3d9a", cat: "Analytics", detail: "Beta-adjusted risk analysis in investor reporting workflows." },
+  { label: "Volatility", color: "#ff3d9a", cat: "Analytics", detail: "Rolling volatility models for risk management and compliance." },
+  { label: "ARIMA", color: "#ff3d9a", cat: "Analytics", detail: "ARIMA time-series models for revenue and expense forecasting." },
+  { label: "Regression", color: "#ff3d9a", cat: "Analytics", detail: "Multiple regression for cost-driver and performance attribution." },
+  { label: "Forecasting", color: "#ff3d9a", cat: "Analytics", detail: "Multi-horizon forecast models for executive strategy sessions." },
+  { label: "Risk Mgmt", color: "#ff3d9a", cat: "Analytics", detail: "Integrated risk frameworks covering market, credit, and operational risk." },
+  { label: "Python", color: "#8b5cf6", cat: "Eng", detail: "Python scripts for data pipelines, automation, and ML forecasting." },
+  { label: "SQL", color: "#8b5cf6", cat: "Eng", detail: "Advanced SQL cutting data extraction time by 40%." },
 ] as const;
 
 const CAT_COLORS: Record<string, string> = {
-  Ratios:    "#4f8cff",
-  Tools:     "#22d3ee",
+  Ratios: "#4f8cff",
+  Tools: "#22d3ee",
   Analytics: "#ff3d9a",
-  Eng:       "#8b5cf6",
+  Eng: "#8b5cf6",
 };
 const CAT_LABELS: Record<string, string> = {
-  Ratios:    "Finance Ratios",
-  Tools:     "Finance Tools",
+  Ratios: "Finance Ratios",
+  Tools: "Finance Tools",
   Analytics: "Analytics",
-  Eng:       "Engineering",
+  Eng: "Engineering",
 };
 
 type Term = (typeof TERMS)[number];
 
-/* ─── Fibonacci sphere layout ───────────────────────────────── */
 function fibSphere(n: number, radius: number): [number, number, number][] {
   const golden = (1 + Math.sqrt(5)) / 2;
   return Array.from({ length: n }, (_, i) => {
@@ -89,7 +77,6 @@ function fibSphere(n: number, radius: number): [number, number, number][] {
   });
 }
 
-/* ─── Globe wireframe ────────────────────────────────────────── */
 function GlobeWireframe() {
   const geo = useMemo(() => {
     const buf = new THREE.BufferGeometry();
@@ -118,14 +105,14 @@ function GlobeWireframe() {
     buf.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
     return buf;
   }, []);
+
   return (
     <lineSegments geometry={geo}>
-      <lineBasicMaterial color="#4f8cff" transparent opacity={0.16} />
+      <lineBasicMaterial color="#4f8cff" transparent opacity={0.18} />
     </lineSegments>
   );
 }
 
-/* ─── Globe core (fresnel + scan shader) ────────────────────── */
 function GlobeCore({ highlighted }: { highlighted: boolean }) {
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const uniforms = useMemo(() => ({ uTime: { value: 0 }, uHighlight: { value: 0 } }), []);
@@ -143,7 +130,7 @@ function GlobeCore({ highlighted }: { highlighted: boolean }) {
 
   return (
     <mesh>
-      <sphereGeometry args={[R, 48, 24]} />
+      <sphereGeometry args={[R, 48, 48]} />
       <shaderMaterial
         ref={matRef}
         transparent
@@ -178,67 +165,14 @@ function GlobeCore({ highlighted }: { highlighted: boolean }) {
   );
 }
 
-/* ─── Detail card anchored to a globe point ─────────────────── */
-function TermDetailCard({ term, flipX }: { term: Term; flipX: "left" | "right" }) {
-  const anchor =
-    flipX === "right"
-      ? "left-full top-1/2 ml-4 -translate-y-1/2"
-      : "right-full top-1/2 mr-4 -translate-y-1/2";
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.94, filter: "blur(6px)" }}
-      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-      exit={{ opacity: 0, scale: 0.96, filter: "blur(4px)" }}
-      transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-      className={`pointer-events-none absolute ${anchor} z-50 w-72 overflow-hidden rounded-2xl bg-black/90 shadow-[0_20px_60px_rgba(0,0,0,0.7),0_0_40px_rgba(79,140,255,0.18)] backdrop-blur-xl`}
-      style={{ border: `1px solid ${term.color}44` }}
-    >
-      <div
-        className="absolute inset-x-0 top-0 h-px"
-        style={{ background: `linear-gradient(90deg, rgba(0,0,0,0), ${term.color}, rgba(0,0,0,0))` }}
-      />
-      <div className="p-4">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span
-              className="inline-block h-2 w-2 rounded-full"
-              style={{ background: term.color, boxShadow: `0 0 8px ${term.color}` }}
-            />
-            <p className="font-display text-[15px] font-bold tracking-wide text-white">{term.label}</p>
-          </div>
-          <span
-            className="shrink-0 rounded px-2 py-0.5 font-sans text-[9px] uppercase tracking-[0.22em]"
-            style={{ background: `${term.color}18`, color: term.color, border: `1px solid ${term.color}33` }}
-          >
-            {CAT_LABELS[term.cat]}
-          </span>
-        </div>
-        <p className="font-body text-[11px] leading-[1.8] text-white/60">{term.detail}</p>
-        <div
-          className="mt-3 h-px w-full"
-          style={{ background: `linear-gradient(90deg, ${term.color}55, rgba(0,0,0,0))` }}
-        />
-        <p className="mt-1.5 font-sans text-[9px] uppercase tracking-[0.28em] text-white/25">
-          SIGNAL · {term.cat.toUpperCase()} · ACTIVE
-        </p>
-      </div>
-    </motion.div>
-  );
-}
-
-const CARD_WIDTH = 288;
-const HERO_TEXT_RATIO = 0.54;
-
-/* ─── Single term label + anchored detail card ───────────────── */
-function TermLabelItem({
+/** Pure 3D markers — no DOM / Html overlays inside the canvas. */
+function TermMarker({
   term,
   position,
   isActive,
   dimOthers,
   onEnter,
   onLeave,
-  dense,
 }: {
   term: Term;
   position: [number, number, number];
@@ -246,109 +180,47 @@ function TermLabelItem({
   dimOthers: boolean;
   onEnter: (t: Term) => void;
   onLeave: () => void;
-  dense: boolean;
 }) {
-  const anchorRef = useRef<THREE.Group>(null);
-  const { camera, size } = useThree();
-  const world = useMemo(() => new THREE.Vector3(), []);
-  const [flipX, setFlipX] = useState<"left" | "right">("right");
-
-  useFrame(() => {
-    if (!anchorRef.current) return;
-    anchorRef.current.getWorldPosition(world);
-    world.project(camera);
-    const screenX = (world.x * 0.5 + 0.5) * size.width;
-    const heroEdge =
-      typeof window !== "undefined" ? window.innerWidth * HERO_TEXT_RATIO : size.width * 0.5;
-
-    if (screenX < heroEdge + CARD_WIDTH * 0.4) {
-      setFlipX("right");
-    } else if (screenX > size.width - CARD_WIDTH * 0.5) {
-      setFlipX("left");
-    } else {
-      setFlipX("right");
-    }
-  });
-
-  if (dense && !isActive) {
-    return (
-      <mesh
-        position={position}
-        onPointerEnter={() => onEnter(term)}
-        onPointerLeave={onLeave}
-      >
-        <sphereGeometry args={[0.07, 6, 6]} />
-        <meshBasicMaterial color={term.color} transparent opacity={0.5} />
-      </mesh>
-    );
-  }
+  const size = isActive ? 0.1 : 0.065;
+  const opacity = isActive ? 1 : dimOthers ? 0.25 : 0.8;
 
   return (
-    <group ref={anchorRef} position={position}>
-      <Html
-        center
-        occlude={false}
-        distanceFactor={HTML_DISTANCE}
-        zIndexRange={isActive ? [1000, 500] : [500, 0]}
-      >
-        <div className="relative" style={{ pointerEvents: "auto" }} onPointerLeave={onLeave}>
-          <button
-            type="button"
-            onPointerEnter={() => onEnter(term)}
-            onClick={() => (isActive ? onLeave() : onEnter(term))}
-            style={{
-              color: isActive ? "#ffffff" : term.color,
-              background: isActive ? `${term.color}22` : "rgba(0,0,0,0)",
-              border: isActive ? `1px solid ${term.color}66` : "1px solid rgba(0,0,0,0)",
-              borderRadius: "4px",
-              padding: isActive ? "2px 7px" : "2px 5px",
-              fontFamily: "'Cabinet Grotesk', 'Satoshi', monospace",
-              fontSize: "10px",
-              fontWeight: 700,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              whiteSpace: "nowrap",
-              cursor: "pointer",
-              userSelect: "none",
-              outline: "none",
-              opacity: dimOthers ? 0.35 : 0.88,
-              transform: isActive ? "scale(1.25)" : "scale(1)",
-              textShadow: isActive
-                ? `0 0 20px ${term.color}, 0 0 40px ${term.color}88`
-                : `0 0 12px ${term.color}88`,
-              boxShadow: isActive ? `0 0 20px ${term.color}44` : "none",
-              transition: "all 0.2s ease",
-            }}
-          >
-            {term.label}
-          </button>
-          <AnimatePresence>
-            {isActive ? <TermDetailCard term={term} flipX={flipX} /> : null}
-          </AnimatePresence>
-        </div>
-      </Html>
-    </group>
+    <mesh
+      position={position}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        onEnter(term);
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        onLeave();
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onEnter(term);
+      }}
+    >
+      <sphereGeometry args={[size, 10, 10]} />
+      <meshBasicMaterial color={term.color} transparent opacity={opacity} />
+    </mesh>
   );
 }
 
-/* ─── Interactive term labels ────────────────────────────────── */
-function TermLabels({
+function TermMarkers({
   active,
   onEnter,
   onLeave,
-  dense,
 }: {
   active: string | null;
   onEnter: (t: Term) => void;
   onLeave: () => void;
-  dense: boolean;
 }) {
   const positions = useMemo(() => fibSphere(TERMS.length, LABEL_RADIUS), []);
 
   return (
     <>
       {TERMS.map((t, i) => (
-        <TermLabelItem
+        <TermMarker
           key={t.label}
           term={t}
           position={positions[i]}
@@ -356,14 +228,12 @@ function TermLabels({
           dimOthers={active !== null && active !== t.label}
           onEnter={onEnter}
           onLeave={onLeave}
-          dense={dense}
         />
       ))}
     </>
   );
 }
 
-/* ─── Orbit ring ─────────────────────────────────────────────── */
 function Ring({ radius, tilt, speed, color, opacity }: {
   radius: number; tilt: number; speed: number; color: string; opacity: number;
 }) {
@@ -377,7 +247,6 @@ function Ring({ radius, tilt, speed, color, opacity }: {
   );
 }
 
-/* ─── Particles ──────────────────────────────────────────────── */
 function Particles({ count }: { count: number }) {
   const ref = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
@@ -398,43 +267,29 @@ function Particles({ count }: { count: number }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.018} color="#9ec5ff" transparent opacity={0.5} sizeAttenuation depthWrite={false} blending={THREE.AdditiveBlending} />
+      <pointsMaterial size={0.018} color="#9ec5ff" transparent opacity={0.45} sizeAttenuation depthWrite={false} blending={THREE.AdditiveBlending} />
     </points>
   );
 }
 
-/* ─── Globe group — reads drag + mouse ──────────────────────── */
 function GlobeGroup({
   mouse,
   drag,
   active,
   onEnter,
   onLeave,
-  denseLabels,
 }: {
   mouse: MutableRefObject<{ x: number; y: number }>;
   drag: MutableRefObject<{ rotY: number; rotX: number; spinning: boolean }>;
   active: string | null;
   onEnter: (t: Term) => void;
   onLeave: () => void;
-  denseLabels: boolean;
 }) {
   const ref = useRef<THREE.Group>(null);
-  const { camera, size } = useThree();
-
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    const cam = camera as THREE.PerspectiveCamera;
-    const tanHalf = Math.tan((CAMERA_FOV * Math.PI) / 180 / 2);
-    const visibleH = 2 * cam.position.z * tanHalf;
-    ref.current.position.y = visibleH * GLOBE_Y_SHIFT;
-  }, [camera, size.width, size.height]);
 
   useFrame(() => {
     if (!ref.current) return;
-    if (!drag.current.spinning) {
-      drag.current.rotY += AUTO_SPIN;
-    }
+    if (!drag.current.spinning) drag.current.rotY += AUTO_SPIN;
     drag.current.spinning = false;
     ref.current.rotation.y = drag.current.rotY;
     ref.current.rotation.x = THREE.MathUtils.lerp(
@@ -448,15 +303,10 @@ function GlobeGroup({
     <group ref={ref} scale={GLOBE_SCALE}>
       <GlobeCore highlighted={active !== null} />
       <GlobeWireframe />
-      <TermLabels
-        active={active}
-        onEnter={onEnter}
-        onLeave={onLeave}
-        dense={denseLabels}
-      />
-      <Ring radius={R * 1.2}  tilt={Math.PI / 6}   speed={0.14}  color="#4f8cff" opacity={0.4} />
-      <Ring radius={R * 1.38} tilt={-Math.PI / 4}  speed={-0.09} color="#8b5cf6" opacity={0.28} />
-      <Ring radius={R * 1.52} tilt={Math.PI / 2.5} speed={0.06}  color="#4f8cff" opacity={0.15} />
+      <TermMarkers active={active} onEnter={onEnter} onLeave={onLeave} />
+      <Ring radius={R * 1.2} tilt={Math.PI / 6} speed={0.14} color="#4f8cff" opacity={0.4} />
+      <Ring radius={R * 1.38} tilt={-Math.PI / 4} speed={-0.09} color="#8b5cf6" opacity={0.28} />
+      <Ring radius={R * 1.52} tilt={Math.PI / 2.5} speed={0.06} color="#4f8cff" opacity={0.15} />
     </group>
   );
 }
@@ -467,17 +317,13 @@ function CameraFit() {
   useLayoutEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     if (size.width < 1 || size.height < 1) return;
-
     cam.fov = CAMERA_FOV;
     cam.updateProjectionMatrix();
-
     const aspect = size.width / size.height;
     const tanHalf = Math.tan((CAMERA_FOV * Math.PI) / 180 / 2);
     const distV = FIT_RADIUS / tanHalf;
     const distH = FIT_RADIUS / (tanHalf * aspect);
-    cam.position.z = Math.max(distV, distH) * FIT_MARGIN;
-    cam.position.x = 0;
-    cam.position.y = 0;
+    cam.position.set(0, 0, Math.max(distV, distH) * FIT_MARGIN);
     cam.lookAt(0, 0, 0);
   }, [camera, size.width, size.height]);
 
@@ -494,33 +340,45 @@ function Scene({
   onLeave: () => void;
   tier: string;
 }) {
-  const isHigh = tier === "high";
   return (
     <>
-      <ambientLight intensity={0.12} />
+      <ambientLight intensity={0.15} />
       <pointLight position={[5, 4, 3]} intensity={24} color="#4f8cff" />
       <pointLight position={[-4, -2, 2]} intensity={14} color="#8b5cf6" />
-      <pointLight position={[0, -4, 0]} intensity={8} color="#ff3d9a" />
       <CameraFit />
-      <GlobeGroup
-        mouse={mouse}
-        drag={drag}
-        active={active}
-        onEnter={onEnter}
-        onLeave={onLeave}
-        denseLabels={false}
-      />
-      <Particles count={isHigh ? 90 : 40} />
-      {isHigh && (
-        <EffectComposer multisampling={0}>
-          <Bloom intensity={2.2} luminanceThreshold={0.08} luminanceSmoothing={0.92} mipmapBlur />
-        </EffectComposer>
-      )}
+      <GlobeGroup mouse={mouse} drag={drag} active={active} onEnter={onEnter} onLeave={onLeave} />
+      <Particles count={tier === "high" ? 70 : 35} />
     </>
   );
 }
 
-/* ─── Main export ────────────────────────────────────────────── */
+/** Term detail — regular HTML outside the WebGL canvas (never portaled into 3D). */
+function TermPanel({ term, onClose }: { term: Term; onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 8 }}
+      className="pointer-events-auto absolute bottom-20 left-1/2 z-20 w-[min(92%,18rem)] -translate-x-1/2 overflow-hidden rounded-xl border bg-black/85 p-4 shadow-[0_16px_48px_rgba(0,0,0,0.65)] backdrop-blur-md"
+      style={{ borderColor: `${term.color}44` }}
+    >
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full" style={{ background: term.color, boxShadow: `0 0 8px ${term.color}` }} />
+          <p className="font-display text-sm font-bold text-white">{term.label}</p>
+        </div>
+        <button type="button" onClick={onClose} className="font-sans text-[10px] uppercase tracking-widest text-white/35 hover:text-white/70">
+          Close
+        </button>
+      </div>
+      <p className="font-body text-[11px] leading-relaxed text-white/60">{term.detail}</p>
+      <p className="mt-2 font-sans text-[9px] uppercase tracking-[0.24em]" style={{ color: term.color }}>
+        {CAT_LABELS[term.cat]}
+      </p>
+    </motion.div>
+  );
+}
+
 export function FinanceGlobe() {
   const mouse = useRef({ x: 0, y: 0 });
   const drag = useRef({ rotY: 0, rotX: 0, spinning: false });
@@ -531,7 +389,6 @@ export function FinanceGlobe() {
   const onEnter = useCallback((t: Term) => setActiveTerm(t), []);
   const onLeave = useCallback(() => setActiveTerm(null), []);
 
-  /* Drag handlers */
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     pointer.current = { down: true, lastX: e.clientX, lastY: e.clientY };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -560,9 +417,9 @@ export function FinanceGlobe() {
 
   if (!enableWebGL) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+      <div className="flex h-full min-h-[280px] items-center justify-center" aria-hidden>
         <div
-          className="h-72 w-72 rounded-full"
+          className="h-56 w-56 rounded-full md:h-72 md:w-72"
           style={{
             background: "radial-gradient(circle, rgba(79,140,255,0.28) 0%, rgba(139,92,246,0.15) 45%, transparent 70%)",
             boxShadow: "0 0 80px rgba(79,140,255,0.3)",
@@ -574,7 +431,7 @@ export function FinanceGlobe() {
 
   return (
     <div
-      className="absolute inset-0 select-none"
+      className="relative h-full min-h-[280px] w-full md:min-h-[100svh]"
       style={{ cursor: pointer.current.down ? "grabbing" : "grab" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -582,9 +439,19 @@ export function FinanceGlobe() {
       onPointerLeave={onPointerUp}
     >
       <Canvas
-        dpr={[1, dpr]}
-        camera={{ position: [0, 0, 7.2], fov: CAMERA_FOV }}
-        gl={{ antialias: false, alpha: true, powerPreference: "high-performance", stencil: false, depth: true }}
+        className="!absolute inset-0 !h-full !w-full"
+        dpr={[1, Math.min(dpr, 1.5)]}
+        camera={{ position: [0, 0, 8], fov: CAMERA_FOV }}
+        gl={{
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance",
+          stencil: false,
+          preserveDrawingBuffer: false,
+        }}
+        onCreated={({ gl }) => {
+          gl.setClearColor(0x000000, 0);
+        }}
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
@@ -599,38 +466,24 @@ export function FinanceGlobe() {
         </Suspense>
       </Canvas>
 
-      {/* Category legend — below the globe */}
-      <motion.div
-        className="pointer-events-none absolute bottom-10 left-1/2 z-10 hidden -translate-x-1/2 flex-wrap items-center justify-center gap-x-5 gap-y-1.5 lg:flex"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.6, duration: 0.7 }}
-      >
+      <AnimatePresence>
+        {activeTerm ? <TermPanel term={activeTerm} onClose={onLeave} /> : null}
+      </AnimatePresence>
+
+      <div className="pointer-events-none absolute bottom-8 left-1/2 z-10 hidden -translate-x-1/2 flex-wrap items-center justify-center gap-x-4 gap-y-1 md:flex">
         {Object.entries(CAT_LABELS).map(([key, label]) => (
           <div key={key} className="flex items-center gap-1.5">
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ background: CAT_COLORS[key], boxShadow: `0 0 5px ${CAT_COLORS[key]}88` }}
-            />
-            <span className="font-sans text-[8px] uppercase tracking-[0.24em] text-white/30">{label}</span>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: CAT_COLORS[key] }} />
+            <span className="font-sans text-[8px] uppercase tracking-[0.22em] text-white/30">{label}</span>
           </div>
         ))}
-      </motion.div>
+      </div>
 
-      {/* Drag hint */}
-      <AnimatePresence>
-        {!activeTerm ? (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.35 }}
-            exit={{ opacity: 0 }}
-            transition={{ delay: 1.5, duration: 0.6 }}
-            className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 font-sans text-[9px] uppercase tracking-[0.4em] text-white/35 md:hidden"
-          >
-            Drag · Tap terms
-          </motion.p>
-        ) : null}
-      </AnimatePresence>
+      {!activeTerm ? (
+        <p className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 font-sans text-[9px] uppercase tracking-[0.35em] text-white/30">
+          Drag globe · Hover points
+        </p>
+      ) : null}
     </div>
   );
 }

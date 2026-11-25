@@ -527,7 +527,7 @@ export function Contact() {
 
 /** Types out the terminal prompt char by char. */
 function TypewriterLine() {
-  const full = "~/portfolio $ send_message --to yashtomar142001";
+  const full = "~/portfolio $ send_message --to yash.tomar569";
   const [text, setText] = useState("");
 
   useEffect(() => {

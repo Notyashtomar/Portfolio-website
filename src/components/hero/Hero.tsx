@@ -3,44 +3,52 @@
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap, registerGsap } from "@/lib/gsap";
 import { usePerfFlags } from "@/components/providers/Providers";
-import { profile } from "@/data/resume";
+import { usePreloaderReady } from "@/hooks/usePreloaderReady";
 
 const FinanceGlobe = dynamic(
   () => import("./FinanceGlobe").then((m) => m.FinanceGlobe),
-  { ssr: false, loading: () => <div className="absolute inset-0 hero-fallback-glow" /> },
+  { ssr: false, loading: () => null },
 );
 
 const ROLES = [
-  { label: "Data Analytics", tag: "ANALYTICS" },
-  { label: "MIS Reporting", tag: "REPORTING" },
-  { label: "Forecasting", tag: "FORECASTING" },
-  { label: "Automation", tag: "AUTOMATION" },
+  { label: "System Architecture", tag: "ARCHITECTURE" },
+  { label: "Team Leadership", tag: "DELIVERY" },
+  { label: "Prompt Engineering", tag: "AI" },
+  { label: "Financial Analytics", tag: "ANALYTICS" },
 ];
 
 const STATS = [
-  { value: "3+",      label: "YRS EXP",            detail: "Financial analytics, MIS & process automation" },
-  { value: "15+",     label: "REPORTS AUTOMATED",   detail: "MIS, P&L, KPI dashboards across Excel & Power BI" },
-  { value: "₹500Cr",  label: "AUM TRACKED",         detail: "Assets under management monitored at Wistful Finance" },
+  { value: "5", label: "SYSTEMS SHIPPED", detail: "FRIS, RMS, SMS, Billing, and 4 CRMs in production" },
+  { value: "18", label: "AIRPORTS", detail: "FRIS live across international and domestic stations" },
+  { value: "40%", label: "FASTER REPORTS", detail: "Peak turnaround cut with SQL, Power BI, and Excel" },
 ];
 
 const META = [
-  { key: "SUBJECT",  value: "DATA",      detail: "SQL · Python · Power BI · Excel" },
-  { key: "TIER",     value: "ANALYST",   detail: "MIS Analyst → Data Analyst" },
-  { key: "LOCATION", value: "NEW DELHI", detail: "Open to remote & hybrid roles" },
+  { key: "ROLE", value: "SYSTEM ANALYST", detail: "Team lead at Bird Group" },
+  { key: "STACK", value: "SQL · PBI", detail: "SQL · Python · Power BI · Excel · Prompt engineering" },
+  { key: "LOCATION", value: "NEW DELHI", detail: "Bird Group · aviation ground operations" },
 ];
 
 /* ── Hoverable stat card ── */
-function StatPill({ stat, delay }: { stat: (typeof STATS)[number]; delay: number }) {
+function StatPill({
+  stat,
+  delay,
+  ready,
+}: {
+  stat: (typeof STATS)[number];
+  delay: number;
+  ready: boolean;
+}) {
   const [hovered, setHovered] = useState(false);
   return (
     <motion.div
       className="group relative cursor-default"
       initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+      transition={{ delay: ready ? delay : 0, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -132,6 +140,7 @@ export function Hero() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [roleIdx, setRoleIdx] = useState(0);
   const { lite } = usePerfFlags();
+  const ready = usePreloaderReady();
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -168,28 +177,18 @@ export function Hero() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative flex min-h-[100svh] overflow-hidden"
+      className="relative grid min-h-[100svh] grid-cols-1 overflow-hidden md:grid-cols-2"
     >
-      {/* ── Globe — right half ── */}
-      <div className="absolute right-0 top-0 h-full w-full md:w-[58%] lg:w-[55%]">
-        <FinanceGlobe />
-        {/* fade the left edge on desktop so globe bleeds behind text */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-2/5 bg-gradient-to-r from-[#030303] to-transparent md:block" />
-        {/* fade top and bottom — kept short so the full globe stays visible */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#030303] to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#030303] to-transparent" />
-      </div>
-
-      {/* ── Text ── left column ── */}
+      {/* ── Text — left column, never overlaps the globe canvas ── */}
       <div
         ref={contentRef}
-        className="relative z-10 flex w-full flex-col justify-center px-5 pb-20 pt-24 sm:px-8 md:w-[52%] md:px-12 md:pb-0 lg:px-20 lg:pr-0"
+        className="relative z-10 flex flex-col justify-center px-5 pb-20 pt-24 sm:px-8 md:px-12 md:pb-0 lg:px-16 lg:pr-8"
       >
         {/* ── Status row ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ delay: ready ? 0.05 : 0, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
           className="mb-10 flex flex-wrap items-center gap-4"
         >
           <span className="flex items-center gap-2">
@@ -202,8 +201,8 @@ export function Hero() {
         {/* ── Horizontal rule ── */}
         <motion.div
           initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          transition={{ delay: 0.25, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          animate={ready ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
+          transition={{ delay: ready ? 0.12 : 0, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="mb-10 h-px origin-left bg-gradient-to-r from-accent-blue/60 via-white/15 to-transparent"
         />
 
@@ -214,9 +213,9 @@ export function Hero() {
               <motion.span
                 className="block"
                 initial={{ y: "110%", opacity: 0 }}
-                animate={{ y: "0%", opacity: 1 }}
+                animate={ready ? { y: "0%", opacity: 1 } : { y: "110%", opacity: 0 }}
                 transition={{
-                  delay: 0.35 + li * 0.13,
+                  delay: ready ? 0.18 + li * 0.1 : 0,
                   duration: 0.9,
                   ease: [0.16, 1, 0.3, 1],
                 }}
@@ -230,8 +229,8 @@ export function Hero() {
         {/* ── Role list — gobold services style ── */}
         <motion.div
           initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.65, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+          animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+          transition={{ delay: ready ? 0.42 : 0, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           className="mt-8 space-y-1 sm:mt-10"
         >
           {ROLES.map((role, i) => (
@@ -239,8 +238,8 @@ export function Hero() {
               key={role.label}
               className="group flex cursor-default items-center gap-3"
               initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 + i * 0.08, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              animate={ready ? { opacity: 1, x: 0 } : { opacity: 0, x: -16 }}
+              transition={{ delay: ready ? 0.46 + i * 0.08 : 0, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             >
               <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-accent-blue/50 transition group-hover:text-accent-blue">
                 +
@@ -255,8 +254,8 @@ export function Hero() {
         {/* ── Animated role badge ── */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.0, duration: 0.5 }}
+          animate={ready ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ delay: ready ? 0.72 : 0, duration: 0.5 }}
           className="mt-8 sm:mt-10"
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-accent-blue/25 bg-accent-blue/8 px-4 py-1.5">
@@ -279,16 +278,16 @@ export function Hero() {
         {/* ── Divider ── */}
         <motion.div
           initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          transition={{ delay: 1.05, duration: 0.6 }}
+          animate={ready ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
+          transition={{ delay: ready ? 0.78 : 0, duration: 0.6 }}
           className="mb-8 mt-10 h-px origin-left bg-gradient-to-r from-white/12 via-white/6 to-transparent sm:mt-12"
         />
 
         {/* ── CTA ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.15, duration: 0.55 }}
+          animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ delay: ready ? 0.85 : 0, duration: 0.55 }}
           className="flex flex-wrap items-center gap-4"
         >
           <Link href="#projects" data-cursor="interactive">
@@ -304,20 +303,20 @@ export function Hero() {
         {/* ── Stats row — hover to reveal detail ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.3, duration: 0.55 }}
+          animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ delay: ready ? 0.95 : 0, duration: 0.55 }}
           className="mt-12 flex flex-wrap gap-6 sm:mt-16"
         >
           {STATS.map((s, i) => (
-            <StatPill key={s.label} stat={s} delay={1.3 + i * 0.06} />
+            <StatPill key={s.label} stat={s} delay={0.95 + i * 0.06} ready={ready} />
           ))}
         </motion.div>
 
         {/* ── Bottom meta row — hover to reveal detail ── */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.45, duration: 0.5 }}
+          animate={ready ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ delay: ready ? 1.08 : 0, duration: 0.5 }}
           className="mt-8 flex flex-wrap gap-3"
         >
           {META.map((m) => (
@@ -326,11 +325,16 @@ export function Hero() {
         </motion.div>
       </div>
 
+      {/* ── Globe — right column, isolated WebGL canvas ── */}
+      <div className="relative isolate min-h-[45vh] md:min-h-[100svh]">
+        <FinanceGlobe />
+      </div>
+
       {/* ── Bottom scroll indicator ── */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.6 }}
+        animate={ready ? { opacity: 1 } : { opacity: 0 }}
+        transition={{ delay: ready ? 1.2 : 0 }}
         className="absolute bottom-8 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 md:flex"
       >
         <span className="font-sans text-[9px] uppercase tracking-[0.45em] text-white/25">Scroll</span>

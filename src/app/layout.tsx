@@ -7,13 +7,13 @@ export const metadata: Metadata = {
   title: `${profile.name} · ${profile.title}`,
   description: profile.summary,
   keywords: [
-    "Data Analyst",
+    "System Analyst",
+    "Team Lead",
+    "System Architecture",
+    "Prompt Engineering",
     "MIS Analyst",
-    "Business Analyst",
-    "Financial Analyst",
     "Power BI",
     "SQL",
-    "Excel",
     profile.name,
   ],
   openGraph: {
