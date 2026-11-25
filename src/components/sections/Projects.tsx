@@ -1,125 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion, useMotionValue, useSpring, type MotionValue } from "framer-motion";
-import { useLayoutEffect, useRef, useState } from "react";
+import {
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
+import { useRef, type PointerEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { projects } from "@/data/resume";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
-import { gsap, registerGsap, ScrollTrigger } from "@/lib/gsap";
 import { usePerfFlags } from "@/components/providers/Providers";
 
-/* ─── Project card ────────────────────────────────────────────── */
-function ProjectCard({
-  project,
-  index,
-  isCenter,
-  dimmed,
-}: {
-  project: (typeof projects)[number];
-  index: number;
-  isCenter: boolean;
-  dimmed: boolean;
-}) {
-  const metrics = project.metrics.filter((m) => m.numeric > 0).slice(0, 2);
+const EASE = [0.16, 1, 0.3, 1] as const;
 
-  return (
-    <Link href={`/projects/${project.slug}`} data-cursor="interactive" className="block h-full">
-      <motion.div
-        className="group relative flex h-full flex-col border bg-[#060810] p-7 sm:p-9"
-        animate={{
-          borderColor: isCenter ? "rgba(79,140,255,0.5)" : "rgba(255,255,255,0.08)",
-          boxShadow: isCenter
-            ? "0 0 60px rgba(79,140,255,0.18), 0 0 120px rgba(79,140,255,0.08)"
-            : "none",
-        }}
-        transition={{ duration: 0.4 }}
-      >
-        {/* Hover glows */}
-        <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-accent-violet/0 blur-3xl transition duration-700 group-hover:bg-accent-violet/28" />
-        <div className="pointer-events-none absolute -bottom-10 -left-8 h-40 w-40 rounded-full bg-accent-blue/0 blur-3xl transition duration-700 group-hover:bg-accent-blue/20" />
-
-        {/* Active top bar */}
-        <motion.div
-          className="absolute inset-x-0 top-0 h-0.5"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(0,0,0,0), #4f8cff, #8b5cf6, rgba(0,0,0,0))",
-          }}
-          animate={{ opacity: isCenter ? 1 : 0 }}
-          transition={{ duration: 0.4 }}
-        />
-
-        {/* Card number watermark */}
-        <span
-          className="pointer-events-none absolute right-5 bottom-5 font-display text-[80px] font-bold leading-none select-none"
-          style={{ color: isCenter ? "rgba(79,140,255,0.06)" : "rgba(255,255,255,0.03)" }}
-        >
-          {String(index + 1).padStart(2, "0")}
-        </span>
-
-        <div className="relative z-10 flex h-full flex-col">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex flex-col gap-2">
-              <span className="section-num">{String(index + 1).padStart(2, "0")} / PROJECT</span>
-              <span className="font-sans text-[10px] uppercase tracking-[0.32em] text-accent-violet/80 transition group-hover:text-accent-blue">
-                {project.subtitle}
-              </span>
-            </div>
-            <motion.span
-              className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/12 bg-white/[0.025] text-white/30 transition group-hover:border-accent-blue/50 group-hover:bg-accent-blue/15 group-hover:text-white"
-              whileHover={{ rotate: 45, scale: 1.08 }}
-            >
-              <ArrowUpRight className="h-4 w-4" />
-            </motion.span>
-          </div>
-
-          <div className="mt-8 flex-1">
-            <h3 className="font-display text-3xl font-bold leading-[1.1] text-white sm:text-[2.2rem]">
-              {project.title.toUpperCase()}
-            </h3>
-            <p className="font-body mt-4 text-sm leading-[1.85] text-white/45 transition duration-500 group-hover:text-white/70">
-              {project.tagline}
-            </p>
-          </div>
-
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            {metrics.map((m, mi) => (
-              <motion.div
-                key={m.label}
-                className="border border-white/8 bg-black/40 p-4 transition duration-300 group-hover:bg-accent-blue/[0.07]"
-                animate={{ borderColor: isCenter ? "rgba(79,140,255,0.25)" : "rgba(255,255,255,0.08)" }}
-                transition={{ duration: 0.4 }}
-              >
-                <p className="font-display text-3xl font-bold text-white">
-                  <AnimatedCounter value={m.numeric} suffix={m.suffix} duration={1.4 + mi * 0.15} />
-                </p>
-                <p className="font-sans mt-1.5 text-[9px] uppercase tracking-[0.22em] text-white/35">{m.label}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="mt-6 flex items-center gap-2 font-sans text-[9px] uppercase tracking-[0.32em] text-white/25 transition group-hover:text-accent-blue/80">
-            <span>Case Study</span>
-            <span className="h-px w-0 bg-accent-blue transition-all duration-500 group-hover:w-10" />
-          </div>
-        </div>
-      </motion.div>
-    </Link>
-  );
-}
-
-/* ─── Finance ticker ──────────────────────────────────────────── */
-function FinanceTicker() {
+/* ─── Ticker ──────────────────────────────────────────────────── */
+function Ticker() {
   const TERMS = [
-    "EBITDA","ROI","IRR","NPV","CAGR","SHARPE RATIO","P&L ANALYSIS",
-    "MIS REPORTING","ALPHA","VOLATILITY","ARIMA","REGRESSION",
-    "FORECASTING","VaR","SQL AUTOMATION","SAP FICO","DCF MODEL","VALUATION",
-    "BUDGET VARIANCE","LIQUIDITY RATIO","WORKING CAPITAL","EBITDA MARGIN",
+    "FRIS", "18 AIRPORTS", "RMS", "SMS", "BILLING ENGINE", "CRM SUITE",
+    "ROLE-BASED ACCESS", "AUDIT TRAIL", "DATA MODELING", "SQL PIPELINES",
+    "POWER BI", "PROMPT ENGINEERING", "LOOP ENGINEERING", "UAT",
+    "MIS REPORTING", "FORECASTING",
   ];
   const doubled = [...TERMS, ...TERMS];
   return (
-    <div className="relative overflow-hidden border-b border-white/8 py-2.5">
+    <div className="relative overflow-hidden border-y border-white/8 py-2.5">
       <div className="ticker-track">
         {doubled.map((t, i) => (
           <span key={i} className="flex items-center gap-5 px-5">
@@ -132,302 +41,284 @@ function FinanceTicker() {
   );
 }
 
-/* ─── Spotlight that follows the centered card ─────────────────── */
-function Spotlight({ x }: { x: MotionValue<number> }) {
-  const sx = useSpring(x, { stiffness: 50, damping: 16 });
+/* ─── 3D tilt card ────────────────────────────────────────────── */
+function ProjectCard3D({
+  project,
+  index,
+  total,
+  interactive,
+}: {
+  project: (typeof projects)[number];
+  index: number;
+  total: number;
+  interactive: boolean;
+}) {
+  const px = useMotionValue(0.5);
+  const py = useMotionValue(0.5);
+  const rotX = useSpring(useTransform(py, [0, 1], [7, -7]), { stiffness: 160, damping: 20 });
+  const rotY = useSpring(useTransform(px, [0, 1], [-9, 9]), { stiffness: 160, damping: 20 });
+  const sheenX = useTransform(px, [0, 1], ["0%", "100%"]);
+  const sheenY = useTransform(py, [0, 1], ["0%", "100%"]);
+  const sheen = useMotionTemplate`radial-gradient(520px circle at ${sheenX} ${sheenY}, rgba(79,140,255,0.16), transparent 60%)`;
+
+  const onMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!interactive) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    px.set((e.clientX - r.left) / r.width);
+    py.set((e.clientY - r.top) / r.height);
+  };
+  const onLeave = () => {
+    px.set(0.5);
+    py.set(0.5);
+  };
+
+  const metrics = project.metrics.filter((m) => m.numeric > 0).slice(0, 3);
+  const num = String(index + 1).padStart(2, "0");
+
   return (
-    <motion.div
-      className="pointer-events-none absolute top-1/2 z-0 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-      style={{
-        x: sx,
-        background: "radial-gradient(circle, rgba(79,140,255,0.14) 0%, transparent 65%)",
-        filter: "blur(50px)",
-      }}
-    />
+    <Link href={`/projects/${project.slug}`} data-cursor="interactive" className="block h-full">
+      <motion.div
+        onPointerMove={onMove}
+        onPointerLeave={onLeave}
+        className="group relative h-full overflow-hidden rounded-[28px] border border-white/10 bg-[#070910]"
+        style={{
+          rotateX: interactive ? rotX : 0,
+          rotateY: interactive ? rotY : 0,
+          transformStyle: "preserve-3d",
+          boxShadow:
+            "0 40px 120px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.02) inset, 0 0 80px rgba(79,140,255,0.08)",
+        }}
+      >
+        {/* Sheen following the pointer */}
+        <motion.div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{ background: sheen }} />
+
+        {/* Ambient gradients */}
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent-violet/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 -left-20 h-80 w-80 rounded-full bg-accent-blue/12 blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-blue/70 to-transparent" />
+
+        {/* Watermark */}
+        <span
+          className="pointer-events-none absolute -bottom-6 right-4 select-none font-display font-bold leading-none text-white/[0.035]"
+          style={{ fontSize: "clamp(120px, 22vw, 260px)", transform: "translateZ(-40px)" }}
+        >
+          {num}
+        </span>
+
+        <div
+          className="relative z-10 grid h-full gap-5 p-6 sm:gap-8 sm:p-10 md:grid-cols-[1.35fr_1fr] md:p-12 lg:p-14"
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          {/* Left — copy */}
+          <div className="flex flex-col" style={{ transform: "translateZ(30px)" }}>
+            <div className="flex items-center gap-4">
+              <span className="section-num">{num} / {String(total).padStart(2, "0")}</span>
+              <span className="h-px w-10 bg-accent-blue/30" />
+              <span className="font-sans text-[10px] uppercase tracking-[0.32em] text-accent-violet/80">
+                {project.subtitle}
+              </span>
+            </div>
+
+            <h3
+              className="mt-6 font-display font-bold leading-[0.98] tracking-[-0.03em] text-white"
+              style={{ fontSize: "clamp(1.5rem, 4.4vw, 3.9rem)" }}
+            >
+              {project.title.toUpperCase()}
+            </h3>
+
+            <p className="font-body mt-4 line-clamp-3 max-w-xl text-[13px] leading-[1.75] text-white/50 sm:mt-5 sm:line-clamp-none sm:text-[15px] sm:leading-[1.85]">
+              {project.tagline}
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2 sm:mt-6">
+              {project.tech.map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-sans text-[9px] uppercase tracking-[0.22em] text-white/45"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-auto hidden items-center gap-3 pt-8 font-sans text-[10px] uppercase tracking-[0.32em] text-white/35 transition group-hover:text-accent-blue sm:flex">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.03] transition duration-500 group-hover:rotate-45 group-hover:border-accent-blue/60 group-hover:bg-accent-blue/15">
+                <ArrowUpRight className="h-4 w-4" />
+              </span>
+              <span>Open case study</span>
+              <span className="h-px w-0 bg-accent-blue transition-all duration-500 group-hover:w-12" />
+            </div>
+          </div>
+
+          {/* Right — metrics */}
+          <div
+            className="grid grid-cols-3 gap-2 self-end md:flex md:flex-col md:justify-center md:gap-3 md:self-auto"
+            style={{ transform: "translateZ(50px)" }}
+          >
+            {metrics.map((m, mi) => (
+              <div
+                key={m.label}
+                className="rounded-xl border border-white/8 bg-black/40 p-3 backdrop-blur-sm transition duration-500 group-hover:border-accent-blue/30 group-hover:bg-accent-blue/[0.06] sm:rounded-2xl sm:p-5"
+              >
+                <p className="font-display text-xl font-bold text-white sm:text-3xl md:text-4xl">
+                  <AnimatedCounter value={m.numeric} suffix={m.suffix} duration={1.2 + mi * 0.15} />
+                </p>
+                <p className="font-sans mt-1 text-[8px] uppercase tracking-[0.16em] text-white/35 sm:mt-1.5 sm:text-[9px] sm:tracking-[0.24em]">{m.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </Link>
   );
 }
 
-/* ─── Progress dots ───────────────────────────────────────────── */
-function ProgressDots({
-  progress, total, center, ctaActive,
-}: { progress: number; total: number; center: number; ctaActive: boolean }) {
+/* ─── One layer of the scroll deck ────────────────────────────── */
+function DeckLayer({
+  project,
+  index,
+  total,
+  progress,
+}: {
+  project: (typeof projects)[number];
+  index: number;
+  total: number;
+  progress: MotionValue<number>;
+}) {
+  const step = 1 / total;
+  const enterStart = Math.max(0, (index - 1) * step);
+  const active = index * step;
+  const exitEnd = Math.min(1, (index + 1) * step);
+  const isLast = index === total - 1;
+
+  // Enter: rise from below, tilted back; Exit: sink into depth as the next card arrives.
+  const rotateX = useTransform(progress, [enterStart, active, exitEnd], [18, 0, isLast ? 0 : -8]);
+  const scale = useTransform(progress, [enterStart, active, exitEnd], [0.9, 1, isLast ? 1 : 0.86]);
+  const y = useTransform(progress, [enterStart, active, exitEnd], [80, 0, isLast ? 0 : -60]);
+  const shade = useTransform(progress, [active, exitEnd], [0, isLast ? 0 : 0.72]);
+
   return (
-    <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-4">
-      <div className="flex items-center gap-2">
-        {Array.from({ length: total }).map((_, i) => {
-          const isActive = i === center && !ctaActive;
-          const isPast   = ctaActive || progress * total > i + 0.5;
-          return (
-            <motion.div
-              key={i}
-              className="rounded-full"
-              animate={isActive
-                ? { width: 24, height: 5, backgroundColor: "rgba(79,140,255,1)", boxShadow: "0 0 10px rgba(79,140,255,0.8)" }
-                : isPast
-                ? { width: 8,  height: 4, backgroundColor: "rgba(79,140,255,0.4)", boxShadow: "none" }
-                : { width: 6,  height: 4, backgroundColor: "rgba(255,255,255,0.15)", boxShadow: "none" }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            />
-          );
-        })}
-      </div>
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={ctaActive ? "cta" : center}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/30 tabular-nums"
-        >
-          {ctaActive ? "→ CONTACT" : `${String(center + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`}
-        </motion.span>
-      </AnimatePresence>
+    <div
+      className="sticky top-0 flex h-[100svh] items-center justify-center px-4 sm:px-8"
+      style={{ perspective: "1600px", zIndex: index + 1 }}
+    >
+      <motion.div
+        className="relative w-full max-w-[1120px] will-change-transform"
+        style={{
+          rotateX,
+          scale,
+          y,
+          height: "min(74svh, 680px)",
+          transformStyle: "preserve-3d",
+          transformOrigin: "50% 30%",
+        }}
+      >
+        <ProjectCard3D project={project} index={index} total={total} interactive />
+
+        {/* Depth shade — darkens cards that have receded */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 rounded-[28px] bg-[#030303]"
+          style={{ opacity: shade }}
+        />
+      </motion.div>
     </div>
   );
 }
 
-/* ─── Main section ────────────────────────────────────────────── */
+/* ─── Section header with 3D opening ──────────────────────────── */
+function Header() {
+  return (
+    <div className="relative px-5 pb-10 pt-24 sm:px-8 md:px-12 lg:px-16" style={{ perspective: "1200px" }}>
+      <div className="mx-auto max-w-[90rem]">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="mb-8 flex items-center gap-4"
+        >
+          <span className="section-num">02 / WORK</span>
+          <div className="h-px flex-1 bg-gradient-to-r from-accent-blue/30 to-transparent" />
+          <span className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/25">
+            {projects.length} production systems
+          </span>
+        </motion.div>
+
+        <motion.h2
+          className="section-heading-bold max-w-5xl"
+          initial="hidden"
+          whileInView="shown"
+          viewport={{ once: true, amount: 0.4 }}
+        >
+          {["SYSTEMS THAT", "RUN THE", "OPERATION."].map((line, i) => (
+            <span key={line} className="block overflow-hidden" style={{ perspective: "900px" }}>
+              <motion.span
+                className="block origin-bottom"
+                variants={{
+                  hidden: { opacity: 0, rotateX: -70, y: "60%" },
+                  shown: {
+                    opacity: 1,
+                    rotateX: 0,
+                    y: "0%",
+                    transition: { delay: 0.1 + i * 0.12, duration: 1, ease: EASE },
+                  },
+                }}
+              >
+                {line}
+              </motion.span>
+            </span>
+          ))}
+        </motion.h2>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ delay: 0.5, duration: 0.8, ease: EASE }}
+          className="font-body mt-8 max-w-xl text-base leading-[1.8] text-white/40"
+        >
+          Five production platforms for aviation ground operations at Bird Group, plus the
+          analytics work that preceded them. Scroll to move through the deck.
+        </motion.p>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.7, duration: 0.8 }}
+        className="mt-12"
+      >
+        <Ticker />
+      </motion.div>
+    </div>
+  );
+}
+
+/* ─── Section ─────────────────────────────────────────────────── */
 export function Projects() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const stickyRef  = useRef<HTMLDivElement>(null);
-  const trackRef   = useRef<HTMLDivElement>(null);
-  const trackAreaRef = useRef<HTMLDivElement>(null);
-  const spacerRef  = useRef<HTMLDivElement>(null);
-  const endSpacerRef = useRef<HTMLDivElement>(null);
-  const ctaRef     = useRef<HTMLDivElement>(null);
-  const cardRefs   = useRef<(HTMLDivElement | null)[]>([]);
-  const [progress, setProgress]       = useState(0);
-  const [centerIdx, setCenterIdx]     = useState(0);
-  const [hoveredIdx, setHoveredIdx]   = useState<number | null>(null);
-  const [ctaActive, setCtaActive]     = useState(false);
-  const spotlightX = useMotionValue(0);
-  const centerIdxRef = useRef(0);
-  const ctaActiveRef = useRef(false);
-  const progressRef  = useRef(0);
-
+  const deckRef = useRef<HTMLDivElement>(null);
   const { lite } = usePerfFlags();
+  const { scrollYProgress } = useScroll({
+    target: deckRef,
+    offset: ["start start", "end end"],
+  });
 
-  useLayoutEffect(() => {
-    if (lite) return;
-    registerGsap();
-
-    const section = sectionRef.current;
-    const sticky  = stickyRef.current;
-    const track   = trackRef.current;
-    const trackArea = trackAreaRef.current;
-    if (!section || !sticky || !track || !trackArea) return;
-
-    let tween: gsap.core.Timeline | null = null;
-    let setupToken = 0;
-
-    const getTrackCenter = () => {
-      const rect = trackArea.getBoundingClientRect();
-      return rect.left + rect.width / 2;
-    };
-
-    const centerOffset = (el: HTMLElement) => {
-      const rect = el.getBoundingClientRect();
-      return rect.left + rect.width / 2 - getTrackCenter();
-    };
-
-    const updateFocus = () => {
-      const vwCenter = getTrackCenter();
-      let bestDist = Infinity;
-      let bestIdx  = -1;
-
-      cardRefs.current.forEach((card, i) => {
-        if (!card) return;
-        const rect = card.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const d = Math.abs(cx - vwCenter);
-        if (d < bestDist) { bestDist = d; bestIdx = i; }
-      });
-
-      const cta = ctaRef.current;
-      let ctaDist = Infinity;
-      if (cta) {
-        const rect = cta.getBoundingClientRect();
-        ctaDist = Math.abs(rect.left + rect.width / 2 - vwCenter);
-      }
-
-      const ctaWins = ctaDist < bestDist;
-      const nextCenter = ctaWins ? -1 : bestIdx;
-      if (centerIdxRef.current !== nextCenter) {
-        centerIdxRef.current = nextCenter;
-        setCenterIdx(nextCenter);
-      }
-      if (ctaActiveRef.current !== ctaWins) {
-        ctaActiveRef.current = ctaWins;
-        setCtaActive(ctaWins);
-      }
-
-      if (ctaWins && cta) {
-        const r = cta.getBoundingClientRect();
-        spotlightX.set(r.left + r.width / 2);
-      } else if (bestIdx >= 0 && cardRefs.current[bestIdx]) {
-        const r = cardRefs.current[bestIdx]!.getBoundingClientRect();
-        spotlightX.set(r.left + r.width / 2);
-      }
-    };
-
-    const measureStops = (cards: HTMLDivElement[], cta: HTMLElement | null) => {
-      const cardStops = cards.map((card) => Math.max(0, centerOffset(card)));
-      const ctaStop = cta ? Math.max(0, centerOffset(cta)) : 0;
-      return { cardStops, ctaStop };
-    };
-
-    const buildTimeline = (cardStops: number[], ctaStop: number, maxScroll: number) => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: () => `+=${maxScroll}`,
-          pin: sticky,
-          pinSpacing: true,
-          scrub: true,
-          anticipatePin: 0,
-          invalidateOnRefresh: true,
-          fastScrollEnd: true,
-          onUpdate(self) {
-            if (Math.abs(self.progress - progressRef.current) > 0.008) {
-              progressRef.current = self.progress;
-              setProgress(self.progress);
-            }
-            updateFocus();
-          },
-        },
-      });
-
-      for (let i = 1; i < cardStops.length; i++) {
-        const prev = cardStops[i - 1] ?? 0;
-        const stop = cardStops[i] ?? prev;
-        const travel = Math.max(0, stop - prev);
-        if (travel > 0) {
-          tl.to(track, { x: -stop, ease: "none", duration: travel / maxScroll });
-        }
-      }
-
-      const lastStop = cardStops[cardStops.length - 1] ?? 0;
-      if (ctaStop > lastStop + 1) {
-        tl.to(track, {
-          x: -ctaStop,
-          ease: "none",
-          duration: (ctaStop - lastStop) / maxScroll,
-        });
-      }
-
-      return tl;
-    };
-
-    const setup = (retry = 0) => {
-      const token = ++setupToken;
-
-      tween?.scrollTrigger?.kill();
-      tween?.kill();
-      ScrollTrigger.getAll()
-        .filter((t) => t.vars.trigger === section)
-        .forEach((t) => t.kill());
-
-      const spacer = spacerRef.current;
-      const endSpacer = endSpacerRef.current;
-      gsap.set(track, { x: 0, clearProps: "transform" });
-
-      const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
-      const cta = ctaRef.current;
-      if (cards.length !== projects.length) {
-        if (retry < 12) requestAnimationFrame(() => setup(retry + 1));
-        return;
-      }
-
-      const firstCard = cards[0];
-      if (spacer && firstCard) {
-        spacer.style.width = `${Math.max(0, -centerOffset(firstCard))}px`;
-      }
-
-      const areaWidth = trackArea.getBoundingClientRect().width;
-      if (endSpacer) endSpacer.style.width = `${areaWidth * 0.5}px`;
-
-      // Force layout so stop measurements reflect spacer widths.
-      void track.offsetWidth;
-
-      let { cardStops, ctaStop } = measureStops(cards, cta);
-      const lastIdx = projects.length - 1;
-      let lastCardStop = cardStops[lastIdx] ?? 0;
-
-      if (endSpacer && cta) {
-        const extra = Math.max(0, ctaStop - lastCardStop) + areaWidth * 0.2;
-        endSpacer.style.width = `${areaWidth * 0.45 + extra}px`;
-        void track.offsetWidth;
-        ({ cardStops, ctaStop } = measureStops(cards, cta));
-        lastCardStop = cardStops[lastIdx] ?? 0;
-      }
-
-      if (token !== setupToken || !section || !track || !trackArea) return;
-
-      const maxScroll = Math.max(
-        lastCardStop,
-        ctaStop,
-        areaWidth * 0.5,
-      );
-      if (lastCardStop <= 0) {
-        if (retry < 12) requestAnimationFrame(() => setup(retry + 1));
-        return;
-      }
-
-      gsap.set(track, { x: 0 });
-      tween = buildTimeline(cardStops, ctaStop, maxScroll);
-
-      const st = tween.scrollTrigger;
-      ScrollTrigger.refresh();
-      st?.update();
-      updateFocus();
-    };
-
-    setup();
-
-    let resizeTimer: ReturnType<typeof setTimeout>;
-    const onResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => setup(), 250);
-    };
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      setupToken++;
-      clearTimeout(resizeTimer);
-      window.removeEventListener("resize", onResize);
-      tween?.scrollTrigger?.kill();
-      tween?.kill();
-      ScrollTrigger.getAll()
-        .filter((t) => t.vars.trigger === section)
-        .forEach((t) => t.kill());
-    };
-  }, [lite, spotlightX]);
-
-  /* ── Lite / mobile: vertical grid ── */
   if (lite) {
     return (
-      <section id="projects" className="relative px-5 py-20 sm:px-8 sm:py-28 md:px-12 md:py-36 lg:px-16">
-        <div className="mx-auto max-w-[90rem]">
-          <div className="mb-6 flex items-center gap-4">
-            <span className="section-num">02 / WORK</span>
-            <div className="h-px flex-1 bg-gradient-to-r from-accent-blue/30 to-transparent" />
-          </div>
-          <h2 className="section-heading-bold mb-12 max-w-3xl sm:mb-16">
-            WORK THAT<br />MOVED THE<br />NUMBERS.
-          </h2>
-        </div>
-        <FinanceTicker />
-        <div className="mx-auto mt-10 grid max-w-[90rem] gap-4 px-5 sm:gap-5 sm:px-8 md:grid-cols-2 md:px-12 lg:grid-cols-3 lg:px-16">
+      <section id="projects" className="relative">
+        <Header />
+        <div className="mx-auto grid max-w-[90rem] gap-5 px-5 pb-24 pt-10 sm:px-8 md:px-12 lg:px-16">
           {projects.map((project, i) => (
             <motion.div
               key={project.slug}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
-              transition={{ delay: i * 0.08, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ delay: 0.05, duration: 0.7, ease: EASE }}
+              style={{ minHeight: 420 }}
             >
-              <ProjectCard project={project} index={i} isCenter={false} dimmed={false} />
+              <ProjectCard3D project={project} index={i} total={projects.length} interactive={false} />
             </motion.div>
           ))}
         </div>
@@ -435,142 +326,45 @@ export function Projects() {
     );
   }
 
-  /* ── Full mode ── */
   return (
-    <section id="projects" ref={sectionRef} className="relative">
-      <div
-        ref={stickyRef}
-        className="h-screen overflow-hidden bg-[#030303]"
-      >
-        {/* Ambient radial */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_55%,rgba(79,140,255,0.07),transparent)]" />
+    <section id="projects" className="relative">
+      <Header />
 
-        {/* Spotlight on centered card */}
-        <Spotlight x={spotlightX} />
+      {/* Deck — each layer is sticky; the wrapper height gives scroll room */}
+      <div ref={deckRef} className="relative" style={{ height: `${projects.length * 100}svh` }}>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_50%,rgba(79,140,255,0.07),transparent)]" />
+        {projects.map((project, i) => (
+          <DeckLayer
+            key={project.slug}
+            project={project}
+            index={i}
+            total={projects.length}
+            progress={scrollYProgress}
+          />
+        ))}
+      </div>
 
-        {/* Top bar */}
-        <div className="absolute inset-x-0 top-0 z-20 px-5 pt-5 sm:px-8 md:px-12 lg:px-16">
-          <div className="mb-2 flex items-center gap-4">
-            <span className="section-num">02 / WORK</span>
-            <div className="h-px flex-1 bg-gradient-to-r from-accent-blue/25 to-transparent" />
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={ctaActive ? "cta" : centerIdx}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="font-sans text-[9px] uppercase tracking-[0.28em] text-white/25 tabular-nums"
-              >
-                {ctaActive ? "Ready to talk?" : centerIdx >= 0 ? projects[centerIdx]?.title : ""}
-              </motion.span>
-            </AnimatePresence>
-          </div>
-          <FinanceTicker />
-        </div>
-
-        {/* Edge fades */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#030303] to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#030303] to-transparent" />
-
-        {/* Content row — blurb stays fixed, cards scroll beside it */}
-        <div
-          className="flex h-full items-center pl-5 sm:pl-8 md:pl-12 lg:pl-16"
-          style={{ paddingTop: "72px", paddingBottom: "60px" }}
+      {/* Trailing CTA */}
+      <div className="relative flex flex-col items-center justify-center px-6 py-28 text-center sm:py-36">
+        <motion.div
+          initial={{ opacity: 0, y: 30, rotateX: -25 }}
+          whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.9, ease: EASE }}
+          style={{ perspective: "900px" }}
         >
-          <div
-            className="relative z-10 flex shrink-0 flex-col justify-center"
-            style={{ width: "min(55vw, 240px)" }}
-          >
-            <h2 className="section-heading-bold leading-tight" style={{ fontSize: "clamp(1.4rem,3vw,2.4rem)" }}>
-              WORK THAT<br />MOVED THE<br />NUMBERS.
-            </h2>
-            <p className="font-body mt-4 text-sm leading-[1.8] text-white/30">
-              Turning financial complexity into clarity — one dataset at a time.
-            </p>
-            <div className="mt-5 flex items-center gap-2 font-sans text-[9px] uppercase tracking-[0.38em] text-white/18">
-              <motion.span
-                className="h-px bg-white/22"
-                animate={{ width: [16, 32, 16] }}
-                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <span>Scroll to explore</span>
-            </div>
-          </div>
-
-          <div ref={trackAreaRef} className="relative min-w-0 flex-1 overflow-hidden">
-            <div
-              ref={trackRef}
-              className="flex items-center gap-5"
-              style={{ width: "max-content" }}
-            >
-              {/* Dynamic spacer — grown via JS so card 1 centres in the track area */}
-              <div ref={spacerRef} className="shrink-0" style={{ width: 0 }} aria-hidden />
-
-              {/* Project cards */}
-              {projects.map((project, i) => (
-                <div
-                  key={project.slug}
-                  ref={(el) => { cardRefs.current[i] = el; }}
-                  className="shrink-0"
-                  onMouseEnter={() => setHoveredIdx(i)}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                  style={{
-                    width: "min(440px, calc(100vw - min(55vw, 240px) - 96px))",
-                    height: "clamp(360px, 60vh, 540px)",
-                    cursor: "pointer",
-                  }}
-                >
-                  <ProjectCard
-                    project={project}
-                    index={i}
-                    isCenter={centerIdx === i}
-                    dimmed={hoveredIdx !== null && hoveredIdx !== i}
-                  />
-                </div>
-              ))}
-
-              {/* Trailing CTA */}
-              <div
-                ref={ctaRef}
-                className="flex shrink-0 flex-col items-center justify-center"
-                style={{ width: "min(320px, calc(100vw - min(55vw, 240px) - 96px))" }}
-              >
-                <Link href="#contact" data-cursor="interactive" className="group flex flex-col items-center gap-4 text-center">
-                  <motion.span
-                    className="font-display font-bold"
-                    style={{ fontSize: "clamp(1.8rem, 4vw, 3.2rem)" }}
-                    animate={{ color: ctaActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.14)" }}
-                    whileHover={{ color: "rgba(255,255,255,0.95)" }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    LET&apos;S BUILD
-                  </motion.span>
-                  <motion.span
-                    className="font-display font-bold"
-                    style={{ fontSize: "clamp(1.8rem, 4vw, 3.2rem)" }}
-                    animate={{ color: ctaActive ? "rgba(79,140,255,1)" : "rgba(255,255,255,0.14)" }}
-                    whileHover={{ color: "rgba(79,140,255,1)" }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    SOMETHING.
-                  </motion.span>
-                  <motion.span
-                    className="mt-1 font-sans text-[10px] uppercase tracking-[0.4em]"
-                    animate={{ opacity: ctaActive ? 1 : 0.35, color: ctaActive ? "#4f8cff" : "rgba(79,140,255,0.4)" }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    Get in touch ↗
-                  </motion.span>
-                </Link>
-              </div>
-
-              <div ref={endSpacerRef} className="shrink-0" style={{ width: 0 }} aria-hidden />
-            </div>
-          </div>
-        </div>
-
-        {/* Progress dots */}
-        <ProgressDots progress={progress} total={projects.length} center={centerIdx} ctaActive={ctaActive} />
+          <Link href="#contact" data-cursor="interactive" className="group flex flex-col items-center gap-2">
+            <span className="font-display font-bold text-white" style={{ fontSize: "clamp(1.8rem, 5vw, 3.6rem)" }}>
+              LET&apos;S BUILD
+            </span>
+            <span className="font-display font-bold text-accent-blue" style={{ fontSize: "clamp(1.8rem, 5vw, 3.6rem)" }}>
+              SOMETHING.
+            </span>
+            <span className="mt-3 font-sans text-[10px] uppercase tracking-[0.4em] text-accent-blue/70 transition group-hover:text-accent-blue">
+              Get in touch ↗
+            </span>
+          </Link>
+        </motion.div>
       </div>
     </section>
   );

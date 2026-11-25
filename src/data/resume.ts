@@ -185,8 +185,8 @@ export const projects = [
     ],
     metrics: [
       { value: "1", label: "Shared data model", numeric: 1, suffix: "" },
+      { value: "2", label: "Systems integrated", numeric: 2, suffix: "" },
       { value: "2026", label: "Delivery", numeric: 0, suffix: "" },
-      { value: "All", label: "Stations covered", numeric: 0, suffix: "" },
     ],
     impact:
       "Station workforce planning now sits on the same model as equipment, so management sees people and resources together.",

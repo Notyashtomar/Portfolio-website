@@ -10,22 +10,22 @@ import { cn } from "@/lib/utils";
 
 const stats = [
   {
-    value: 2,
-    suffix: "+",
-    label: "Years experience",
-    detail: "Across Bird, Wistful, and SLA — building financial models, automating MIS, and running end-to-end data pipelines.",
+    value: 5,
+    suffix: "",
+    label: "Production systems",
+    detail: "FRIS, RMS, SMS, Billing Software, and a suite of 4 CRMs, each in daily use by operations, finance, and sales at Bird Group.",
   },
   {
-    value: 35,
-    suffix: "%",
-    label: "Faster reporting",
-    detail: "Cut monthly report turnaround at Wistful by automating data extraction and dashboard refresh cycles.",
+    value: 18,
+    suffix: "",
+    label: "Airports on FRIS",
+    detail: "Led the flight data platform from concept to live production across international and domestic stations.",
   },
   {
     value: 40,
     suffix: "%",
-    label: "Process efficiency",
-    detail: "Streamlined SQL-based data extraction at SLA, eliminating manual steps and reducing error rates across finance workflows.",
+    label: "Faster reporting",
+    detail: "Peak reporting turnaround cut across Bird Group and Wistful Finance through SQL automation, Power BI, and Excel.",
   },
 ];
 
@@ -202,7 +202,7 @@ export function About() {
             Who I am
           </p>
           <SplitReveal
-            text="Clarity from complex data."
+            text="Systems people use every day."
             as="h2"
             mode="words"
             className="max-w-4xl text-[clamp(2rem,6vw,5.5rem)] font-semibold leading-[1.05] text-white"
